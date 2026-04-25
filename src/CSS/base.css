@@ -9,6 +9,7 @@
 :root {
   /* Font families */
   /* --font-hanzi: "Noto Serif SC", serif; */
+  --font-node: "ZCOOL QingKe HuangYou", sans-serif;
   --font-hanzi: "Poppins", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
   --font-ui: "Poppins", sans-serif;
