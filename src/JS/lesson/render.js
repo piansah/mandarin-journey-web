@@ -5,7 +5,12 @@
 
 import { lessonState, matchTemp, setMatchTemp } from "./state.js";
 import { speakMandarin } from "../utilities/tts.js";
-import { SVG_MIC, SVG_MIC_REC, svgMapIcon } from "../../assets/icon.js";
+import {
+  SVG_MIC,
+  SVG_MIC_REC,
+  svgMapIcon,
+  SVG_LISTEN,
+} from "../../assets/icon.js";
 
 // ── fungsi dari nav.js — di-import untuk dipakai di render
 // (updateProgress, resetFeedback, setBtnReady, handleCek didefinisikan di nav.js)
@@ -233,8 +238,11 @@ function _renderVocabCard(inDirection) {
         `<mark class="vocab-highlight">${w.hanzi}</mark>`,
       );
       examplesHtml += `
-        <div class="vocab-example-box">
-          <div class="vocab-ex-hanzi">${highlighted}</div>
+        <div class="vocab-example-box" onclick="event.stopPropagation(); _lessonSpeak('${ex.hanzi.replace(/'/g, "\\'")}')">
+          <div class="vocab-ex-hanzi-row">
+            <div class="vocab-ex-hanzi">${highlighted}</div>
+            <button class="vocab-ex-speak-btn">${SVG_LISTEN}</button>
+          </div>
           <div class="vocab-ex-pinyin">${ex.pinyin || ""}</div>
           <div class="vocab-ex-meaning">${ex.meaning || ""}</div>
         </div>`;

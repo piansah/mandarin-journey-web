@@ -318,14 +318,53 @@
   border-radius: 0 12px 12px 0;
   padding: 10px 14px;
   margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vocab-example-box:active {
+  background: rgba(232, 201, 109, 0.1);
+}
+
+.vocab-ex-hanzi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 3px;
 }
 
 .vocab-ex-hanzi {
   font-family: var(--font-hanzi);
   font-size: 16px;
   color: var(--txt);
-  margin-bottom: 3px;
   line-height: 1.4;
+}
+
+.vocab-ex-speak-btn {
+  background: rgba(232, 201, 109, 0.08);
+  border: 1px solid rgba(232, 201, 109, 0.2);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all 0.15s;
+}
+
+.vocab-ex-speak-btn:active {
+  transform: scale(0.9);
+  background: rgba(232, 201, 109, 0.2);
+}
+
+.vocab-ex-speak-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .vocab-highlight {
