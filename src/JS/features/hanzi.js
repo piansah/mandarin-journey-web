@@ -476,7 +476,10 @@ async function _saveSpeakingXP() {
 function _normalizeChinese(str) {
   if (!str) return "";
   return str
-    .replace(/[，,、。．？!！；;：""''「」『』【】（）()·\s]/g, "")
+    .replace(
+      /[，,、。．？?！!；;：:＂"＇'「」『』【】（）()〈〉《》〔〕［］｛｝·\s]/g,
+      "",
+    )
     .trim();
 }
 
@@ -662,12 +665,15 @@ export function _spkToggleRecHanzi() {
     });
     if (matched) bestScore = Math.max(bestScore, 85);
 
+    const isCorrect = bestScore >= 60;
+    const displayResult = isCorrect ? card.hz : first;
+
     if (bestScore > 80) {
       _hspSetNextEnabled(true);
-      _hspShowFb("ok", `✓ Bagus! ${bestScore}% Tepat Sekali!\n"${first}"`);
+      _hspShowFb("ok", `✓ Bagus! ${bestScore}% Tepat Sekali!\n"${displayResult}"`);
     } else if (bestScore >= 60) {
       _hspSetNextEnabled(false);
-      _hspShowFb("warn", `${bestScore}% — Hampir Sesuai\n"${first}"`);
+      _hspShowFb("warn", `${bestScore}% — Hampir Sesuai\n"${displayResult}"`);
     } else {
       _hspSetNextEnabled(false);
       _hspShowFb("err", `${bestScore}% — HUH WKWK?!\n"${first}"`);

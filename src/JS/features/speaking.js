@@ -111,10 +111,13 @@ function _spkStartRec() {
     });
     if (matched) bestScore = Math.max(bestScore, 85);
 
+    const isCorrect = bestScore >= 60;
+    const displayResult = isCorrect ? card.hz : first;
+
     if (bestScore >= 80) {
-      _spkShowFb("ok", `✓ Bagus! ${bestScore}% Tepat Sekali!\n"${first}"`);
+      _spkShowFb("ok", `✓ Bagus! ${bestScore}% Tepat Sekali!\n"${displayResult}"`);
     } else if (bestScore >= 60) {
-      _spkShowFb("warn", `${bestScore}% — Hampir Sesuai\n"${first}"`);
+      _spkShowFb("warn", `${bestScore}% — Hampir Sesuai\n"${displayResult}"`);
     } else {
       _spkShowFb("err", `${bestScore}% — HUH WKWK?!\n"${first}"`);
     }
@@ -155,8 +158,9 @@ function _spkStopRec() {
 ════════════════════════════════════════════════════ */
 function _normalizeChinese(str) {
   if (!str) return "";
+  // Menghapus spasi, koma, titik, tanda tanya, tanda seru, dan tanda baca Mandarin lainnya
   return str
-    .replace(/[，,、。．？!！；;：""''「」『』【】（）()·\s]/g, "")
+    .replace(/[，,、。．？?！!；;：:＂"＇'「」『』【】（）()〈〉《》〔〕［］｛｝·\s]/g, "")
     .trim();
 }
 
@@ -191,8 +195,9 @@ function _spkSimilarity(a, b) {
 
 function _spkMatch(transcript, card) {
   if (!card) return false;
-  const t = transcript.toLowerCase().replace(/\s+/g, "");
-  const hz = card.hz;
+  // Normalisasi transkrip dan target Hanzi
+  const t = _normalizeChinese(transcript.toLowerCase());
+  const hz = _normalizeChinese(card.hz);
   const py = card.py;
 
   /* Lapis 1: cocok hanzi PERSIS */
@@ -206,6 +211,8 @@ function _spkMatch(transcript, card) {
   /* Lapis 3: cocok pinyin — minimum 75% karakter
      — gunakan _stripTones() dari utils.js */
   const pyPlain = _stripTones(py).replace(/\s+/g, "");
+  // Catatan: tLatin di sini tetap Hanzi jika SpeechRecognition mengembalikan Hanzi,
+  // sehingga pencocokan pinyin ini hanya efektif jika SpeechRecognition mengembalikan Latin.
   const tLatin = _stripTones(t);
 
   if (tLatin.length >= 2 && pyPlain.includes(tLatin)) {

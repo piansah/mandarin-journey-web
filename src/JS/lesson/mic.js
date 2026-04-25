@@ -20,10 +20,20 @@ export function toggleLessonMic() {
 
 function _lessonFallbackSimilarity(a, b) {
   if (!a || !b) return 0;
-  a = a.replace(/\s/g, "");
-  b = b.replace(/\s/g, "");
+  // Normalisasi sederhana: hapus spasi dan tanda baca umum
+  const norm = (s) =>
+    s
+      .toLowerCase()
+      .replace(
+        /[，,、。．？?！!；;：:＂"＇'「」『』【】（）()〈〉《》〔〕［］｛｝·\s]/g,
+        "",
+      )
+      .trim();
+  a = norm(a);
+  b = norm(b);
   if (a === b) return 100;
   const maxLen = Math.max(a.length, b.length);
+  if (maxLen === 0) return 0;
   let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
   const curr = new Array(b.length + 1);
   for (let i = 1; i <= a.length; i++) {
@@ -117,22 +127,25 @@ function _startLessonMic() {
       if (sc > bestScore) bestScore = sc;
     });
 
+    const isCorrect = bestScore >= 55;
+    // Gunakan teks target jika benar/hampir benar agar tampilan rapi
+    const displayResult = isCorrect ? hz : first;
+
     if (bestScore >= 80)
-      _setLessonSpkFb("ok", `✓ Bagus! ${bestScore}% — "${first}"`);
+      _setLessonSpkFb("ok", `✓ Bagus! ${bestScore}% — "${displayResult}"`);
     else if (bestScore >= 55)
-      _setLessonSpkFb("warn", `${bestScore}% — Hampir! "${first}"`);
+      _setLessonSpkFb("warn", `${bestScore}% — Hampir! "${displayResult}"`);
     else _setLessonSpkFb("err", `${bestScore}% — Coba lagi? "${first}"`);
 
     lessonState.selectedOption = bestScore;
     lessonState.answered = true;
 
-    const isCorrect = bestScore >= 55;
     const correctHtml = `
       <div class="feedback-answer-box">
-        <div class="fb-hanzi">${q.question.hanzi}</div>
+        <div class="fb-hanzi">${hz}</div>
         <div class="fb-pinyin">${q.question.pinyin}</div>
         <div class="fb-meaning">${q.question.meaning}</div>
-        <div style="font-size:12px;margin-top:6px;color:var(--dim);">${bestScore}% — "${first}"</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--dim);">${bestScore}% — "${displayResult}"</div>
       </div>`;
     showFeedback(isCorrect, correctHtml);
 
