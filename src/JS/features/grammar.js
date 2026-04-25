@@ -445,9 +445,12 @@ export function renderGramSoal(restoredWords) {
       const explanationHtml = q.explanation
         ? `<div class="gram-result-explanation">${q.explanation}</div>`
         : "";
-      resultEl.innerHTML = `<div class="gram-result-main">${mainText}</div>${explanationHtml}`;
-    }
-  } else if (resultEl) {
+      resultEl.innerHTML = `<div class="gram-result-main" onclick="window.gramPlayCurrent()" style="cursor:pointer;">
+          <span>${mainText}</span>
+        </div>${explanationHtml}`;
+      }
+      }
+ else if (resultEl) {
     resultEl.className = "gram-result";
     resultEl.innerHTML = "";
   }
@@ -558,8 +561,13 @@ export function gramAddWord(idx, word, pinyin, el) {
 }
 
 export function gramRemoveWord(ansIdx) {
-  if (gramChecked) return;
   const item = gramAnswer[ansIdx];
+  if (!item) return;
+
+  // Selalu putar suara untuk validasi
+  speakMandarin(item.word, null, true);
+
+  if (gramChecked) return;
   gramChipUsed[item.idx] = false;
   gramAnswer.splice(ansIdx, 1);
 
@@ -605,7 +613,9 @@ export function gramCheck() {
     gramCorrect++;
     if (resultEl) {
       resultEl.className = "gram-result correct";
-      resultEl.innerHTML = `<div class="gram-result-main">✓ Benar! ${q.correct_order.join("")} — ${q.translation}</div>${_explanationHtml}`;
+      resultEl.innerHTML = `<div class="gram-result-main" onclick="window.gramPlayCurrent()" style="cursor:pointer;">
+          <span>✓ Benar! ${q.correct_order.join("")} — ${q.translation}</span>
+        </div>${_explanationHtml}`;
     }
     setTimeout(() => speakMandarin(q.correct_order.join(""), null, true), 300);
   } else {
@@ -615,7 +625,9 @@ export function gramCheck() {
     }
     if (resultEl) {
       resultEl.className = "gram-result wrong";
-      resultEl.innerHTML = `<div class="gram-result-main">✗ Belum tepat. Urutan benar: ${q.correct_order.join("")}</div>${_explanationHtml}`;
+      resultEl.innerHTML = `<div class="gram-result-main" onclick="window.gramPlayCurrent()" style="cursor:pointer;">
+          <span>✗ Belum tepat. Urutan benar: ${q.correct_order.join("")}</span>
+        </div>${_explanationHtml}`;
     }
   }
 
@@ -882,6 +894,10 @@ window.gramRemoveWord = gramRemoveWord;
 window.gramCheck = gramCheck;
 window.gramPrev = gramPrev;
 window.gramNext = gramNext;
+window.gramPlayCurrent = () => {
+  const q = gramQuestions[gramIdx];
+  if (q) speakMandarin(q.correct_order.join(""), null, true);
+};
 window.showGramDone = showGramDone;
 window.confirmGramRestart = confirmGramRestart;
 window.gramRestart = gramRestart;
