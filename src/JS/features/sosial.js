@@ -54,7 +54,7 @@ function _calcXPFromRows(rows) {
     } else if (type === "tulis_session") {
       if (score >= 100) xp += XP.TULIS_SELESAI;
     } else if (type === "lesson") {
-      xp += Math.min(score || 0, 100);
+      xp += score || 0;
     }
   });
   return xp;
