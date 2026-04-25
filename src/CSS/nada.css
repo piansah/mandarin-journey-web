@@ -1,0 +1,368 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   NADA.CSS — Latihan Nada Screen
+   ============================================================ */
+
+#nada-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-ui);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.nada-hd {
+  background: var(--sur);
+  border-bottom: 1px solid var(--bdr);
+  padding: 13px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.nada-hd-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.nada-hd-sub {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 1px;
+}
+.nada-counter {
+  margin-left: auto;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.nada-counter-num {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.nada-counter-denom {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
+/* ── Progress ── */
+.nada-prog {
+  height: 3px;
+  background: var(--bdr);
+  flex-shrink: 0;
+}
+.nada-prog-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s;
+}
+
+/* ── Body ── */
+.nada-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 100px;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Card ── */
+.nada-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 18px;
+  padding: 24px;
+  width: 100%;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition:
+    border-color 0.3s,
+    background 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.nada-card:active {
+  transform: scale(0.985);
+}
+.nada-card.correct {
+  border-color: var(--gold);
+  background: rgba(222, 192, 74, 0.04);
+}
+.nada-card.wrong {
+  border-color: var(--red);
+  background: rgba(224, 85, 85, 0.04);
+}
+
+/* ── TTS icon (pojok kanan atas) ── */
+.nada-tts-icon {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 14px;
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.nada-card:active .nada-tts-icon {
+  opacity: 0.7;
+}
+
+.nada-hz {
+  font-family: var(--font-hanzi);
+  font-size: 48px;
+  line-height: 1.1;
+  margin-bottom: 4px;
+  width: 100%;
+  text-align: center;
+  display: block;
+  transition: color 0.25s;
+}
+.nada-hz.placeholder {
+  color: transparent;
+}
+
+/* ? ditaruh di card supaya benar-benar center */
+.nada-card:has(.nada-hz.placeholder)::after {
+  content: "?";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-style: italic;
+  font-size: 72px;
+  color: var(--dim);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* ── Reveal setelah jawab (space di-reserve dari awal agar card tidak resize) ── */
+.nada-py-reveal {
+  font-size: 22px;
+  font-family: var(--font-serif);
+  color: var(--gold);
+  margin-top: 4px;
+  min-height: 26px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.nada-py-reveal.show {
+  opacity: 1;
+}
+
+.nada-arti-reveal {
+  font-size: 13px;
+  color: var(--dim2);
+  margin-top: 2px;
+  min-height: 20px;
+  opacity: 0;
+  transition: opacity 0.3s 0.1s;
+}
+.nada-arti-reveal.show {
+  opacity: 1;
+}
+
+/* ── Legenda ── */
+.nada-legend {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.nada-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--dim2);
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+.nada-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.nada-dot.t1 {
+  background: var(--t1);
+}
+.nada-dot.t2 {
+  background: var(--t2);
+}
+.nada-dot.t3 {
+  background: var(--t3);
+}
+.nada-dot.t4 {
+  background: var(--t4);
+}
+
+/* ── Pilihan Nada ── */
+.nada-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.nada-choice {
+  padding: 16px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--bdr);
+  background: var(--sur);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.nada-choice:hover:not(:disabled) {
+  border-color: rgba(232, 201, 109, 0.4);
+  background: rgba(222, 192, 74, 0.04);
+  transform: translateY(-1px);
+}
+.nada-choice:disabled {
+  cursor: default;
+}
+.nada-choice.correct-ans {
+  background: rgba(232, 201, 109, 0.1);
+  border-color: var(--gold);
+}
+.nada-choice.wrong-ans {
+  background: rgba(224, 85, 85, 0.1);
+  border-color: var(--red);
+}
+
+.nada-choice-num {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+}
+.nada-choice-mark {
+  font-size: 26px;
+  font-family: var(--font-serif);
+  line-height: 1.2;
+}
+.nada-choice-desc {
+  font-size: 11px;
+  color: var(--dim2);
+  text-align: center;
+}
+
+/* ── Feedback ── */
+.nada-feedback {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.nada-feedback.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nada-feedback.ok {
+  background: rgba(222, 192, 74, 0.04);
+  border: 1px solid rgba(222, 215, 74, 0.3);
+  color: var(--gold);
+}
+.nada-feedback.err {
+  background: rgba(224, 85, 85, 0.1);
+  border: 1px solid rgba(224, 85, 85, 0.3);
+  color: var(--red);
+}
+
+/* ── Nav ── */
+.nada-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.nada-next-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  background: var(--gold);
+  color: #000;
+  border: none;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
+}
+.nada-next-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.nada-next-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ── Responsive ── */
+@media (max-width: 360px) {
+  .nada-hz {
+    font-size: 44px;
+  }
+  .nada-choice-mark {
+    font-size: 22px;
+  }
+  .nada-choices {
+    gap: 8px;
+  }
+}
+/* ── Tone Sandhi Note ── */
+.nada-sandhi {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dim2);
+  line-height: 1.6;
+  text-align: center;
+}
+.nada-sandhi b {
+  color: var(--gold);
+  font-weight: 600;
+}
+.nada-sandhi i {
+  color: var(--dim);
+}

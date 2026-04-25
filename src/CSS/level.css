@@ -1,0 +1,310 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   LEVEL.CSS — Gelar, Badge, Unlock Toast
+   ============================================================ */
+
+/* ══════════════════════════════════════════════
+   GELAR LABEL — di samping angka level (stat card)
+══════════════════════════════════════════════ */
+
+#stat-title-label {
+  display: none;
+}
+
+.stat-level-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+#stat-level-title {
+  font-family: var(--font-hanzi);
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(232, 201, 109, 0.35);
+  display: none;
+  cursor: default;
+  line-height: 1;
+}
+
+.sc-gelar-side {
+  font-family: var(--font-hanzi);
+  font-size: 12px;
+  color: var(--gold);
+  opacity: 0.85;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   BADGE ROW — di dashboard
+══════════════════════════════════════════════ */
+
+.badge-sec {
+  margin: 10px 32px 0;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 12px 16px;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+
+body.user-logged-in .badge-sec {
+  display: block;
+}
+
+.badge-sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.badge-sec-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.badge-sec-sub {
+  font-size: 10px;
+  color: var(--dim);
+}
+
+#badge-row-wrap {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.badge-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: calc((100% - 7px * 8) / 9);
+  min-width: 30px;
+  padding: 8px 4px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  cursor: default;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+
+.badge-chip.badge-unlocked {
+  border-color: rgba(232, 201, 109, 0.35);
+  background: rgba(232, 201, 109, 0.06);
+}
+
+.badge-chip.badge-unlocked:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+.badge-chip.badge-locked {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.badge-chip-icon {
+  font-family: var(--font-hanzi);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--dim2);
+}
+
+.badge-chip.badge-unlocked .badge-chip-icon {
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(232, 201, 109, 0.4);
+}
+
+.badge-chip-label {
+  font-size: 8px;
+  color: var(--dim);
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.badge-chip.badge-unlocked .badge-chip-label {
+  color: var(--dim2);
+}
+
+/* ══════════════════════════════════════════════
+   UNLOCK TOAST
+══════════════════════════════════════════════ */
+
+#unlock-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--sur);
+  border: 1px solid rgba(232, 201, 109, 0.5);
+  border-radius: 16px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(232, 201, 109, 0.12) inset;
+  z-index: 9999;
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  max-width: 320px;
+  width: calc(100% - 48px);
+}
+
+#unlock-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.unlock-toast-icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 8px rgba(232, 201, 109, 0.4));
+}
+
+.unlock-toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.unlock-toast-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.unlock-toast-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.unlock-toast-desc {
+  font-size: 11px;
+  color: var(--dim2);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══════════════════════════════════════════════
+   SCROLL LOCK
+══════════════════════════════════════════════ */
+
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  touch-action: none;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .badge-sec {
+    margin: 10px 16px 0;
+  }
+  .badge-chip {
+    width: calc((100% - 7px * 8) / 9);
+    min-width: 28px;
+    padding: 7px 3px 5px;
+  }
+  .badge-chip-icon {
+    font-size: 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   USER PANEL V2 — Profile Modal
+══════════════════════════════════════════════ */
+
+.user-panel-v2 {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.upv2-header {
+  background: transparent;
+  border-bottom: 1px solid var(--bdr);
+  padding: 28px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.upv2-avatar-ring {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  padding: 3px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  object-fit: cover;
+}
+
+.profile-avatar-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--sur2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.upv2-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1.2;
+}
+
+.upv2-email {
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 2px;
+}

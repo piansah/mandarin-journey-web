@@ -1,0 +1,64 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   UTILS-SCREEN-ANIM.CSS
+   CSS pendamping untuk utils-screen-anim.js.
+
+   PENTING:
+   - File ini MENGGANTIKAN semua @keyframes fadeIn / slideUp / slideOut
+     yang ada di lesson.css dan file CSS lain.
+   - Hapus duplikat dari lesson.css (lihat PATCH_lesson.css.md).
+   - Tidak ada selector yang terikat pada layar tertentu —
+     semua bersifat utility / reusable.
+   ============================================================ */
+
+/* ── screen-exit-fade — kelas tambahan untuk animasi keluar manual ── */
+.screen-exit-fade {
+  animation: _sa-slide-out 0.28s ease forwards;
+  pointer-events: none;
+}
+
+/* ── Modal / overlay masuk ── */
+.screen-modal-enter {
+  animation: _sa-fade-in 0.18s ease forwards;
+}
+
+.screen-modal-card-enter {
+  animation: _sa-pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Keyframes — semua pakai prefix _sa- agar tidak bertabrakan ── */
+@keyframes _sa-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes _sa-slide-up {
+  from { opacity: 0; transform: translateY(48px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes _sa-slide-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(24px); }
+}
+
+@keyframes _sa-pop-in {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes _sa-slide-left {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes _sa-slide-right {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Kelas utilitas opsional (jika ingin pakai CSS class, bukan JS) ── */
+.sa-slide-up   { animation: _sa-slide-up   0.38s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.sa-fade-in    { animation: _sa-fade-in    0.26s ease forwards; }
+.sa-pop-in     { animation: _sa-pop-in     0.34s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.sa-slide-left { animation: _sa-slide-left 0.32s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }

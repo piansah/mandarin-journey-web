@@ -1,0 +1,711 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   CERITA.CSS — Baca Cerita (Reading Mode)
+   ============================================================ */
+
+/* ── Dashboard menu card accent ───────────────────────────── */
+.mc-cerita::before {
+  background: radial-gradient(
+    circle at 0% 0%,
+    rgba(139, 92, 246, 0.12),
+    transparent 70%
+  );
+}
+
+/* ── Reading Screen Layout ─────────────────────────────────── */
+#cerita-screen {
+  display: none;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+#cerita-screen.active {
+  display: flex;
+}
+
+/* ── Header — konsisten dengan quiz/kalimat/hanzi ───────────── */
+.cerita-hd {
+  background: var(--sur);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 75px;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.cerita-hd h1 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.cerita-hd p {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 1px;
+}
+.cerita-title-zh {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: 1px;
+  margin-top: 1px;
+}
+
+/* ── Controls (kanan atas) ──────────────────────────────────── */
+.cerita-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cerita-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  padding: 5px 9px;
+}
+
+.cerita-ctrl-label {
+  font-size: 11px;
+  color: var(--dim2);
+}
+
+.cerita-ctrl-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt);
+  min-width: 28px;
+  text-align: center;
+}
+
+.cerita-btn {
+  background: none;
+  border: 1px solid var(--bdr);
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--txt);
+  font-family: var(--font-ui);
+  transition: background 0.15s;
+}
+.cerita-btn:hover {
+  background: var(--sur2);
+}
+
+.cerita-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--gold);
+  border: none;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.cerita-play-btn:hover {
+  opacity: 0.85;
+}
+
+/* btn-back sudah didefinisikan di layers.css, override posisi */
+.cerita-hd .btn-back {
+  margin-left: 4px;
+  order: unset;
+}
+
+/* ── Progress Bar (tipis di bawah header) ───────────────────── */
+.cerita-progress-bar {
+  height: 3px;
+  background: var(--bdr);
+  flex-shrink: 0;
+}
+.cerita-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s;
+}
+
+/* ── Scroll Container ────────────────────────────────────────── */
+.cerita-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px 20px;
+  scroll-behavior: smooth;
+}
+
+.cerita-chapter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ── Paragraf Teks ───────────────────────────────────────────── */
+.cerita-body {
+  font-family: var(--font-hanzi);
+}
+.cerita-para {
+  line-height: 2.1;
+  color: var(--txt);
+  margin-bottom: 1.8rem;
+  font-size: 22px;
+  transition: font-size 0.2s;
+}
+.cerita-para:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Kata Highlight ──────────────────────────────────────────── */
+.cerita-hl {
+  background: rgba(232, 201, 109, 0.12);
+  color: var(--txt);
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  transition: background 0.15s;
+}
+.cerita-hl:hover {
+  background: rgba(232, 201, 109, 0.22);
+}
+
+/* ── Popup Pinyin & Arti ─────────────────────────────────────── */
+.cerita-popup {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 110%;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  padding: 7px 11px;
+  z-index: 100;
+  min-width: 120px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.cerita-py {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.cerita-ar {
+  display: block;
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 2px;
+}
+
+/* ── Bottom Bar ──────────────────────────────────────────────── */
+.cerita-bottombar {
+  padding: 10px 16px;
+  background: var(--sur);
+  border-top: 1px solid var(--bdr);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Controls di kanan bottom bar */
+.cerita-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Progress badge — jadi tombol reset saat done */
+.cerita-prog-badge {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim2);
+  cursor: default;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+.cerita-prog-badge.done {
+  background: transparent;
+  border-color: var(--gold);
+  color: var(--gold);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.cerita-prog-badge.done:hover {
+  background: var(--gold);
+  color: #000;
+}
+
+/* ── Done badge di item list ─────────────────────────────────── */
+.item-done-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border-radius: 4px;
+  padding: 1px 7px;
+  margin-left: 6px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cerita-hd {
+    padding: 8px 12px;
+  }
+  /* Padding bawah agar konten tidak tertutup fixed bottombar */
+  .cerita-scroll-container {
+    padding: 20px 16px 80px;
+  }
+  .cerita-para {
+    font-size: 20px;
+  }
+  /* Tampilkan ctrl-group dengan nilai tengah */
+  .cerita-ctrl-group {
+    display: flex;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .cerita-ctrl-val {
+    display: inline-block;
+    min-width: 24px;
+    font-size: 11px;
+  }
+  .cerita-btn {
+    padding: 4px 7px;
+    font-size: 12px;
+  }
+  /* Play button di mobile: hanya icon, tanpa teks */
+  .cerita-play-btn .play-label {
+    display: none;
+  }
+  .cerita-play-btn {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+  /* Bottom bar: fixed di bawah layar agar tidak hilang saat scroll */
+  .cerita-bottombar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    z-index: 50;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+/* ── Speak Buttons (TTS) ── */
+.cerita-speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  vertical-align: middle;
+  margin-left: 6px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.cerita-speak-btn:hover {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.1);
+}
+.cerita-popup-speak {
+  display: block;
+  margin-top: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cerita-popup-speak:hover {
+  opacity: 1;
+}
+
+/* ── Retry Confirm Modal — shared dengan grammar ────────────── */
+/* Pindahan dari inline style di index.html supaya teks bisa di-override via JS */
+.retry-confirm-warning {
+  background: rgba(232, 201, 109, 0.08);
+  border: 1px solid rgba(232, 201, 109, 0.25);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+/* ============================================================
+   CERITA — COMPREHENSION QUIZ (Uji Pemahaman)
+   ============================================================ */
+
+/* ── Tombol trigger di bawah cerita ── */
+.cerita-quiz-trigger {
+  padding: 12px 0 32px;
+}
+.cerita-quiz-divider {
+  height: 1px;
+  background: var(--bdr);
+  margin-bottom: 20px;
+}
+.cerita-quiz-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 201, 109, 0.35);
+  background: rgba(232, 201, 109, 0.06);
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cerita-quiz-btn:hover {
+  background: rgba(232, 201, 109, 0.12);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.cerita-quiz-btn:active {
+  transform: scale(0.98);
+}
+.cerita-quiz-btn-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.cerita-quiz-btn-sub {
+  font-size: 11px;
+  color: var(--dim2);
+  font-weight: 400;
+}
+
+/* ── Panel container ── */
+.cerita-cq-panel {
+  margin: 0 0 40px;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.cq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 0;
+}
+.cq-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(232, 201, 109, 0.1);
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.25);
+  border-radius: 20px;
+  padding: 3px 12px;
+  letter-spacing: 0.2px;
+}
+.cq-counter {
+  font-size: 12px;
+  color: var(--dim2);
+  font-weight: 500;
+}
+
+/* ── Progress bar ── */
+.cq-prog {
+  height: 3px;
+  background: var(--bdr);
+  margin: 12px 18px 0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cq-prog-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ── Question ── */
+.cq-qnum {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+  padding: 14px 18px 4px;
+  text-transform: uppercase;
+}
+.cq-qtext {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--txt);
+  line-height: 1.55;
+  padding: 0 18px 14px;
+}
+
+/* ── Options ── */
+.cq-opts {
+  padding: 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cq-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  color: var(--txt);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  width: 100%;
+}
+.cq-opt:hover:not(:disabled) {
+  border-color: rgba(232, 201, 109, 0.4);
+  background: rgba(232, 201, 109, 0.05);
+  color: var(--gold);
+}
+.cq-opt:disabled {
+  cursor: default;
+}
+.cq-opt-lbl {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--dim2);
+}
+.cq-opt--correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+.cq-opt--correct .cq-opt-lbl {
+  background: var(--ok);
+  color: #fff;
+}
+.cq-opt--wrong {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+.cq-opt--wrong .cq-opt-lbl {
+  background: var(--bad);
+  color: #fff;
+}
+
+/* ── Feedback ── */
+.cq-feedback {
+  margin: 12px 18px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  display: none;
+}
+.cq-feedback--ok {
+  display: block;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  color: #4ade80;
+}
+.cq-feedback--err {
+  display: block;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: #f87171;
+}
+
+/* ── Nav ── */
+.cq-nav {
+  padding: 14px 18px 18px;
+}
+.cq-next-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--gold);
+  color: #000;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
+}
+.cq-next-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.cq-next-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ── Loading / Error ── */
+.cq-loading {
+  padding: 28px 18px;
+  font-size: 13px;
+  color: var(--dim2);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.cq-error {
+  padding: 20px 18px;
+  font-size: 13px;
+  color: #f87171;
+  text-align: center;
+}
+
+/* ── Done screen ── */
+.cq-done {
+  padding: 24px 18px 20px;
+  text-align: center;
+}
+.cq-done-emoji {
+  font-size: 40px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.cq-done-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.cq-done-sub {
+  font-size: 13px;
+  color: var(--dim2);
+  margin-bottom: 18px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .cerita-quiz-btn {
+    max-width: 100%;
+  }
+  .cq-qtext {
+    font-size: 14px;
+  }
+  .cq-opt {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+}
+
+/* ── Done chips ── */
+.cq-chips {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.cq-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 10px 18px;
+  min-width: 64px;
+}
+.cq-chip--ok { border-color: rgba(74,222,128,0.3); }
+.cq-chip--err { border-color: rgba(248,113,113,0.3); }
+.cq-chip--pct { border-color: rgba(232,201,109,0.3); }
+.cq-chip-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--txt);
+}
+.cq-chip--ok .cq-chip-num { color: #4ade80; }
+.cq-chip--err .cq-chip-num { color: #f87171; }
+.cq-chip--pct .cq-chip-num { color: var(--gold); }
+.cq-chip-lbl {
+  font-size: 10px;
+  color: var(--dim2);
+  font-weight: 500;
+}
+
+/* ── Done actions ── */
+.cq-done-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.cq-done-btn {
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  color: var(--txt);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cq-done-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}

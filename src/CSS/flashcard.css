@@ -1,0 +1,374 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   FLASHCARD.CSS — Flashcard Screen, Swipe, Kosakata List
+   ============================================================ */
+
+#fc-screen {
+  background: var(--bg);
+  height: 100dvh;
+  min-height: unset;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* ── Flashcard Header ── */
+.fc-hd {
+  background: var(--sur);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+}
+.fc-hd h1 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.fc-hd p {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 1px;
+}
+
+/* ── Progress Bar ── */
+.fc-prog {
+  height: 3px;
+  background: var(--bdr);
+  flex-shrink: 0;
+}
+.fc-prog-fill {
+  height: 100%;
+  background: var(--gold);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* ── FC Wrapper ── */
+.fc-wrap {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 20px 12px;
+  box-sizing: border-box;
+  display: flex; /* tambah */
+  flex-direction: column; /* tambah */
+  flex: 1; /* tambah */
+  min-height: 0; /* tambah */
+  overflow: hidden; /* tambah */
+}
+
+.fc-counter {
+  display: none;
+}
+
+/* ── Card Wrap & Perspective ── */
+.fc-card-wrap {
+  perspective: 800px;
+  flex: 1;
+  min-height: 0;
+  max-height: 480px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  position: relative;
+}
+
+/* ── Card ── */
+.fc-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+.fc-card.flipped-once {
+  transform: rotateY(180deg);
+}
+.fc-card.flipped-twice {
+  transform: rotateY(360deg);
+}
+.fc-card.is-dragging {
+  transition: none !important;
+  cursor: grabbing;
+}
+
+/* ── Card Faces ── */
+.fc-front,
+.fc-back1,
+.fc-back2 {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fc-front {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+}
+.fc-back1 {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  transform: rotateY(180deg);
+}
+.fc-back2 {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  transform: rotateY(360deg);
+}
+
+/* ── Card Content ── */
+.fc-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: clamp(40px, 12vw, 64px);
+  color: var(--txt);
+  line-height: 1;
+  text-align: center;
+  word-break: keep-all;
+}
+.fc-hint {
+  font-size: 24px;
+  color: var(--dim);
+  margin-top: 6px;
+}
+.fc-pinyin-big {
+  font-size: 36px;
+  font-family: var(--font-serif);
+  color: var(--gold);
+}
+.fc-arti {
+  font-size: 18px;
+  color: var(--gold);
+  font-weight: 600;
+  text-align: center;
+}
+.fc-hz-small {
+  font-size: 32px;
+  font-family: var(--font-hanzi);
+  color: var(--dim2);
+}
+
+/* ── Swipe Overlays ── */
+.fc-swipe-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  z-index: 20;
+}
+.fc-swipe-overlay.ov-right {
+  background: rgba(26, 122, 74, 0.18);
+  color: #4ade80;
+  border: 2px solid rgba(74, 222, 128, 0.35);
+}
+.fc-swipe-overlay.ov-left {
+  background: rgba(192, 57, 43, 0.18);
+  color: #f87171;
+  border: 2px solid rgba(248, 113, 113, 0.35);
+}
+
+/* ── Swipe Hint ── */
+.fc-swipe-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+/* ── Swipe Animations ── */
+@keyframes fcSwipeOut {
+  to {
+    transform: translateX(var(--fc-tx)) rotate(var(--fc-rot));
+    opacity: 0;
+  }
+}
+@keyframes fcSwipeIn {
+  from {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes fcFlip {
+  from {
+    transform: rotateY(0);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+/* ── FC Nav (hidden) ── */
+.fc-nav {
+  display: none !important;
+}
+.fc-nav-btn {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: var(--txt);
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+}
+.fc-nav-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.fc-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ── Speak Button (TTS) ── */
+.fc-speak-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+.fc-speak-btn:hover {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.1);
+}
+
+/* ── Shuffle Tag ── */
+.fc-shuffle-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 20px;
+}
+
+/* ── Kosakata List (layer-fc personal) ── */
+.vok-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+.vok-card:hover {
+  border-color: rgba(232, 201, 109, 0.3);
+}
+.vok-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 26px;
+  color: var(--txt);
+  min-width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.vok-info {
+  flex: 1;
+  min-width: 0;
+}
+.vok-pinyin {
+  font-size: 12px;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 2px;
+}
+.vok-arti {
+  font-size: 13px;
+  color: var(--txt);
+  font-weight: 500;
+}
+.vok-catatan {
+  font-size: 11px;
+  color: var(--dim2);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vok-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.vok-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.vok-btn.edit:hover {
+  background: rgba(232, 201, 109, 0.12);
+  border-color: var(--gold);
+}
+.vok-btn.del:hover {
+  background: rgba(192, 57, 43, 0.12);
+  border-color: rgba(192, 57, 43, 0.5);
+  color: #f87171;
+}
+.vok-loading {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--dim);
+  font-size: 13px;
+}

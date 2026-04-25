@@ -1,0 +1,1330 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   LESSON.CSS — v6: vocab intro fixes
+   - FIX: padding-top vocab screen agar tidak terpotong progress bar
+   - FIX: action bar hidden saat vocab via CSS :has()
+   - FIX: hapus vocab-actions (pakai lessonBtnCek)
+   - FIX: hapus vocab-speaker-btn
+   - NEW: lessonVocabSkipHint di atas tombol
+   ============================================================ */
+
+/* ── Layout utama ── */
+/* petualangan.css atau lesson.css */
+#lesson-screen {
+  background: var(--bg);
+  position: fixed; /* ← tambah ini */
+  inset: 0; /* ← cover full viewport */
+  z-index: 50; /* ← di atas petualangan-screen */
+  overflow-y: auto;
+}
+
+/* Sembunyikan saat tidak active */
+#lesson-screen:not(.active) {
+  display: none !important;
+}
+
+.lesson-screen-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-screen {
+  display: none;
+  flex: 1;
+}
+
+.lesson-screen.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Question wrap ── */
+.lesson-question-wrap {
+  flex: 1;
+  padding: 0px 24px 120px;
+}
+
+/* ── Type badge ── */
+.lesson-type {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 28px;
+  text-align: center;
+  display: none;
+  opacity: 0.6;
+}
+
+/* ── Question header ── */
+.lesson-question-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  position: relative;
+  cursor: pointer;
+}
+
+.lesson-question-header:active .hanzi-big {
+  opacity: 0.7;
+}
+
+.lesson-progress-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Review badge ── */
+.lesson-review-badge {
+  position: fixed;
+  top: clamp(80px, 10dvh, 120px);
+  left: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dim);
+  padding: 4px 0;
+  white-space: nowrap;
+  z-index: 199;
+  pointer-events: none;
+}
+
+.hanzi-big {
+  font-family: var(--font-hanzi);
+  font-size: 32px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 10px;
+  line-height: 1.1;
+}
+
+.pinyin {
+  font-size: 14px;
+  color: var(--gold);
+  text-align: center;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.speaking-meaning {
+  font-size: 13px;
+  color: var(--dim);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ── Listen button ── */
+.lesson-listen-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(232, 201, 109, 0.12);
+  border: 1px solid rgba(232, 201, 109, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: var(--gold);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.lesson-listen-btn:active {
+  transform: scale(0.92);
+  background: rgba(232, 201, 109, 0.22);
+}
+
+/* ── Instruction ── */
+.instr {
+  background: var(--sur2);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+  color: var(--dim);
+  margin-bottom: 20px;
+  border-left: 3px solid var(--gold);
+}
+
+/* ══════════════════════════════════════════
+   SEMBUNYIKAN progress + action bar saat loading
+══════════════════════════════════════════ */
+#lesson-screen.active:has(._ll_wrap) .lesson-progress-top,
+#lesson-screen.active:has(._ll_wrap) .lesson-action-bar {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ══════════════════════════════════════════
+   VOCAB INTRO SCREEN
+══════════════════════════════════════════ */
+
+#lesson-screen-vocab {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lesson-vocab-wrap {
+  flex: 1;
+  /* FIX: compensate fixed progress bar + breathing room */
+  padding: clamp(80px, 10dvh, 120px) 20px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Skip hint — di atas tombol cek, hanya vocab idx 0 */
+#lessonVocabSkipHint {
+  display: none;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+  padding-bottom: 8px;
+  cursor: pointer;
+}
+#lessonVocabSkipHint:active {
+  opacity: 0.6;
+}
+
+/* Nav dots */
+.vocab-nav-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.vocab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sur2);
+  transition: all 0.25s;
+}
+
+.vocab-dot.active {
+  width: 20px;
+  border-radius: 3px;
+  background: var(--gold);
+}
+
+.vocab-dot.done {
+  background: rgba(232, 201, 109, 0.35);
+}
+
+/* Kartu utama vocab — tap seluruh kartu untuk TTS */
+.vocab-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 28px 20px 20px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: opacity 0.15s;
+  /* Subtle hint bahwa kartu bisa di-tap */
+  user-select: none;
+}
+
+.vocab-card:active {
+  opacity: 0.8;
+  transform: scale(0.99);
+}
+
+/* Tap hint icon di pojok kanan atas */
+.vocab-card::after {
+  content: "🔊";
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 16px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.vocab-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--txt);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.vocab-pinyin {
+  font-size: 16px;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.vocab-meaning {
+  font-size: 14px;
+  color: var(--dim);
+  margin-bottom: 16px;
+}
+
+/* Detail chips */
+.vocab-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.vocab-chip {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.vocab-chip-label {
+  font-size: 10px;
+  color: var(--dim);
+}
+
+.vocab-chip-val {
+  font-size: 12px;
+  color: var(--txt);
+  font-weight: 600;
+}
+
+/* Section label */
+.vocab-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+/* Contoh kalimat */
+.vocab-example-box {
+  background: var(--sur2);
+  border-left: 3px solid rgba(232, 201, 109, 0.5);
+  border-radius: 0 12px 12px 0;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.vocab-ex-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 16px;
+  color: var(--txt);
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+.vocab-highlight {
+  background: none;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.vocab-ex-pinyin {
+  font-size: 11px;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 2px;
+}
+
+.vocab-ex-meaning {
+  font-size: 11px;
+  color: var(--dim);
+}
+
+/* Tips hafalan */
+.vocab-tip-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 4px;
+}
+
+.vocab-tip-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.vocab-tip-text {
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+.vocab-tip-text strong {
+  color: var(--txt);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════
+   OPTIONS (MC & FILL)
+══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   MC QUOTE CARD
+══════════════════════════════════════════ */
+.mc-quote-card {
+  background: var(--sur2);
+  border-radius: 16px;
+  padding: 32px 20px 24px;
+  position: relative;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.mc-quote-card:active {
+  border: 1.5px solid var(--gold);
+}
+
+.mc-quote-mark {
+  position: absolute;
+  font-size: 64px;
+  line-height: 1;
+  color: var(--bdr);
+  font-family: Georgia, serif;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+}
+
+.mc-quote-mark--open {
+  top: 8px;
+  left: 14px;
+}
+
+.mc-quote-mark--close {
+  bottom: -20px;
+  right: 14px;
+}
+
+.mc-quote-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt);
+  text-align: center;
+  z-index: 1;
+  padding: 0 12px;
+  line-height: 1.4;
+}
+
+.mc-quote-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--txt);
+  text-align: center;
+  z-index: 1;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.mc-quote-pinyin {
+  font-size: 15px;
+  color: var(--gold);
+  font-style: italic;
+  z-index: 1;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.option:active {
+  transform: scale(0.98);
+}
+
+.option.selected {
+  border-color: var(--dim);
+  background: rgba(128, 109, 232, 0.1);
+}
+
+.option.correct {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.15);
+}
+
+.option.wrong {
+  border-color: var(--red);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.opt-letter {
+  width: 32px;
+  height: 32px;
+  background: var(--bdr);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.option.correct .opt-letter {
+  background: var(--gold);
+  color: #000;
+}
+.option.wrong .opt-letter {
+  background: var(--red);
+  color: #fff;
+}
+.option.selected .opt-letter {
+  background: var(--dim);
+  color: #000;
+}
+
+.opt-content {
+  flex: 1;
+}
+
+.opt-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.opt-pinyin {
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.opt-meaning {
+  font-size: 13px;
+  font-family: var(--font-ui);
+  color: var(--txt);
+}
+
+/* ══════════════════════════════════════════
+   TRUE / FALSE
+══════════════════════════════════════════ */
+.tf-statement-box {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tf-statement-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tf-statement-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1.4;
+}
+
+.tf-options {
+  display: flex;
+  gap: 12px;
+}
+
+.tf-opt {
+  flex: 1;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tf-opt:active {
+  transform: scale(0.97);
+}
+
+.tf-opt-icon {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tf-opt-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+.tf-opt--true .tf-opt-icon {
+  color: var(--gold);
+}
+.tf-opt--false .tf-opt-icon {
+  color: var(--red);
+}
+
+.tf-opt.selected {
+  border-color: var(--dim);
+  background: rgba(102, 102, 128, 0.1);
+}
+
+.tf-opt--true.correct,
+.tf-opt--false.correct {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.15);
+}
+
+.tf-opt--true.wrong,
+.tf-opt--false.wrong {
+  border-color: var(--red);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* ══════════════════════════════════════════
+   ARRANGE WORDS
+══════════════════════════════════════════ */
+.arrange-drop {
+  min-height: 70px;
+  background: var(--sur2);
+  border: 2px dashed var(--bdr);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.arrange-drop--meaning {
+  min-height: 60px;
+}
+
+.placeholder {
+  color: var(--dim);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.word {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.word:active {
+  transform: scale(0.95);
+}
+.word.placed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.word-hz {
+  font-family: var(--font-hanzi);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.word-py {
+  font-size: 10px;
+  color: var(--gold);
+}
+
+.word--meaning {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: flex;
+  align-items: center;
+}
+
+.word--meaning:active {
+  transform: scale(0.95);
+}
+.word--meaning.placed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.word-meaning-label {
+  font-size: 14px;
+  color: var(--txt);
+  font-weight: 600;
+}
+
+.placed-word {
+  background: rgba(232, 201, 109, 0.15);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.placed-word.correct {
+  background: rgba(232, 201, 109, 0.15);
+  border-color: var(--gold);
+}
+.placed-word.wrong {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--red);
+}
+
+.placed-hz {
+  font-family: var(--font-hanzi);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.chip-pinyin {
+  font-size: 10px;
+  font-weight: normal;
+  color: var(--gold);
+}
+
+.placed-word--meaning {
+  background: rgba(232, 201, 109, 0.15);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.placed-word--meaning.correct {
+  background: rgba(232, 201, 109, 0.15);
+  border-color: var(--gold);
+}
+.placed-word--meaning.wrong {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--red);
+}
+
+.placed-meaning-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--txt);
+}
+
+/* ══════════════════════════════════════════
+   MATCH
+══════════════════════════════════════════ */
+.match-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: 10px;
+}
+
+.match-item {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 72px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.hanzi-item {
+  font-family: var(--font-hanzi);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.match-pinyin {
+  font-size: 12px;
+  font-family: var(--font-ui);
+  color: var(--gold);
+  display: block;
+  margin-top: 3px;
+}
+
+.match-meaning-text {
+  font-size: 14px;
+  color: var(--txt);
+  line-height: 1.3;
+}
+
+.match-item.selected {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.1);
+}
+
+.match-item.matched {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.15);
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.match-item.wrong {
+  border-color: var(--red);
+  background: rgba(248, 113, 113, 0.1);
+  animation: shake 0.3s;
+}
+
+/* ══════════════════════════════════════════
+   FILL
+══════════════════════════════════════════ */
+.fill-sentence {
+  font-family: var(--font-hanzi);
+  font-size: 24px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.blank {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 3px solid var(--gold);
+  color: var(--gold);
+  text-align: center;
+  margin: 0 4px;
+}
+
+.hint-pinyin {
+  font-size: 13px;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.hint-meaning {
+  font-size: 12px;
+  color: var(--dim);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ══════════════════════════════════════════
+   DICTATION
+══════════════════════════════════════════ */
+.dictation-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 40px;
+}
+
+.dictation-wave span {
+  display: block;
+  width: 4px;
+  background: var(--gold);
+  border-radius: 2px;
+  opacity: 0.35;
+  flex-shrink: 0;
+  transition:
+    height 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.dictation-wave--playing span {
+  opacity: 0.9;
+  animation: dictation-bounce 0.6s ease-in-out infinite alternate;
+}
+
+.dictation-wave--playing span:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+.dictation-wave--playing span:nth-child(3n) {
+  animation-delay: 0.2s;
+}
+
+@keyframes dictation-bounce {
+  from {
+    transform: scaleY(0.4);
+  }
+  to {
+    transform: scaleY(1.2);
+  }
+}
+
+/* ══════════════════════════════════════════
+   SPEAKING
+══════════════════════════════════════════ */
+.speak-btn {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 40px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+  cursor: pointer;
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s;
+}
+
+.speak-btn:active {
+  transform: scale(0.97);
+}
+
+.speak-btn--recording {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+
+.lesson-spk-feedback {
+  margin-top: 14px;
+  font-size: 14px;
+  text-align: center;
+  min-height: 20px;
+  color: var(--dim);
+}
+
+.lesson-spk-fb--ok {
+  color: var(--gold);
+  font-weight: 700;
+}
+.lesson-spk-fb--warn {
+  color: var(--dim);
+  font-weight: 600;
+}
+.lesson-spk-fb--err {
+  color: var(--red);
+}
+.lesson-spk-fb--interim {
+  color: var(--dim);
+  font-style: italic;
+}
+
+/* ══════════════════════════════════════════
+   PROGRESS TOP
+══════════════════════════════════════════ */
+
+.lesson-progress-top,
+.lesson-action-bar,
+.lesson-screen-container,
+.lesson-toast,
+.lesson-combo-banner {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+#lesson-screen.active .lesson-progress-top,
+#lesson-screen.active .lesson-action-bar,
+#lesson-screen.active .lesson-screen-container,
+#lesson-screen.active .lesson-toast,
+#lesson-screen.active .lesson-combo-banner {
+  display: revert !important;
+  visibility: visible !important;
+}
+
+#lesson-screen.active:has(#lesson-screen-result.active) .lesson-progress-top,
+#lesson-screen.active:has(#lesson-screen-result.active) .lesson-action-bar {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+#lesson-screen.active .lesson-progress-top {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  height: auto !important;
+  background: var(--bg);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+}
+
+.lesson-progress-fill-top {
+  flex: 1;
+  height: 8px;
+  background: var(--sur2);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+#lessonProgressFillTop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--gold);
+  border-radius: 40px;
+  transition: width 0.35s ease;
+}
+
+/* ── Streak glow ── */
+#lessonProgressFillTop.streak-3 {
+  background: linear-gradient(90deg, var(--gold), #f97316);
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.55);
+}
+
+#lessonProgressFillTop.streak-5 {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.7);
+  animation: streak-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes streak-pulse {
+  from {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.85);
+  }
+}
+
+.lesson-progress-close {
+  background: none;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.lesson-screen-container {
+  padding-top: clamp(80px, 10dvh, 120px) !important;
+}
+
+#lesson-screen.active:has(#lesson-screen-result.active)
+  .lesson-screen-container {
+  padding-top: 0 !important;
+}
+
+/* ══════════════════════════════════════════
+   ACTION BAR
+   - Selalu tampil saat lesson aktif (termasuk vocab)
+   - Tersembunyi saat result
+══════════════════════════════════════════ */
+#lesson-screen.active .lesson-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 0 20px 28px;
+  background: linear-gradient(to top, var(--bg) 80%, transparent);
+  z-index: 90;
+  isolation: isolate;
+  display: flex !important;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Skip hint di atas tombol dalam action bar */
+#lessonVocabSkipHint {
+  display: none;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+  padding: 0 0 8px;
+  cursor: pointer;
+}
+#lessonVocabSkipHint:active {
+  opacity: 0.6;
+}
+
+.lesson-btn-cek {
+  width: 100%;
+  padding: 16px;
+  border-radius: 40px;
+  border: none;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--sur2);
+  color: var(--dim);
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.lesson-btn-cek.ready {
+  background: var(--gold);
+  color: #0e0e14;
+  pointer-events: auto;
+}
+.lesson-btn-cek.correct-state {
+  background: var(--gold);
+  color: #000;
+  pointer-events: auto;
+}
+.lesson-btn-cek.wrong-state {
+  background: var(--red);
+  color: #fff;
+  pointer-events: auto;
+}
+.lesson-btn-cek:active {
+  transform: scale(0.98);
+}
+
+/* ══════════════════════════════════════════
+   FEEDBACK PANEL
+══════════════════════════════════════════ */
+.lesson-feedback-panel {
+  background: var(--sur);
+  border-radius: 20px 20px 0 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  max-height: 0;
+  padding: 0 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 95;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.lesson-feedback-panel.show {
+  max-height: 220px;
+  padding: 16px 20px 20px;
+  pointer-events: auto;
+  visibility: visible;
+}
+.lesson-feedback-panel.correct {
+  background: rgba(232, 201, 109, 0.15);
+}
+.lesson-feedback-panel.wrong {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.lesson-feedback-status {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.lesson-feedback-panel.correct .lesson-feedback-status {
+  color: var(--gold);
+}
+.lesson-feedback-panel.wrong .lesson-feedback-status {
+  color: var(--red);
+}
+
+.lesson-feedback-answer {
+  font-size: 13px;
+  color: var(--txt);
+}
+
+.feedback-answer-box {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.fb-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.fb-pinyin {
+  font-size: 13px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.fb-meaning {
+  font-size: 12px;
+  color: var(--txt);
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#lesson-screen.active .lesson-toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 40px;
+  padding: 8px 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 200;
+  white-space: nowrap;
+}
+
+.lesson-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════════════════════════════════════════
+   RESULT WRAP
+══════════════════════════════════════════ */
+.lesson-result-wrap {
+  padding: 40px 20px;
+  text-align: center;
+  flex: 1;
+}
+
+/* ══════════════════════════════════════════
+   EXIT MODAL
+══════════════════════════════════════════ */
+.lesson-exit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: _sa-fade-in 0.18s ease;
+}
+
+.lesson-exit-modal .modal-card {
+  background: var(--card, #1e1e2e);
+  border: 1px solid rgba(232, 201, 109, 0.2);
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: _sa-pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-continue-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--txt, #f0f0f0);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-exit-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #f87171;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════
+   KEYFRAMES
+══════════════════════════════════════════ */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes screen-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.screen-exit-fade {
+  animation: screen-out 0.28s ease forwards;
+  pointer-events: none;
+}

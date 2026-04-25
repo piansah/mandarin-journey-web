@@ -1,0 +1,332 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   AVATAR.CSS — Avatar Picker Modal & Card Styles
+   ============================================================ */
+
+/* ── Overlay ── */
+.av-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.av-picker-overlay.active {
+  opacity: 1;
+}
+.av-picker-overlay.active .av-picker-modal {
+  transform: translateY(0);
+}
+
+/* ── Modal ── */
+.av-picker-modal {
+  background: var(--sur);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(40px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  border: 1px solid var(--bdr);
+  border-bottom: none;
+}
+
+/* ── Header ── */
+.av-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+}
+.av-picker-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--txt);
+  font-family: var(--font-display);
+}
+.av-picker-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  color: var(--dim2);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.av-picker-close:hover {
+  background: var(--bdr);
+  color: var(--txt);
+}
+
+/* ── Scrollable body ── */
+.av-picker-body {
+  overflow-y: auto;
+  padding: 14px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.av-picker-body::-webkit-scrollbar {
+  width: 4px;
+}
+.av-picker-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.av-picker-body::-webkit-scrollbar-thumb {
+  background: var(--bdr);
+  border-radius: 2px;
+}
+
+/* ── Tier row ── */
+.av-tier-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.av-tier-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dim2);
+  letter-spacing: 0.04em;
+}
+.av-tier-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Avatar grid ── */
+.av-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* ── Avatar card ── */
+.av-card {
+  background: var(--sur2);
+  border: 1.5px solid var(--bdr);
+  border-radius: 14px;
+  padding: 10px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+  position: relative;
+}
+.av-card.unlocked {
+  cursor: pointer;
+}
+.av-card.unlocked:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+.av-card.active {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.06);
+}
+.av-card.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Card image wrapper ── */
+.av-card-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--sur);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  border: 1.5px solid var(--bdr);
+}
+.av-card.active .av-card-img {
+  border-color: var(--gold);
+}
+.av-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Lock veil ── */
+.av-lock-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 50%;
+}
+.av-lock-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.av-lock-lv {
+  font-size: 9px;
+  color: #ccc;
+  font-weight: 500;
+}
+
+/* ── Active tick ── */
+.av-active-tick {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  background: var(--gold);
+  border-radius: 50%;
+  border: 2px solid var(--sur2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #000;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ── Card text ── */
+.av-card-name {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--txt);
+  text-align: center;
+  line-height: 1.3;
+}
+.av-card-hanzi {
+  font-family: var(--font-hanzi);
+  font-size: 13px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+/* ── Tombol Ganti Avatar di profil modal ── */
+.btn-ganti-avatar {
+  width: 100%;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.35);
+  padding: 8px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+  margin-bottom: 10px;
+}
+.btn-ganti-avatar:hover {
+  background: rgba(232, 201, 109, 0.08);
+  border-color: var(--gold);
+}
+
+/* ── Avatar ring di profil modal ── */
+.upv2-avatar-ring {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  overflow: hidden;
+  margin: 0 auto 10px;
+  background: var(--sur2);
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  position: relative;
+}
+.upv2-avatar-ring:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(232, 201, 109, 0.25);
+}
+.upv2-avatar-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 400px) {
+  .av-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .av-card-img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Upload section */
+.av-upload-section {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.av-upload-btn,
+.av-remove-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: var(--font-ui);
+}
+
+.av-upload-btn {
+  background: var(--gold);
+  color: #000;
+}
+
+.av-remove-btn {
+  background: rgba(224, 85, 85, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(224, 85, 85, 0.3);
+}
+
+.av-upload-btn:hover {
+  opacity: 0.85;
+}
+
+.av-remove-btn:hover {
+  background: rgba(224, 85, 85, 0.25);
+}
+
+.av-divider {
+  height: 1px;
+  background: var(--bdr);
+  margin: 12px 16px;
+}

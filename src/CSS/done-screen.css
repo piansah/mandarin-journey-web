@@ -1,0 +1,243 @@
+/* ============================================================
+   DONE-SCREEN.CSS — Shared Done Screen Component
+   Referensi visual: lesson.js / lesson.css (jangan ubah lesson.css)
+   ============================================================ */
+
+/* ── Wrapper ── */
+.ds-wrap {
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  gap: 0;
+}
+
+/* ── Icon ── */
+.ds-icon-wrap {
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: scale(0.5);
+  animation: ds-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.ds-icon-bg {
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ds-icon-emoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+/* ── Title & Subtitle ── */
+.ds-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--txt);
+  margin-bottom: 6px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 150ms;
+}
+.ds-subtitle {
+  font-size: 14px;
+  color: var(--dim);
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 250ms;
+}
+
+/* ── XP Pill ── */
+.ds-xp-row {
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 350ms;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.ds-xp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid;
+  border-radius: 40px;
+  padding: 5px 20px;
+}
+.ds-xp-icon { font-size: 16px; }
+.ds-xp-text { font-size: 18px; font-weight: 800; }
+.ds-xp-bonus {
+  font-size: 12px;
+  font-weight: 700;
+  animation: ds-pulse 1.2s ease infinite alternate;
+}
+
+/* ── Stats Grid (3 kolom: Benar | Akurasi | Salah) ── */
+.ds-stats {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 450ms;
+}
+.ds-stat-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 16px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ds-stat-card--center { padding-bottom: 12px; }
+.ds-stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+.ds-stat-label {
+  font-size: 11px;
+  color: var(--dim);
+  font-weight: 500;
+}
+
+/* ── Insight / Performa Dots ── */
+.ds-insight {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 16px;
+  width: 100%;
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 550ms;
+}
+.ds-insight-label {
+  font-size: 11px;
+  color: var(--dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.ds-insight-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ds-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  opacity: 0;
+  animation: ds-dot-in 0.3s ease forwards;
+}
+.ds-dot--ok  { background: var(--gold); }
+.ds-dot--err { background: var(--red); }
+
+/* ── Actions ── */
+.ds-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ds-up 0.4s ease forwards;
+  animation-delay: 650ms;
+}
+
+.ds-btn-main {
+  min-width: 160px;
+  padding: 12px 32px;
+  border-radius: 40px;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.ds-btn-main:active { transform: scale(0.97); }
+.ds-btn-sec {
+  min-width: 160px;
+  padding: 13px 32px;
+  border-radius: 40px;
+  border: none;
+  background: var(--gold);
+  color: #0e0e14;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s;
+}
+
+
+
+
+.ds-btn-main,
+.ds-btn-sec {
+  width: 100%;
+  min-width: unset;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* ── Animasi ── */
+@keyframes ds-pop {
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes ds-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ds-dot-in {
+  to { opacity: 1; }
+}
+@keyframes ds-pulse {
+  from { opacity: 0.7; }
+  to   { opacity: 1; }
+}
+
+/* ── Burst Confetti ── */
+.ds-burst {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 300;
+}
+.ds-burst-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  opacity: 0;
+  animation: ds-burst-fly 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes ds-burst-fly {
+  0%   { opacity: 1; transform: translate(-50%,-50%) rotate(var(--angle)) translateY(0); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--angle)) translateY(calc(-1 * var(--dist))); }
+}

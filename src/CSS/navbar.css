@@ -1,0 +1,105 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   NAVBAR.CSS — Bottom Navigation Bar (icon only)
+   ============================================================ */
+
+/* ── Bar utama ── */
+.bottom-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(52px + env(safe-area-inset-bottom, 0px));
+  background: var(--sur);
+  border-top: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 500;
+}
+
+/* ── Item tab ── */
+.bnav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+.bnav-item:active {
+  opacity: 0.6;
+}
+
+/* ── Icon wrapper ── */
+.bnav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* ── SVG default (tidak aktif) ── */
+.bnav-item .bnav-icon svg {
+  stroke: var(--dim);
+  transition: stroke 0.2s;
+}
+.bnav-item .bnav-icon svg rect,
+.bnav-item .bnav-icon svg circle,
+.bnav-item .bnav-icon svg polygon {
+  fill: none;
+  transition: fill 0.2s;
+}
+
+/* ── State aktif ── */
+.bnav-item.active .bnav-icon svg {
+  stroke: var(--gold);
+}
+.bnav-item[data-screen="sosial-screen"].active .bnav-icon svg rect {
+  fill: var(--gold);
+}
+.bnav-item[data-screen="profile-screen"].active .bnav-icon svg circle {
+  fill: var(--gold);
+}
+
+/* ── Active dot indicator ── */
+.bnav-item.active .bnav-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+/* ── Padding konten agar tidak tertutup navbar ── */
+
+#profile-screen .prof-scroll,
+#sosial-screen .sosial-scroll {
+  padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px) + 8px);
+}
+
+/* ── Sembunyikan via JS ── */
+body.navbar-hidden .bottom-navbar {
+  display: none;
+}
+
+/* ── Responsive tablet ── */
+@media (min-width: 480px) {
+  .bottom-navbar {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 1px solid var(--bdr);
+    border-right: 1px solid var(--bdr);
+  }
+}

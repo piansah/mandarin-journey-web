@@ -1,0 +1,18 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   APP-INIT.CSS — Critical styles (dipindah dari inline <style>)
+   ============================================================ */
+
+body:not(.app-ready) .screen {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.app-ready .screen {
+  transition: opacity 0.15s ease;
+}
+
+/* Hanya dashboard, bukan semua screen */
+#dash.screen.active {
+  display: block !important;
+}

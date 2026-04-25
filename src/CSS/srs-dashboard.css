@@ -1,0 +1,131 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   SRS-DASHBOARD.CSS — SRS Kosakata Section (Dashboard)
+   ============================================================ */
+.srs-sec {
+  margin: 10px 32px 0;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.srs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.srs-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.srs-due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(232, 201, 109, 0.12);
+  border: 1px solid rgba(232, 201, 109, 0.28);
+  border-radius: 20px;
+  padding: 2px 9px;
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.srs-due-badge:hover {
+  background: rgba(232, 201, 109, 0.22);
+}
+
+/* 3 angka chips */
+.srs-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.srs-chip {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.srs-chip--mature {
+  border-color: rgba(74, 222, 128, 0.25);
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.srs-chip--due {
+  border-color: rgba(232, 201, 109, 0.25);
+  background: rgba(232, 201, 109, 0.05);
+}
+
+.srs-chip-n {
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.srs-chip--mature .srs-chip-n {
+  color: #4ade80;
+}
+
+.srs-chip-l {
+  font-size: 9px;
+  color: var(--dim2);
+  margin-top: 3px;
+}
+
+/* Progress bar */
+.srs-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.srs-bar-track {
+  height: 4px;
+  background: var(--bdr);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.srs-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, var(--gold));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.srs-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--dim);
+}
+
+/* Hanya tampil saat login */
+body.user-logged-in .srs-sec {
+  display: block !important;
+}
+
+@media (max-width: 640px) {
+  .srs-sec {
+    margin: 10px 16px 0;
+  }
+  .srs-chip-n {
+    font-size: 18px;
+  }
+}

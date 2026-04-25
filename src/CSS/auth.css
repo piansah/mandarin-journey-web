@@ -1,0 +1,889 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   AUTH.CSS — Modals, Auth Forms, Kosakata Personal, Daftar Kata
+   ============================================================ */
+
+/* ── Auth Btn Wrap (hidden) ── */
+.auth-btn-wrap {
+  display: none;
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-wrap {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+}
+.modal {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.modal-sub {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-bottom: 24px;
+}
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--dim2);
+}
+.modal-close:hover {
+  background: rgba(192, 57, 43, 0.2);
+  color: #f87171;
+  border-color: rgba(192, 57, 43, 0.4);
+}
+
+/* ── Form Components ── */
+.form-group {
+  margin-bottom: 16px;
+}
+.form-label {
+  font-size: 11px;
+  color: var(--dim2);
+  margin-bottom: 6px;
+  display: block;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.form-input {
+  width: 100%;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: var(--txt);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus {
+  border-color: var(--gold);
+}
+.form-input::placeholder {
+  color: var(--dim);
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--gold);
+  color: #000;
+  border: none;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Auth Messages ── */
+.auth-msg {
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  margin-bottom: 14px;
+  display: none;
+}
+.auth-msg.err {
+  background: rgba(192, 57, 43, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  display: block;
+}
+.auth-msg.ok {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  display: block;
+}
+
+.auth-toggle {
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 16px;
+}
+.auth-toggle a {
+  color: var(--gold);
+  cursor: pointer;
+}
+.auth-toggle a:hover {
+  text-decoration: underline;
+}
+
+/* ── User Panel (logged-in state) ── */
+.user-panel {
+  text-align: center;
+}
+.user-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--t3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #000;
+  margin: 0 auto 12px;
+}
+.user-email {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+.btn-logout {
+  width: 100%;
+  background: transparent;
+  color: var(--dim2);
+  border: 1px solid var(--bdr);
+  padding: 9px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+}
+.btn-logout:hover {
+  background: rgba(192, 57, 43, 0.15);
+  color: #f87171;
+  border-color: rgba(192, 57, 43, 0.4);
+}
+
+/* ── Google Login Button ── */
+.btn-google {
+  width: 100%;
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: box-shadow 0.2s;
+}
+.btn-google:hover:not(:disabled) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.btn-google:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Add Vok Button ── */
+.btn-add-vok {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.btn-add-vok:hover {
+  opacity: 0.85;
+}
+
+/* ── Login Required State ── */
+.login-logo {
+  font-family: var(--font-hanzi);
+}
+
+.login-sub {
+  font-family: var(--font-hanzi);
+}
+
+.login-required {
+  text-align: center;
+  padding: 60px 24px;
+}
+.login-required-icon {
+  font-size: 44px;
+  margin-bottom: 16px;
+}
+.login-required-txt {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-bottom: 8px;
+}
+.login-required-sub {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-bottom: 24px;
+  line-height: 1.7;
+}
+.btn-login-now {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+}
+
+/* ── Kosvok Toolbar ── */
+.kosvok-toolbar {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--bdr);
+  flex-shrink: 0;
+  background: var(--sur);
+}
+.kosvok-search {
+  flex: 1;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 8px 14px;
+  color: var(--txt);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.kosvok-search:focus {
+  border-color: var(--gold);
+}
+.kosvok-search::placeholder {
+  color: var(--dim);
+}
+.kosvok-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kosvok-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--dim);
+}
+.kosvok-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+.kosvok-empty-txt {
+  font-size: 14px;
+  color: var(--dim2);
+  margin-bottom: 4px;
+}
+.kosvok-empty-sub {
+  font-size: 12px;
+}
+
+/* ── Daftar Kata (Kos) ── */
+.kos-toolbar {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  
+}
+.kos-search {
+  flex: 1;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 8px 14px;
+  color: var(--txt);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.kos-search:focus {
+  border-color: var(--gold);
+}
+.kos-search::placeholder {
+  color: var(--dim);
+}
+.kos-day-select {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 8px 12px;
+  color: var(--txt);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.kos-day-select:focus {
+  border-color: var(--gold);
+}
+.kos-list {
+  padding: 12px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+.kos-item {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 11px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+.kos-item:hover {
+  border-color: rgba(232, 201, 109, 0.3);
+}
+.kos-item.personal {
+  border-left: 3px solid var(--gold);
+}
+.kos-hz {
+  font-family: var(--font-hanzi);
+  font-size: 22px;
+  color: var(--txt);
+  min-width: 48px;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+.kos-info {
+  flex: 1;
+  min-width: 0;
+}
+.kos-py {
+  font-size: 12px;
+  color: var(--gold);
+  font-style: italic;
+  margin-bottom: 2px;
+}
+.kos-arti {
+  font-size: 13px;
+  color: var(--txt);
+  font-weight: 500;
+}
+.kos-contoh {
+  font-size: 11px;
+  color: var(--dim2);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.kos-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.kos-no {
+  font-size: 10px;
+  color: var(--dim);
+  background: var(--sur2);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.kos-day-tag {
+  font-size: 10px;
+  color: var(--gold);
+  background: rgba(232, 201, 109, 0.12);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.kos-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+.kos-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s;
+}
+.kos-btn.edit:hover {
+  background: rgba(232, 201, 109, 0.12);
+  border-color: var(--gold);
+}
+.kos-btn.del {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+}
+.kos-btn.del:hover {
+  background: rgba(192, 57, 43, 0.12);
+  border-color: rgba(192, 57, 43, 0.5);
+  color: #f87171;
+}
+.kos-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--dim);
+}
+.kos-count {
+  font-size: 11px;
+  color: var(--dim2);
+  padding: 8px 20px 4px;
+  flex-shrink: 0;
+}
+
+.btn-kos-fc {
+  flex: 1;
+  background: var(--sur2);
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.4);
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+}
+.btn-kos-fc:hover {
+  background: rgba(232, 201, 109, 0.12);
+}
+.btn-kos-add {
+  flex: 1;
+  background: var(--gold);
+  color: #000;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: opacity 0.2s;
+}
+.btn-kos-add:hover {
+  opacity: 0.85;
+}
+
+/* ── Deck Delete Button ── */
+.kos-deck-del {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  color: var(--dim);
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+  flex-shrink: 0;
+}
+.item-card:hover .kos-deck-del {
+  opacity: 1;
+}
+.kos-deck-del:hover {
+  background: rgba(192, 57, 43, 0.15);
+  color: #f87171;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KOS WORD DETAIL — layer-kos-word
+══════════════════════════════════════════════════════════════ */
+
+.kos-word-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 40px;
+}
+
+/* Hero Card */
+.kwd-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    var(--sur2) 0%,
+    rgba(232, 201, 109, 0.06) 100%
+  );
+  border-bottom: 1px solid var(--bdr);
+  padding: 32px 24px 28px;
+  text-align: center;
+}
+.kwd-hz {
+  font-family: var(--font-hanzi);
+  font-size: 72px;
+  line-height: 1;
+  color: var(--txt);
+  margin-bottom: 12px;
+}
+.kwd-py {
+  font-size: 22px;
+  font-family: var(--font-serif);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.kwd-arti {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.kwd-catatan {
+  font-size: 12px;
+  color: var(--dim2);
+  background: rgba(232, 201, 109, 0.06);
+  border: 1px solid rgba(232, 201, 109, 0.15);
+  border-radius: 8px;
+  padding: 6px 14px;
+  display: inline-block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Section Title */
+.kwd-sec-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 20px 20px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kwd-sec-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--bdr);
+}
+
+/* Example Cards */
+.kwd-example-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 0 16px 10px;
+  transition: border-color 0.15s;
+}
+.kwd-example-card:hover {
+  border-color: rgba(232, 201, 109, 0.3);
+}
+
+.kwd-ex-source {
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.kwd-ex-hz {
+  font-family: var(--font-hanzi);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--txt);
+  margin-bottom: 4px;
+}
+.kwd-ex-py {
+  font-size: 13px;
+  margin-bottom: 5px;
+  line-height: 1.6;
+}
+.kwd-ex-id {
+  font-size: 13px;
+  color: var(--dim2);
+  line-height: 1.5;
+  border-top: 1px solid var(--bdr);
+  padding-top: 6px;
+  margin-top: 4px;
+}
+
+.kwd-empty {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Contoh dot badge on list item */
+.kos-contoh-dot {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* Hover indicator on kos-item */
+.kos-item {
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.kos-item:hover {
+  border-color: rgba(232, 201, 109, 0.35);
+  background: rgba(232, 201, 109, 0.03);
+}
+
+#fc-personal-screen {
+  background: var(--bg);
+}
+
+/* ── Speak Icon (TTS) — pojok kanan atas hero ── */
+.kwd-speak-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--txt);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.kwd-speak-icon:hover {
+  background: rgba(232, 201, 109, 0.12);
+  border-color: rgba(232, 201, 109, 0.35);
+}
+.kwd-speak-icon:active {
+  background: rgba(232, 201, 109, 0.22);
+}
+
+/* ── Label Gramatikal (word_class) ── */
+.kwd-word-class {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(232, 201, 109, 0.08);
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.25);
+  letter-spacing: 0.02em;
+}
+.kwd-ex-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--bdr);
+  background: var(--sur2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.kwd-ex-speak:hover {
+  border-color: var(--gold);
+  background: rgba(232, 201, 109, 0.1);
+}
+
+/* ── Contoh example action buttons ── */
+.kwd-ex-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--bdr);
+}
+.kwd-ex-btn {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--dim2);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.15s;
+}
+.kwd-ex-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.kwd-ex-btn.del {
+  margin-left: auto;
+}
+.kwd-ex-btn.del:hover {
+  border-color: rgba(192, 57, 43, 0.5);
+  color: #f87171;
+  background: rgba(192, 57, 43, 0.1);
+}
+
+/* ── Profile Gelar Label (di modal profil, di bawah avatar row) ── */
+#profile-gelar-label {
+  font-family: var(--font-hanzi);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  display: none;
+}
+
+/* ── Rename Display Name ── */
+.upv2-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.upv2-rename-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.45;
+  padding: 2px 4px;
+  border-radius: 5px;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+.upv2-rename-btn:hover {
+  opacity: 1;
+}
+.upv2-rename-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 4px 0 6px;
+}
+.upv2-rename-input {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  color: var(--txt);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  padding: 6px 10px;
+  width: 150px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.upv2-rename-input:focus {
+  border-color: var(--gold);
+}
+.upv2-rename-save {
+  background: var(--gold);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  padding: 6px 12px;
+  transition: opacity 0.15s;
+}
+.upv2-rename-save:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.upv2-rename-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.upv2-rename-cancel {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  color: var(--dim2);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  padding: 6px 10px;
+  transition: all 0.15s;
+}
+.upv2-rename-cancel:hover {
+  border-color: rgba(192, 57, 43, 0.4);
+  color: #f87171;
+}

@@ -1,0 +1,193 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   SPEAKING.CSS — Toolbar Dengarkan & Coba Ucapkan
+   Dipakai di fc-screen (flashcard), variables dari base.css
+   ============================================================ */
+
+/* ── Toolbar wrapper ── */
+#spk-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 0 16px 4px;
+  flex-shrink: 0;
+}
+
+/* ── Baris tombol ── */
+.spk-btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ── Tombol dasar ── */
+.spk-tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 22px;
+  border-radius: 50px;
+  border: 1px solid var(--bdr);
+  background: var(--sur);
+  color: var(--txt);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  white-space: nowrap; /* FIX: teks tombol tidak wrap */
+}
+
+.spk-tb-btn:hover {
+  background: var(--sur2);
+  border-color: var(--dim);
+}
+
+.spk-tb-btn:active {
+  transform: scale(0.95);
+}
+
+.spk-tb-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ── Tombol Dengarkan: kilat saat diputar ── */
+.spk-tb-btn.spk-tb-flash {
+  background: rgba(232, 201, 109, 0.14);
+  border-color: rgba(232, 201, 109, 0.4);
+}
+
+/* ── Tombol Mic: sedang recording ── */
+.spk-tb-btn.spk-tb-recording {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fca5a5;
+}
+
+/* ── Tombol Mic: browser tidak support ── */
+.spk-tb-btn.spk-tb-disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.spk-fb-label {
+  font-weight: 500;
+  font-size: 13px;
+}
+.spk-fb-hanzi {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── Dot pulse animasi saat recording ── */
+.spk-dot-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f87171;
+  animation: spkPulse 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes spkPulse {
+  from {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ── Feedback strip ── */
+.spk-fb {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  transition: opacity 0.2s;
+  line-height: 1.4;
+}
+
+.spk-fb--hidden {
+  display: none;
+}
+
+.spk-fb--interim {
+  opacity: 0.6;
+  color: var(--dim2);
+  background: transparent;
+  border: none;
+}
+
+.spk-fb--ok {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.spk-fb--warn {
+  background: rgba(232, 201, 109, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.25);
+}
+
+.spk-fb--err {
+  background: rgba(224, 85, 85, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(224, 85, 85, 0.25);
+}
+
+/* ── Responsive: HP kecil ── */
+@media (max-width: 430px) {
+  #spk-toolbar {
+    gap: 8px;
+    margin-top: 10px;
+    padding: 0 12px 4px;
+  }
+  .spk-btn-row {
+    gap: 8px;
+  }
+
+  .spk-tb-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .spk-tb-icon {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 390px) {
+  #spk-toolbar {
+    gap: 6px;
+    margin-top: 8px;
+    padding: 0 8px 2px;
+  }
+  .spk-btn-row {
+    gap: 6px;
+  }
+
+  .spk-tb-btn {
+    padding: 7px 13px;
+    font-size: 11px;
+    gap: 5px;
+  }
+
+  .spk-tb-icon {
+    font-size: 12px;
+  }
+}

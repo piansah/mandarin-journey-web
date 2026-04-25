@@ -1,0 +1,685 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   HANZI.CSS — Baca Kalimat Hanzi Screen
+   v9 — localStorage read progress counter
+   ============================================================ */
+
+#hanzi-screen {
+  background: var(--bg);
+}
+
+/* ── Button Latihan Hanzi (sticky bottom) ── */
+.btn-latihan-hanzi {
+  flex: 1;
+  background: var(--gold);
+  color: #0a0a0d;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-latihan-hanzi:hover {
+  background: var(--gold);
+  color: #000;
+}
+.btn-latihan-hanzi:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+/* ── Hanzi Header ── */
+.hanzi-hd {
+  background: var(--sur);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.hanzi-hd h1 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.hanzi-hd p {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 1px;
+}
+
+.hanzi-stats {
+  display: flex;
+  gap: 8px;
+}
+.h-stat {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 6px 12px;
+  text-align: center;
+}
+.h-stat-n {
+  font-size: 20px;
+  font-family: var(--font-serif);
+  color: var(--gold);
+  line-height: 1;
+  font-weight: 700;
+}
+.h-stat-l {
+  font-size: 9px;
+  color: var(--dim2);
+  margin-top: 2px;
+}
+
+/* ── Score Badge (reused) ── */
+.kal-score {
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.kal-score .n {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.kal-score .l {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
+/* ── Progress Bar ── */
+.hanzi-prog {
+  height: 3px;
+  background: var(--bdr);
+  flex-shrink: 0;
+}
+.hanzi-prog-fill {
+  height: 100%;
+  background: var(--gold);
+  width: 0%;
+  transition: width 0.3s;
+}
+
+/* ── Hanzi Wrapper ── */
+.hanzi-wrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px 80px;
+}
+
+.hanzi-instr {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 9px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--dim2);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.hanzi-instr strong {
+  color: var(--gold);
+}
+
+.h-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: var(--dim2);
+  align-items: center;
+}
+.h-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.hld {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+/* ── Section Label ── */
+.h-sec-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 6px 0 10px;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.h-sec-label span {
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  padding: 1px 9px;
+  border-radius: 20px;
+  font-size: 9px;
+}
+
+/* ── Hanzi Grid ── */
+.h-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.h-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px 14px 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.15s;
+  user-select: none;
+  position: relative;
+  min-height: 78px;
+}
+.h-card:hover {
+  border-color: var(--gold);
+}
+.h-card.step1 {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.06);
+}
+.h-card.step2 {
+  border-color: var(--green);
+  background: rgba(74, 222, 128, 0.04);
+}
+.h-card-num {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 9px;
+  color: var(--dim);
+  background: var(--sur2);
+  padding: 1px 6px;
+  border-radius: 9px;
+}
+.h-hz {
+  font-family: var(--font-hanzi);
+  font-size: 19px;
+  line-height: 1.5;
+  padding-right: 28px;
+}
+.h-py {
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 7px;
+  display: none;
+  flex-wrap: wrap;
+}
+.h-py.show {
+  display: flex;
+}
+.h-arti {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 5px;
+  border-top: 1px solid var(--bdr);
+  padding-top: 6px;
+  display: none;
+  line-height: 1.5;
+}
+.h-arti.show {
+  display: block;
+}
+.h-hint {
+  font-size: 9px;
+  color: var(--dim);
+  margin-top: 6px;
+  opacity: 0.6;
+}
+.h-card.step1 .h-hint,
+.h-card.step2 .h-hint {
+  display: none;
+}
+
+/* ── Item done badge di list ── */
+.item-done-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 20px;
+  padding: 1px 8px;
+  margin-left: 6px;
+}
+
+/* ── Footer ── */
+.btn-reset-h {
+  display: block;
+  margin: 28px auto 0;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 10px 28px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: all 0.2s;
+}
+.btn-reset-h:hover {
+  background: var(--gold);
+  color: #000;
+}
+
+/* ── Read Progress Counter (localStorage only, tidak masuk dashboard) ── */
+.h-prog-txt {
+  text-align: center;
+  font-size: 11px;
+  color: var(--dim2);
+  margin-top: 12px;
+  padding-bottom: 8px;
+  transition: color 0.3s;
+}
+
+/* Semua kartu selesai → teks jadi hijau */
+.h-prog-txt.complete {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SPEAKING SCREEN
+══════════════════════════════════════════════════════════════ */
+
+#hanzi-speaking-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-ui);
+}
+
+/* ── Speaking Header ── */
+.sp-hd {
+  background: var(--sur);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 12px;
+}
+.sp-hd-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.sp-hd-sub {
+  font-size: 12px;
+  color: var(--dim2);
+  margin-top: 1px;
+}
+
+/* ── Counter UI: angka besar + "dari X" ── */
+.sp-counter {
+  margin-left: auto;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 6px 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.sp-counter-num {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.sp-counter-denom {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
+/* ── Speaking Progress Bar ── */
+.sp-prog {
+  height: 3px;
+  background: var(--bdr);
+  flex-shrink: 0;
+}
+.sp-prog-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s;
+}
+
+/* ── Speaking Body ── */
+.sp-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 120px;
+  gap: 20px;
+  overflow-y: auto;
+}
+.sp-instr {
+  font-size: 11px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ── Speaking Card ── */
+.sp-card {
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  user-select: none;
+}
+.sp-card:hover {
+  border-color: var(--gold);
+}
+.sp-card:active {
+  opacity: 0.85;
+}
+.sp-card-hz {
+  font-family: var(--font-hanzi);
+  font-size: 32px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.sp-card-py {
+  font-size: 14px;
+  color: var(--dim2);
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+.sp-card-arti {
+  font-size: 12px;
+  color: var(--dim);
+}
+.sp-card-hint {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Speaking Toolbar ── */
+#hsp-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ── Tombol Dengarkan & Coba Ucapkan ── */
+.hsp-btn-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.spk-tb-btn {
+  flex: 0 1 auto;
+  min-width: 130px;
+  padding: 12px 18px;
+  border-radius: 40px;
+  background: var(--sur);
+  border: 1px solid var(--bdr);
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spk-tb-btn:hover {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.1);
+  transform: translateY(-1px);
+}
+
+.spk-tb-btn:active {
+  transform: scale(0.97);
+}
+
+.spk-tb-btn.spk-tb-recording {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold);
+  animation: pulseMic 1.2s infinite;
+}
+
+@keyframes pulseMic {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.spk-tb-icon {
+  font-size: 14px;
+}
+
+.spk-dot-pulse {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #fbbf24;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+  box-shadow: 0 0 4px #fbbf24;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+.spk-tb-flash {
+  animation: flash 0.3s ease;
+}
+
+@keyframes flash {
+  0% {
+    background: rgba(212, 175, 55, 0.4);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* ── Feedback Box ── */
+.spk-fb {
+  font-family: var(--font-ui);
+  width: 100%;
+  text-align: center;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  transition: opacity 0.3s ease;
+  min-height: 48px;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+}
+
+.spk-fb--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spk-fb--interim {
+  background: rgba(212, 175, 55, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.spk-fb--ok {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+}
+
+.spk-fb--warn {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.spk-fb--err {
+  background: rgba(251, 113, 133, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(251, 113, 133, 0.4);
+}
+
+/* ── Speaking Bottom Nav ── */
+.sp-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--bdr);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* ── Lanjut Button ── */
+.sp-action-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  background: var(--gold);
+  color: #000;
+  border: none;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
+}
+.sp-action-btn:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+.sp-next-btn.is-disabled,
+.sp-next-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+}
+.sp-next-btn.is-disabled:active,
+.sp-next-btn:disabled:active {
+  transform: none;
+  opacity: 0.45;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .h-grid {
+    grid-template-columns: 1fr;
+  }
+  .sp-card-hz {
+    font-size: 28px;
+  }
+  .spk-tb-btn {
+    min-width: 110px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .fc-done-chip {
+    min-width: 70px;
+    padding: 6px 12px;
+  }
+  .fc-done-chip-num {
+    font-size: 18px;
+  }
+}
+
+/* tambahkan/override di hanzi.css */
+.sp-card-hz {
+  font-family: var(--font-hanzi);
+}
+
+.sp-card-py {
+  font-family: var(--font-ui);
+}
+
+.sp-card-arti {
+  font-family: var(--font-ui);
+}
+
+.sp-instr {
+  font-family: var(--font-ui);
+}
+
+.sp-hd-title {
+  font-family: var(--font-serif);
+}
+
+.sp-hd-sub {
+  font-family: var(--font-ui);
+}
