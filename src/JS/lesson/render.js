@@ -241,12 +241,13 @@ function _renderVocabCard(inDirection) {
         <div class="vocab-example-box" onclick="event.stopPropagation(); _lessonSpeak('${ex.hanzi.replace(/'/g, "\\'")}')">
           <div class="vocab-ex-hanzi-row">
             <div class="vocab-ex-hanzi">${highlighted}</div>
-            <button class="vocab-ex-speak-btn">${SVG_LISTEN}</button>
+            
           </div>
           <div class="vocab-ex-pinyin">${ex.pinyin || ""}</div>
           <div class="vocab-ex-meaning">${ex.meaning || ""}</div>
         </div>`;
     });
+    // <button class="vocab-ex-speak-btn">${SVG_LISTEN}</button>
   }
 
   let tipHtml = "";
