@@ -673,7 +673,7 @@ async function _doFlushPendingReviews() {
 
   // Gunakan _fcPrevSessionXP yang sudah dihitung saat showFCDone
   await _grantSessionXP(_fcPrevSessionXP);
-  
+
   await Promise.all(
     entries.map(([cardId, quality]) =>
       srsSaveReview(cardId, quality).catch(console.error),
@@ -689,14 +689,14 @@ async function _flushPendingReviews() {
 async function _grantSessionXP(xpNow) {
   if (xpNow <= 0) return;
   if (!currentFCSetId) return;
-  
+
   const user = await _getUser();
   if (!user) return;
 
   const fcKey = `fc${currentFCSetId}`;
   const prevScore =
     typeof window.fcScores !== "undefined" ? (window.fcScores[fcKey] ?? 0) : 0;
-  
+
   const finalScore = Math.max(prevScore, xpNow);
 
   try {
