@@ -1121,6 +1121,7 @@ let _strokeCharIdx = 0;
 let _strokeStrokeIdx = 0;
 let _strokeLocked = false;
 let _strokeTotalStrokes = 0;
+let _strokeCharTotalStrokes = []; // Simpan jumlah stroke per karakter
 // Flag: true = animasi sedang berjalan, null = idle
 let _strokeAnimation = null;
 
@@ -1167,8 +1168,7 @@ function _renderHero() {
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
 
   container.innerHTML = `
-    <div class="kwd-hero" style="position:relative;">
-      <button class="kwd-speak-icon" onclick="window.speakMandarin(_currentKosWord.hanzi, 0.7)" title="Dengar pengucapan">🔊</button>
+    <div class="kwd-hero" style="position:relative; cursor:pointer;" onclick="window.speakMandarin('${card.hanzi}', 0.7)">
       <div class="kwd-hz">${card.hanzi || ""}</div>
       <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
       <div class="kwd-arti">${card.arti || ""}</div>
@@ -1226,6 +1226,7 @@ function _renderStrokeTab() {
   _strokeStrokeIdx = 0;
   _strokeLocked = false;
   _strokeTotalStrokes = 0;
+  _strokeCharTotalStrokes = new Array(_strokeChars.length).fill(0);
   _strokeAnimation = null;
 
   _destroyStrokeWriters();
@@ -1249,7 +1250,6 @@ function _renderStrokeTab() {
           .map(
             (char, i) => `
           <div class="kwd-stroke-slide" data-index="${i}">
-            <div class="kwd-stroke-counter" id="kwd-sc-${i}">${i + 1} / ${_strokeChars.length}</div>
             <div id="stroke-target-${i}" class="kwd-stroke-target"></div>
           </div>
         `,
@@ -1258,26 +1258,27 @@ function _renderStrokeTab() {
       </div>
       ${charDotsHtml}
     </div>
-    <div class="kwd-stroke-bottom" id="kwd-stroke-bottom">
-      <div class="kwd-sb-controls">
-        <button class="kwd-sb-btn" onclick="window._strokePrev()" title="Stroke sebelumnya">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <div class="kwd-stroke-bottom" id="kwd-stroke-bottom" style="padding: 10px 0; background: transparent; position: relative;">
+      <div class="kwd-sb-controls" style="background: none; box-shadow: none; border: none; display: flex; justify-content: center; align-items: center; gap: 45px; width: 100%;">
+        <button class="kwd-sb-btn" id="kwd-sb-prev-btn" onclick="window._strokePrev()" title="Stroke sebelumnya" style="background:none; border:none; box-shadow:none; padding:0; color:var(--txt); width:auto; height:auto;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
-        <button class="kwd-sb-btn kwd-sb-play-btn" id="kwd-sb-play-btn" onclick="window._strokePlayPause()" title="Play / Pause">
-          <svg id="kwd-sb-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <button class="kwd-sb-btn" id="kwd-sb-play-btn" onclick="window._strokePlayPause()" title="Play / Pause" style="background:none; border:none; box-shadow:none; padding:0; color:var(--gold); width:auto; height:auto;">
+          <svg id="kwd-sb-play-icon" width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
         </button>
-        <button class="kwd-sb-btn" onclick="window._strokeNext()" title="Stroke berikutnya">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <button class="kwd-sb-btn" id="kwd-sb-next-btn" onclick="window._strokeNext()" title="Stroke berikutnya" style="background:none; border:none; box-shadow:none; padding:0; color:var(--txt); width:auto; height:auto;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
-        <div class="kwd-sb-sep"></div>
-        <button class="kwd-sb-btn kwd-sb-lock-btn" id="kwd-sb-lock-btn" onclick="window._strokeToggleLock()" title="Lock / Unlock slide">
-          <svg id="kwd-sb-lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        
+        <!-- Lock button di pojok kanan -->
+        <button class="kwd-sb-btn" id="kwd-sb-lock-btn" onclick="window._strokeToggleLock()" title="Lock / Unlock slide" style="position: absolute; right: 20px; background:none; border:none; box-shadow:none; padding:0; color:var(--dim); width:auto; height:auto;">
+          <svg id="kwd-sb-lock-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
           </svg>
@@ -1292,20 +1293,24 @@ function _renderStrokeTab() {
     slider.addEventListener("scroll", () => {
       if (_strokeLocked) return;
       const slideH = slider.clientHeight;
+      if (slideH === 0) return;
       const idx = Math.round(slider.scrollTop / slideH);
+      const counter = document.getElementById("kwd-stroke-counter-fixed");
+      if (counter) counter.textContent = `${idx + 1} / ${_strokeChars.length}`;
+
       if (idx !== _strokeCharIdx) {
         // Stop sequence saat ganti karakter
         _strokeAnimation = null;
         _updatePlayIcon(false);
         _strokeCharIdx = idx;
         _strokeStrokeIdx = 0;
+        _strokeTotalStrokes = _strokeCharTotalStrokes[idx] || 0;
         _updateStrokeUI();
       }
       _syncCharDots(idx);
     });
   }
 
-  // Init UI saja, tidak auto play
   setTimeout(() => {
     _updateStrokeUI();
   }, 300);
@@ -1324,14 +1329,18 @@ function _initStrokeWriter(char, index) {
     drawingColor: "#e8c96d",
     showOutline: true,
     showCharacter: false,
+    strokeAnimationSpeed: 0.5, // Lebih lambat lagi
+    delayBetweenStrokes: 400,
     charDataLoader: (char, onLoad, onError) => {
       fetch(
         `https://cdn.jsdelivr.net/npm/hanzi-writer-data@latest/${char}.json`,
       )
         .then((r) => r.json())
         .then((data) => {
+          const count = data.strokes?.length || 0;
+          _strokeCharTotalStrokes[index] = count;
           if (index === _strokeCharIdx) {
-            _strokeTotalStrokes = data.strokes?.length || 0;
+            _strokeTotalStrokes = count;
             _updateStrokeUI();
           }
           onLoad(data);
@@ -1343,19 +1352,33 @@ function _initStrokeWriter(char, index) {
   _strokeWriters[index] = writer;
 }
 
-// Play stroke satu per satu secara berurutan, bisa di-interrupt via _strokeAnimation flag
-function _playStrokeSequence(charIdx, fromIdx) {
+// Pastikan visual writer sesuai dengan _strokeStrokeIdx (untuk navigasi mundur)
+function _strokeSolidify(charIdx, targetCount) {
   const writer = _strokeWriters[charIdx];
   if (!writer) return;
 
-  // Cek flag — jika null, sequence dihentikan
-  if (!_strokeAnimation) {
+  if (writer.cancelAnimation) writer.cancelAnimation();
+  writer.hideCharacter({ duration: 0 });
+  writer.showOutline({ duration: 0 });
+
+  if (targetCount <= 0) return;
+
+  // Gambar semua stroke sampai targetCount secara instan
+  for (let i = 0; i < targetCount; i++) {
+    writer.animateStroke(i, { strokeAnimationSpeed: 999 });
+  }
+}
+
+// Play stroke satu per satu secara berurutan
+function _playStrokeSequence(charIdx, fromIdx) {
+  const writer = _strokeWriters[charIdx];
+  if (!writer || !_strokeAnimation) {
     _updatePlayIcon(false);
+    _strokeAnimation = null;
     return;
   }
 
   if (fromIdx >= _strokeTotalStrokes) {
-    // Selesai semua stroke
     _strokeAnimation = null;
     _strokeStrokeIdx = _strokeTotalStrokes;
     _updatePlayIcon(false);
@@ -1363,14 +1386,21 @@ function _playStrokeSequence(charIdx, fromIdx) {
     return;
   }
 
-  _strokeStrokeIdx = fromIdx;
+  _strokeStrokeIdx = fromIdx + 1;
   _updateStrokeUI();
 
   writer.animateStroke(fromIdx, {
     onComplete: () => {
-      _strokeStrokeIdx = fromIdx + 1;
-      _updateStrokeUI();
-      _playStrokeSequence(charIdx, fromIdx + 1);
+      if (_strokeAnimation && _strokeCharIdx === charIdx) {
+        if (fromIdx + 1 >= _strokeTotalStrokes) {
+          _strokeAnimation = null;
+          _strokeStrokeIdx = _strokeTotalStrokes;
+          _updatePlayIcon(false);
+          _updateStrokeUI();
+        } else {
+          _playStrokeSequence(charIdx, fromIdx + 1);
+        }
+      }
     },
   });
 }
@@ -1378,68 +1408,79 @@ function _playStrokeSequence(charIdx, fromIdx) {
 function _strokePlayFromBeginning(charIdx) {
   const writer = _strokeWriters[charIdx];
   if (!writer) return;
-  // Reset visual dulu
+
+  if (writer.cancelAnimation) writer.cancelAnimation();
   writer.hideCharacter({ duration: 0 });
   writer.showOutline({ duration: 0 });
+
   _strokeStrokeIdx = 0;
   _strokeAnimation = true;
   _updatePlayIcon(true);
-  _updateStrokeUI();
   _playStrokeSequence(charIdx, 0);
 }
 
 function _strokePlayStroke(charIdx, strokeIdx) {
   const writer = _strokeWriters[charIdx];
   if (!writer) return;
+
+  if (writer.cancelAnimation) writer.cancelAnimation();
+  // Kita tidak panggil Solidify di sini agar tidak flicker/reset
   _strokeAnimation = true;
   _updatePlayIcon(true);
   _playStrokeSequence(charIdx, strokeIdx);
 }
 
 window._strokePlayPause = () => {
+  const writer = _strokeWriters[_strokeCharIdx];
+  if (!writer) return;
+
   if (_strokeAnimation) {
-    // Stop — set flag null, sequence akan berhenti di onComplete berikutnya
     _strokeAnimation = null;
+    if (writer.cancelAnimation) writer.cancelAnimation();
     _updatePlayIcon(false);
   } else {
     if (_strokeStrokeIdx >= _strokeTotalStrokes) {
-      // Sudah selesai semua, replay dari awal
       _strokePlayFromBeginning(_strokeCharIdx);
     } else {
-      // Lanjut dari stroke saat ini
       _strokePlayStroke(_strokeCharIdx, _strokeStrokeIdx);
     }
   }
 };
 
 window._strokeNext = () => {
-  // Stop sequence
   _strokeAnimation = null;
   _updatePlayIcon(false);
 
   const writer = _strokeWriters[_strokeCharIdx];
-  if (!writer || _strokeStrokeIdx >= _strokeTotalStrokes) return;
+  if (!writer) return;
 
-  // Tampilkan stroke ini instan
+  if (writer.cancelAnimation) writer.cancelAnimation();
+
+  if (_strokeStrokeIdx >= _strokeTotalStrokes) {
+    // Reset ke awal
+    _strokeStrokeIdx = 0;
+    writer.hideCharacter({ duration: 0 });
+    writer.showOutline({ duration: 0 });
+    _updateStrokeUI();
+    return;
+  }
+
+  // Cukup gambar stroke berikutnya secara instan (meneruskan)
   writer.animateStroke(_strokeStrokeIdx, { strokeAnimationSpeed: 999 });
   _strokeStrokeIdx++;
   _updateStrokeUI();
 };
 
 window._strokePrev = () => {
-  // Stop sequence
   _strokeAnimation = null;
   _updatePlayIcon(false);
 
   const writer = _strokeWriters[_strokeCharIdx];
   if (!writer || _strokeStrokeIdx <= 0) return;
 
+  // Untuk mundur, kita harus reset dan gambar ulang sampai (N-1)
   _strokeStrokeIdx--;
-  writer.hideCharacter({ duration: 0 });
-  writer.showOutline({ duration: 0 });
-  for (let i = 0; i < _strokeStrokeIdx; i++) {
-    writer.animateStroke(i, { strokeAnimationSpeed: 999 });
-  }
+  _strokeSolidify(_strokeCharIdx, _strokeStrokeIdx);
   _updateStrokeUI();
 };
 
@@ -1482,16 +1523,34 @@ function _updatePlayIcon(isPlaying) {
 
 function _updateStrokeUI() {
   const label = document.getElementById("kwd-sb-stroke-label");
-  if (label)
-    label.textContent = `Stroke ${_strokeStrokeIdx} / ${_strokeTotalStrokes}`;
+  if (label) {
+    if (_strokeTotalStrokes === 0) {
+      label.textContent = "Memuat data stroke...";
+    } else {
+      label.textContent = `Stroke ${_strokeStrokeIdx} / ${_strokeTotalStrokes}`;
+    }
+  }
+
+  // Update button states
+  const prevBtn = document.getElementById("kwd-sb-prev-btn");
+  if (prevBtn) {
+    prevBtn.style.opacity = _strokeStrokeIdx <= 0 ? "0.3" : "1";
+    prevBtn.style.pointerEvents = _strokeStrokeIdx <= 0 ? "none" : "";
+  }
 }
 
 function _destroyStrokeBottomBar() {
   _strokeAnimation = null;
+  _strokeWriters.forEach((w) => {
+    if (w && w.cancelAnimation) w.cancelAnimation();
+  });
 }
 
 function _destroyStrokeWriters() {
   _strokeAnimation = null;
+  _strokeWriters.forEach((w) => {
+    if (w && w.cancelAnimation) w.cancelAnimation();
+  });
   _strokeWriters = [];
 }
 

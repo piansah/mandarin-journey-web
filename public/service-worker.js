@@ -1,5 +1,5 @@
 /* © 2026 Piansah — Mandarin Journey Service Worker v5 */
-const CACHE_NAME = "mandarin-journey-v10";
+const CACHE_NAME = "mandarin-journey-v11";
 
 const STATIC_ASSETS = [
   "/",
@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   /* ── CSS ── */
   "/src/CSS/base.css",
   "/src/CSS/dashboard.css",
+  "/src/CSS/kosakata.css",
   "/src/CSS/layers.css",
   "/src/CSS/quiz.css",
   "/src/CSS/hanzi.css",

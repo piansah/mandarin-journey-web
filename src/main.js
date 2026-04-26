@@ -7,6 +7,7 @@ import "./CSS/base.css";
 import "./CSS/utils.css";
 import "./CSS/layers.css";
 import "./CSS/auth.css";
+import "./CSS/kosakata.css";
 import "./CSS/onboarding.css";
 import "./CSS/tour.css";
 import "./CSS/navbar.css";
