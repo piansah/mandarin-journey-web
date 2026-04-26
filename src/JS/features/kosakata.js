@@ -1555,43 +1555,128 @@ function _destroyStrokeWriters() {
 }
 
 /* ── Word Tab Logic ── */
-function _renderWordTab() {
+async function _renderWordTab() {
   const container = document.getElementById("kwd-native-list");
   if (!container) return;
 
   const hanzi = _currentKosWord.hanzi;
-  if (!_extractedWordsCache) {
+
+  container.innerHTML =
+    '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
+
+  const { data, error } = await supa
+    .from("word_compounds")
+    .select("hanzi, pinyin, arti, badge")
+    .ilike("hanzi", `%${hanzi}%`)
+    .order("frequency", { ascending: false });
+
+  if (error || !data || data.length === 0) {
     container.innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
-    initExtractedWordsCache().then(() => _renderWordTab());
+      '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata gabungan ditemukan.</div>';
     return;
   }
 
-  const related = _extractedWordsCache.filter((w) => w.hanzi.includes(hanzi));
+  const frag = document.createDocumentFragment();
 
-  if (related.length === 0) {
-    container.innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata turunan yang ditemukan di contoh kalimat.</div>';
-    return;
-  }
+  data.forEach((w, idx) => {
+    const item = document.createElement("div");
+    item.className = "kos-item";
+    item.style.cursor = "pointer";
 
-  container.innerHTML = related
-    .map((w) => {
-      const hskWord = _globalSearchCache?.find((h) => h.hanzi === w.hanzi);
-      const badge = hskWord
-        ? `HSK ${hskWord.hsk_level}`
-        : w.badge === "common"
-          ? "Common"
-          : "Native";
-      const badgeCls = hskWord ? "hsk" : w.badge;
-      return `
-      <div class="kwd-word-card" onclick="window._openKwdRelated('${w.hanzi}')">
-        <div class="kwd-word-badge ${badgeCls}">${badge}</div>
-        <div class="kwd-word-hz">${w.hanzi}</div>
-        <div class="kwd-word-py">${colorPy(w.pinyin)}</div>
+    item.innerHTML = `
+      <div class="kos-hz">${w.hanzi}</div>
+      <div class="kos-info">
+        <div class="kos-py">${colorPy(w.pinyin)}</div>
+        <div class="kos-arti">${w.arti || ""}</div>
+      </div>
+      <div class="kos-meta">
+        <span class="kos-no">#${idx + 1}</span>
       </div>`;
-    })
-    .join("");
+
+    let pressTimer = null,
+      didLongPress = false,
+      didMove = false,
+      startX = 0,
+      startY = 0;
+
+    item.addEventListener(
+      "touchstart",
+      (e) => {
+        didLongPress = false;
+        didMove = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        pressTimer = setTimeout(() => {
+          if (didMove) return;
+          didLongPress = true;
+          speakMandarin(w.hanzi, 0.7);
+          item.style.opacity = "0.6";
+          setTimeout(() => (item.style.opacity = ""), 300);
+        }, 500);
+      },
+      { passive: true },
+    );
+
+    item.addEventListener(
+      "touchmove",
+      (e) => {
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 8 || dy > 8) {
+          didMove = true;
+          clearTimeout(pressTimer);
+        }
+      },
+      { passive: true },
+    );
+
+    item.addEventListener("touchend", () => {
+      clearTimeout(pressTimer);
+      if (!didLongPress && !didMove) _openWordCompound(w);
+    });
+
+    item.addEventListener("mousedown", () => {
+      didLongPress = false;
+      didMove = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        speakMandarin(w.hanzi, 0.7);
+        item.style.opacity = "0.6";
+        setTimeout(() => (item.style.opacity = ""), 300);
+      }, 500);
+    });
+
+    item.addEventListener("mouseup", () => {
+      clearTimeout(pressTimer);
+      if (!didLongPress) _openWordCompound(w);
+    });
+
+    item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+    item.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    frag.appendChild(item);
+  });
+
+  container.innerHTML = "";
+  container.appendChild(frag);
+}
+
+function _openWordCompound(w) {
+  // Cari di flashcard cache dulu
+  const hskWord = _globalSearchCache?.find((h) => h.hanzi === w.hanzi);
+  if (hskWord) {
+    openKosWord(hskWord);
+  } else {
+    // Buka dengan data dari word_compounds langsung
+    openKosWord({
+      hanzi: w.hanzi,
+      pinyin: w.pinyin,
+      arti: w.arti,
+      set_id: null,
+      word_class: null,
+      catatan: null,
+    });
+  }
 }
 
 export function _openKwdRelated(hanzi) {
@@ -1770,7 +1855,8 @@ export async function saveContoh() {
 
   try {
     const hanzi = document.getElementById("contoh-hanzi")?.value.trim();
-    const pinyin = document.getElementById("contoh-pinyin")?.value.trim() || null;
+    const pinyin =
+      document.getElementById("contoh-pinyin")?.value.trim() || null;
     const arti = document.getElementById("contoh-arti")?.value.trim() || null;
 
     if (!hanzi) {
@@ -1784,7 +1870,8 @@ export async function saveContoh() {
     if (!_currentKosWord || !_currentKosWord.hanzi) {
       if (msg) {
         msg.className = "auth-msg err";
-        msg.textContent = "Data kata dasar tidak ditemukan. Silakan buka ulang detail kata.";
+        msg.textContent =
+          "Data kata dasar tidak ditemukan. Silakan buka ulang detail kata.";
       }
       return;
     }
@@ -1830,11 +1917,14 @@ export async function saveContoh() {
     console.error("saveContoh Error:", err);
     if (btn) {
       btn.disabled = false;
-      btn.textContent = _editingContohId ? "Simpan Perubahan" : "+ Tambah Contoh";
+      btn.textContent = _editingContohId
+        ? "Simpan Perubahan"
+        : "+ Tambah Contoh";
     }
     if (msg) {
       msg.className = "auth-msg err";
-      msg.textContent = "Gagal menyimpan: " + (err.message || "Terjadi kesalahan jaringan");
+      msg.textContent =
+        "Gagal menyimpan: " + (err.message || "Terjadi kesalahan jaringan");
     }
   }
 }
