@@ -671,7 +671,9 @@ async function _doFlushPendingReviews() {
   const entries = Array.from(_fcPendingReviews.entries());
   _fcPendingReviews = new Map();
 
-  await _grantSessionXP(entries);
+  // Gunakan _fcPrevSessionXP yang sudah dihitung saat showFCDone
+  await _grantSessionXP(_fcPrevSessionXP);
+  
   await Promise.all(
     entries.map(([cardId, quality]) =>
       srsSaveReview(cardId, quality).catch(console.error),
@@ -684,26 +686,10 @@ async function _flushPendingReviews() {
   await _doFlushPendingReviews();
 }
 
-async function _grantSessionXP(reviewEntries) {
-  const total = _fcUniqueTotal;
-  if (total === 0) return;
-
-  const entries = [];
-  for (const [cardId, quality] of reviewEntries) {
-    if (quality !== 5) continue;
-    const card = _fcCardMeta.get(cardId);
-    entries.push({ isMature: card?._srs?.interval_days >= 21 });
-  }
-  const xpNow = Math.min(calcXPFCSession(entries), XP.SESSION_CAP);
-  _fcPrevSessionXP = xpNow;
-
-  if (xpNow > 0) {
-    const hafal = Math.min(_fcHafal, total);
-    const pct = Math.round((hafal / total) * 100);
-    showXPToast(xpNow, `Sesi selesai ${pct}% hafal`);
-  }
-
+async function _grantSessionXP(xpNow) {
+  if (xpNow <= 0) return;
   if (!currentFCSetId) return;
+  
   const user = await _getUser();
   if (!user) return;
 
@@ -711,26 +697,23 @@ async function _grantSessionXP(reviewEntries) {
   const prevScore =
     typeof window.fcScores !== "undefined" ? (window.fcScores[fcKey] ?? 0) : 0;
   
-  // Hanya simpan jika ada XP atau memang ingin mengupdate progres
-  if (xpNow > 0 || prevScore === 0) {
-    const finalScore = Math.max(prevScore, xpNow);
+  const finalScore = Math.max(prevScore, xpNow);
 
-    try {
-      await supa.from("user_scores").upsert(
-        {
-          user_id: user.id,
-          type: "fc_session",
-          key: fcKey,
-          score: finalScore,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,type,key" },
-      );
-      if (typeof window.fcScores !== "undefined")
-        window.fcScores[fcKey] = finalScore;
-    } catch (e) {
-      console.error("upsert user_scores failed:", e);
-    }
+  try {
+    await supa.from("user_scores").upsert(
+      {
+        user_id: user.id,
+        type: "fc_session",
+        key: fcKey,
+        score: finalScore,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,type,key" },
+    );
+    if (typeof window.fcScores !== "undefined")
+      window.fcScores[fcKey] = finalScore;
+  } catch (e) {
+    console.error("upsert user_scores failed:", e);
   }
 
   if (typeof window.invalidateStatsCache === "function")
@@ -775,21 +758,42 @@ export async function showFCDone() {
   const hint = document.getElementById("fc-swipe-hint");
   if (hint) hint.style.display = "none";
 
-  try {
-    await _flushPendingReviews();
-  } catch (e) {
-    console.error("Flush reviews failed:", e);
+  // 1. HITUNG XP SECARA SINKRON (Agar _fcPrevSessionXP terisi untuk _renderDoneStats)
+  const entries = Array.from(_fcPendingReviews.entries());
+  const xpEntries = [];
+  for (const [cardId, quality] of entries) {
+    if (quality === 5) {
+      const card = _fcCardMeta.get(cardId);
+      xpEntries.push({ isMature: card?._srs?.interval_days >= 21 });
+    }
+  }
+  _fcPrevSessionXP = Math.min(calcXPFCSession(xpEntries), XP.SESSION_CAP);
+
+  // 2. TAMPILKAN TOAST XP
+  if (_fcPrevSessionXP > 0) {
+    const total = _fcUniqueTotal || 1;
+    const hafal = Math.min(_fcHafal, total);
+    const pct = Math.round((hafal / total) * 100);
+    showXPToast(_fcPrevSessionXP, `Sesi selesai ${pct}% hafal`);
   }
 
+  // 3. RENDER DONE STATS SEGERA (No Lag)
   _renderDoneStats();
 
-  if (typeof window._recordDailyStreak === "function")
-    window._recordDailyStreak().catch(console.error);
-  if (typeof window._renderLevel === "function") window._renderLevel();
-
-  _fcScoresFresh = true;
-  if (typeof window.invalidateStatsCache === "function")
-    window.invalidateStatsCache();
+  // 4. JALANKAN PROSES BERAT DI BACKGROUND (Jangan di-await)
+  (async () => {
+    try {
+      await _flushPendingReviews();
+      if (typeof window._recordDailyStreak === "function")
+        await window._recordDailyStreak();
+      if (typeof window._renderLevel === "function") window._renderLevel();
+      _fcScoresFresh = true;
+      if (typeof window.invalidateStatsCache === "function")
+        window.invalidateStatsCache();
+    } catch (e) {
+      console.error("Background sync failed:", e);
+    }
+  })();
 }
 
 function _renderDoneStats() {
