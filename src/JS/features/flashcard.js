@@ -787,6 +787,10 @@ export async function showFCDone() {
       if (typeof window._recordDailyStreak === "function")
         await window._recordDailyStreak();
       if (typeof window._renderLevel === "function") window._renderLevel();
+      if (typeof window.updateSrsDashboard === "function")
+        window.updateSrsDashboard().catch(console.error);
+      if (typeof window.refreshKosDashboardProgress === "function")
+        window.refreshKosDashboardProgress().catch(console.error);
       _fcScoresFresh = true;
       if (typeof window.invalidateStatsCache === "function")
         window.invalidateStatsCache();
