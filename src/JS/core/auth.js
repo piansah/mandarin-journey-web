@@ -288,6 +288,17 @@ export function updateAuthUI() {
   window.renderFCPersonalList?.();
 }
 
+export function validateDisplayName(name) {
+  const normalized = String(name || "").trim();
+  if (!normalized) {
+    return { ok: false, value: "", message: "Nama tidak boleh kosong" };
+  }
+  if (normalized.length > 30) {
+    return { ok: false, value: normalized, message: "Maksimal 30 karakter" };
+  }
+  return { ok: true, value: normalized, message: "" };
+}
+
 export function openAuthModal() {
   if (_currentUser) {
     showScreen("profile-screen");
@@ -322,11 +333,13 @@ window.addEventListener("popstate", (e) => {
 export function showGoogleLogin() {
   const tpl = document.getElementById("tpl-google-login");
   const content = document.getElementById("auth-content");
+  if (!tpl || !content) return;
   content.innerHTML = "";
   content.appendChild(tpl.content.cloneNode(true));
 }
 
 export function showUserPanel() {
+  if (!_currentUser?.email) return;
   const email = _currentUser.email;
   const googleName =
     _currentUser.user_metadata?.full_name ||
@@ -345,6 +358,7 @@ export function showUserPanel() {
 
   const tpl = document.getElementById("tpl-user-panel");
   const content = document.getElementById("auth-content");
+  if (!tpl || !content) return;
   content.innerHTML = "";
   const node = tpl.content.cloneNode(true);
 
@@ -393,15 +407,12 @@ export function toggleRenameInput() {
 export async function saveDisplayName() {
   const input = document.getElementById("upv2-rename-input");
   if (!input) return;
-  const newName = input.value.trim();
-  if (!newName) {
-    showToast("Nama tidak boleh kosong", "warn");
+  const validation = validateDisplayName(input.value);
+  if (!validation.ok) {
+    showToast(validation.message, "warn");
     return;
   }
-  if (newName.length > 30) {
-    showToast("Maksimal 30 karakter", "warn");
-    return;
-  }
+  const newName = validation.value;
   const saveBtn = document.querySelector(".upv2-rename-save");
   if (saveBtn) {
     saveBtn.disabled = true;
@@ -434,6 +445,7 @@ export async function saveDisplayName() {
 export async function doGoogleLoginScreen() {
   const btn = document.getElementById("btn-login");
   const msg = document.getElementById("login-msg");
+  if (!btn) return;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Membuka Google...';
   const { error } = await supa.auth.signInWithOAuth({
@@ -449,6 +461,7 @@ export async function doGoogleLoginScreen() {
 
 export async function doGoogleLogin() {
   const btn = document.getElementById("btn-google-login");
+  if (!btn) return;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Membuka Google...';
   const { error } = await supa.auth.signInWithOAuth({

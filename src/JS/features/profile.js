@@ -4,7 +4,7 @@
    ============================================================ */
 
 import { supa } from "../core/config.js";
-import { getCurrentUser, doLogout } from "../core/auth.js";
+import { getCurrentUser, doLogout, validateDisplayName } from "../core/auth.js";
 import { getActiveAvatarUrl, initAvatarSystem } from "./avatar.js";
 import { calcLevel, TITLES, BADGES } from "../core/level.js";
 import { showToast } from "../utilities/helpers.js";
@@ -542,8 +542,12 @@ export async function _profSaveName() {
   const saveEl = document.getElementById("prof-name-save");
   if (!inputEl || !currentUser) return;
 
-  const newName = inputEl.value.trim();
-  if (!newName) return;
+  const validation = validateDisplayName(inputEl.value);
+  if (!validation.ok) {
+    showToast(validation.message, "warn");
+    return;
+  }
+  const newName = validation.value;
 
   if (nameEl) nameEl.textContent = newName;
   inputEl.style.display = "none";
@@ -551,7 +555,7 @@ export async function _profSaveName() {
   if (nameEl) nameEl.style.display = "block";
 
   try {
-    await supa.from("user_profile").upsert(
+    const { error } = await supa.from("user_profile").upsert(
       {
         user_id: currentUser.id,
         display_name: newName,
@@ -559,6 +563,7 @@ export async function _profSaveName() {
       },
       { onConflict: "user_id" },
     );
+    if (error) throw error;
     showToast("Nama disimpan!", "ok");
   } catch (e) {
     console.error("_profSaveName:", e);

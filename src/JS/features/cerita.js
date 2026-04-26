@@ -30,6 +30,15 @@ let _ceritaSpeed = 1;
 let _ceritaFontSize = 22;
 let _ceritaResetting = false;
 
+function _escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /* ── cerita_scores helper ── */
 export const ceritaScores = {};
 
@@ -60,7 +69,7 @@ async function _ceritaUpsertScore(key, pct) {
   ceritaScores[key] = pct;
   if (typeof window._recordDailyStreak === "function")
     window._recordDailyStreak();
-  await supa.from("user_scores").upsert(
+  const { error } = await supa.from("user_scores").upsert(
     {
       user_id: currentUser.id,
       type: "cerita",
@@ -70,6 +79,7 @@ async function _ceritaUpsertScore(key, pct) {
     },
     { onConflict: "user_id,type,key" },
   );
+  if (error) throw error;
   // FIX: invalidate hanya saat selesai (pct >= 95) — progress scroll biasa tidak perlu invalidate tiap 5%
   if (pct >= 95 && typeof window.invalidateStatsCache === "function")
     window.invalidateStatsCache();
@@ -79,12 +89,13 @@ async function _ceritaDeleteScore(key) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
   delete ceritaScores[key];
-  await supa
+  const { error } = await supa
     .from("user_scores")
     .delete()
     .eq("user_id", currentUser.id)
     .eq("type", "cerita")
     .eq("key", key);
+  if (error) throw error;
 }
 
 /* ── Load Cerita dari Supabase ── */
@@ -168,7 +179,7 @@ export async function startCerita(key) {
     currentCeritaData = await loadCeritaFromDB(key);
   } catch (err) {
     if (bodyEl)
-      bodyEl.innerHTML = `<div style="text-align:center;padding:60px;color:var(--dim);">⚠️ ${err.message}</div>`;
+      bodyEl.innerHTML = `<div style="text-align:center;padding:60px;color:var(--dim);">⚠️ ${_escapeHtml(err.message)}</div>`;
     return;
   }
 
@@ -218,7 +229,7 @@ export function renderCeritaBody() {
   const quizBtnHtml = `
     <div class="cerita-quiz-trigger" id="cerita-quiz-trigger">
       <div class="cerita-quiz-divider"></div>
-      <button class="cerita-quiz-btn" onclick="window.startCeritaQuiz()">
+      <button class="cerita-quiz-btn" id="cerita-quiz-btn">
         <span class="cerita-quiz-btn-icon">📝</span>
         <span>Uji Pemahaman</span>
         <span class="cerita-quiz-btn-sub">3 soal tentang cerita ini</span>
@@ -226,6 +237,10 @@ export function renderCeritaBody() {
     </div>
     <div class="cerita-cq-panel" id="cerita-cq-panel" style="display:none;"></div>`;
   body.insertAdjacentHTML("beforeend", quizBtnHtml);
+  const quizBtn = document.getElementById("cerita-quiz-btn");
+  if (quizBtn) {
+    quizBtn.addEventListener("click", () => window.startCeritaQuiz());
+  }
 
   body.querySelectorAll(".cerita-speak-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -247,6 +262,14 @@ export function renderCeritaBody() {
       if (!isOpen) myPopup.style.display = "block";
     });
   });
+  body.querySelectorAll(".cerita-popup-speak").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!currentCeritaKey) return;
+      const word = btn.dataset.word || "";
+      if (word) speakMandarin(word, 0.8);
+    });
+  });
 
   document.removeEventListener("click", closeCeritaPopups);
   document.addEventListener("click", closeCeritaPopups);
@@ -259,15 +282,16 @@ export function closeCeritaPopups() {
 }
 
 function markVocab(text, vocabWords, vocab) {
-  let result = text;
+  let result = _escapeHtml(text);
   let pidx = 0;
   const placeholders = {};
 
   vocabWords.forEach((word) => {
     const v = vocab[word];
+    const escapedWord = _escapeHtml(word);
     const pid = `__HL${pidx++}__`;
-    const tag = `<span class="cerita-hl" style="position:relative;display:inline-block;">${word}<span class="cerita-popup"><span class="cerita-py">${v.pinyin}</span><span class="cerita-ar">${v.arti}</span><button class="cerita-popup-speak" onclick="event.stopPropagation();if(window.currentCeritaKey)window.speakMandarin('${word}',0.8)" title="Dengar">🔊</button></span></span>`;
-    result = result.split(word).join(pid);
+    const tag = `<span class="cerita-hl" style="position:relative;display:inline-block;">${escapedWord}<span class="cerita-popup"><span class="cerita-py">${_escapeHtml(v.pinyin)}</span><span class="cerita-ar">${_escapeHtml(v.arti)}</span><button class="cerita-popup-speak" data-word="${escapedWord}" title="Dengar">🔊</button></span></span>`;
+    result = result.split(escapedWord).join(pid);
     placeholders[pid] = tag;
   });
 
@@ -467,7 +491,9 @@ function _doCeritaReset() {
       .eq("user_id", currentUser.id)
       .eq("type", "cerita")
       .eq("key", currentCeritaKey)
-      .then(() => {});
+      .then(({ error }) => {
+        if (error) console.warn("_doCeritaReset/delete:", error);
+      });
   }
 
   setTimeout(() => {
@@ -531,17 +557,25 @@ function _cqRenderQuestion() {
   const q = _cqItems[_cqIdx];
   const pct = (((_cqIdx + 1) / _cqItems.length) * 100).toFixed(0);
   _cqAnswered = false;
+  const qText = _escapeHtml(q.q);
+  const options = (q.options || []).map((opt) => _escapeHtml(opt));
 
   panel.innerHTML = `
     <div class="cq-header"><span class="cq-badge">Uji Pemahaman</span><span class="cq-counter">${_cqIdx + 1} / ${_cqItems.length}</span></div>
     <div class="cq-prog"><div class="cq-prog-fill" style="width:${pct}%"></div></div>
     <div class="cq-qnum">Soal ${_cqIdx + 1}</div>
-    <div class="cq-qtext">${q.q}</div>
+    <div class="cq-qtext">${qText}</div>
     <div class="cq-opts" id="cq-opts">
-      ${q.options.map((opt, i) => `<button class="cq-opt" id="cq-opt-${i}" onclick="window._cqAnswer(${i})"><span class="cq-opt-lbl">${["A", "B", "C"][i]}</span><span>${opt}</span></button>`).join("")}
+      ${options.map((opt, i) => `<button class="cq-opt" id="cq-opt-${i}" data-opt="${i}"><span class="cq-opt-lbl">${["A", "B", "C"][i]}</span><span>${opt}</span></button>`).join("")}
     </div>
     <div class="cq-feedback" id="cq-feedback"></div>
     <div class="cq-nav"><button class="cq-next-btn" id="cq-next" onclick="window._cqNext()" disabled>${_cqIdx === _cqItems.length - 1 ? "Lihat Hasil" : "Lanjut"}</button></div>`;
+  panel.querySelectorAll(".cq-opt").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.opt || "-1", 10);
+      if (idx >= 0) _cqAnswer(idx);
+    });
+  });
 }
 
 function _cqAnswer(selected) {
@@ -563,7 +597,7 @@ function _cqAnswer(selected) {
   const fb = document.getElementById("cq-feedback");
   if (fb) {
     fb.className = "cq-feedback cq-feedback--" + (correct ? "ok" : "err");
-    fb.innerHTML =
+    fb.textContent =
       (correct ? "✓ Benar! " : "✗ Salah. ") + (q.explanation || "");
   }
 
@@ -576,7 +610,7 @@ async function _cqSaveResult() {
   if (!currentUser || !currentCeritaKey) return;
   const pct = Math.round((_cqCorrect / _cqItems.length) * 100);
   try {
-    await supa.from("user_scores").upsert(
+    const { error } = await supa.from("user_scores").upsert(
       {
         user_id: currentUser.id,
         type: "cerita_quiz",
@@ -586,6 +620,7 @@ async function _cqSaveResult() {
       },
       { onConflict: "user_id,type,key" },
     );
+    if (error) throw error;
     if (typeof window.invalidateStatsCache === "function")
       // FIX: invalidate cache profile
       window.invalidateStatsCache();
@@ -712,14 +747,32 @@ export async function renderCeritaList() {
           ? `<span class="item-done-tag" style="opacity:.65">${pct}%</span>`
           : "";
       const chars = s.total_chars ? `${s.total_chars} karakter` : "—";
-      return `<div class="item-card" data-hsk="${hsk}" onclick="window.startCerita('${s.key}')">
-      <div class="item-card-top"><span class="day-badge">${s.badge}</span>${doneTag}</div>
-      <div class="item-title">${s.title}</div>
-      ${s.title_zh ? `<div style="font-size:13px;color:var(--dim2);font-family:'Noto Sans SC',sans-serif;margin-top:2px;">${s.title_zh}</div>` : ""}
-      <div class="item-meta"><span class="item-date">${chars}</span><button class="btn-open" onclick="event.stopPropagation();window.startCerita('${s.key}')">Baca</button></div>
+      const title = _escapeHtml(s.title);
+      const titleZh = s.title_zh ? _escapeHtml(s.title_zh) : "";
+      const badgeSafe = _escapeHtml(s.badge);
+      const charsSafe = _escapeHtml(chars);
+      const keySafe = _escapeHtml(s.key);
+      return `<div class="item-card" data-hsk="${hsk}" data-cerita-key="${keySafe}">
+      <div class="item-card-top"><span class="day-badge">${badgeSafe}</span>${doneTag}</div>
+      <div class="item-title">${title}</div>
+      ${s.title_zh ? `<div style="font-size:13px;color:var(--dim2);font-family:'Noto Sans SC',sans-serif;margin-top:2px;">${titleZh}</div>` : ""}
+      <div class="item-meta"><span class="item-date">${charsSafe}</span><button class="btn-open" data-cerita-open="${keySafe}">Baca</button></div>
     </div>`;
     })
     .join("");
+  grid.querySelectorAll(".item-card[data-cerita-key]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const key = el.dataset.ceritaKey;
+      if (key) window.startCerita(key);
+    });
+  });
+  grid.querySelectorAll(".btn-open[data-cerita-open]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.ceritaOpen;
+      if (key) window.startCerita(key);
+    });
+  });
 
   const activeItem = document.querySelector(
     "#hsk-filter-cerita .hsk-dropdown-item.active",

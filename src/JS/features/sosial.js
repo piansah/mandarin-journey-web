@@ -7,7 +7,7 @@ import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
 import { showToast } from "../utilities/helpers.js";
 import { AVATAR_COLLECTION } from "./avatar.js";
-import { XP } from "../utilities/xp.js";
+import { calcXPFromRows } from "../utilities/xp.js";
 
 /* ══════════════════════════════════════════════════════════════
    STATE
@@ -23,42 +23,7 @@ let _lastLoadedPeriod = null;
 let _selectedTier = "all";
 let _userProfilePrevScreen = "sosial-screen";
 let _sosialInitInProgress = false; // guard: cegah concurrent init
-
-/* ══════════════════════════════════════════════════════════════
-   XP HELPER
-══════════════════════════════════════════════════════════════ */
-function _calcXPFromRows(rows) {
-  const xpFromScore = (s) => (s >= 80 ? XP.HIGH : s >= 60 ? XP.MID : XP.LOW);
-
-  let xp = 0;
-  (rows || []).forEach(({ type, score }) => {
-    if (type === "quiz" || type === "kal" || type === "grammar") {
-      xp += xpFromScore(score);
-    } else if (type === "hanzi") {
-      if (score >= 100) xp += XP.HANZI_SELESAI;
-    } else if (type === "cerita") {
-      if (score >= 95) xp += XP.CERITA_SELESAI;
-    } else if (type === "cerita_quiz") {
-      xp +=
-        score >= 80
-          ? XP.CERITA_QUIZ_HIGH
-          : score >= 60
-            ? XP.CERITA_QUIZ_MID
-            : XP.CERITA_QUIZ_LOW;
-    } else if (
-      type === "fc_session" ||
-      type === "nada_session" ||
-      type === "speaking_session"
-    ) {
-      xp += Math.min(score || 0, XP.SESSION_CAP);
-    } else if (type === "tulis_session") {
-      if (score >= 100) xp += XP.TULIS_SELESAI;
-    } else if (type === "lesson") {
-      xp += score || 0;
-    }
-  });
-  return xp;
-}
+let _leaderboardRequestId = 0;
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
@@ -405,7 +370,7 @@ async function _loadFollowList(subTab) {
           display_name: profile.display_name || "Pelajar",
           selected_avatar: profile.selected_avatar || null,
           custom_avatar_url: profile.custom_avatar_url || null,
-          xp: _calcXPFromRows(rowsByUser.get(uid) || []),
+          xp: calcXPFromRows(rowsByUser.get(uid) || []),
           streak: _calcStreak(datesByUser.get(uid) || []),
         };
       })
@@ -518,6 +483,7 @@ function _getFilteredList() {
    LOAD XP LEADERBOARD
 ══════════════════════════════════════════════════════════════ */
 async function _loadXPLeaderboard(period) {
+  const requestId = ++_leaderboardRequestId;
   try {
     let startDate = null;
     const now = new Date();
@@ -535,6 +501,7 @@ async function _loadXPLeaderboard(period) {
     const { data: scores, error } = await query;
     if (error) throw error;
     if (!scores || scores.length === 0) {
+      if (requestId !== _leaderboardRequestId) return;
       _leaderboardCache = [];
       _myRank = null;
       _rankList = [];
@@ -549,10 +516,11 @@ async function _loadXPLeaderboard(period) {
     });
     const userXPMap = new Map();
     for (const [userId, userScores] of userScoresMap.entries()) {
-      userXPMap.set(userId, _calcXPFromRows(userScores));
+      userXPMap.set(userId, calcXPFromRows(userScores));
     }
     const userIds = Array.from(userXPMap.keys());
     if (userIds.length === 0) {
+      if (requestId !== _leaderboardRequestId) return;
       _leaderboardCache = [];
       _myRank = null;
       _rankList = [];
@@ -599,6 +567,7 @@ async function _loadXPLeaderboard(period) {
     }
     leaderboard.sort((a, b) => b.xp - a.xp);
     leaderboard.forEach((item, idx) => (item.rank = idx + 1));
+    if (requestId !== _leaderboardRequestId) return;
     _leaderboardCache = leaderboard;
     _lastLoadedPeriod = period;
     _myRank = leaderboard.find((item) => item.isMe) || null;
@@ -610,6 +579,7 @@ async function _loadXPLeaderboard(period) {
     }
     _renderXPLeaderboard();
   } catch (err) {
+    if (requestId !== _leaderboardRequestId) return;
     console.error("_loadXPLeaderboard:", err);
     const listEl = document.getElementById("xp-leaderboard-list");
     if (listEl)
@@ -819,7 +789,7 @@ async function _openUserPopup(userId) {
         selected_avatar: prof?.selected_avatar || null,
         custom_avatar_url: prof?.custom_avatar_url || null,
         badges: prof?.badges || [],
-        xp: _calcXPFromRows(scores || []),
+        xp: calcXPFromRows(scores || []),
         streak: _calcStreak((streakRows || []).map((r) => r.date)),
         kosakataCount: kosakataCount ?? 0,
         sesiCount: sesiCount ?? 0,
@@ -1204,7 +1174,7 @@ async function _loadOtherFollowList(userId, subTab) {
         display_name: profile.display_name || "Pelajar",
         selected_avatar: profile.selected_avatar || null,
         custom_avatar_url: profile.custom_avatar_url || null,
-        xp: _calcXPFromRows(rowsByUser.get(uid) || []),
+        xp: calcXPFromRows(rowsByUser.get(uid) || []),
         streak: _calcStreak(datesByUser.get(uid) || []),
       };
     });
@@ -1309,7 +1279,7 @@ window._closeOtherFollowSheet = _closeOtherFollowSheet;
 window._toggleFollowFromList = _toggleFollowFromList;
 window._reloadOtherFollowSheet = _reloadOtherFollowSheet;
 window._switchFollowTab = _switchFollowTab;
-window._calcXPFromRows = _calcXPFromRows;
+window._calcXPFromRows = calcXPFromRows;
 window._calcStreak = _calcStreak;
 window._getGelarByXP = _getGelarByXP;
 window._isFollowing = _isFollowing;

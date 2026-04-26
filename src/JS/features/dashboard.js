@@ -36,6 +36,7 @@ import {
   fetchUserStats,
   invalidateStatsCache,
 } from "../utilities/stats-api.js";
+import { calcXPFromRows } from "../utilities/xp.js";
 
 /* ── Constants ── */
 const LS_HAN = "hsk_han";
@@ -316,12 +317,13 @@ async function _recordDailyStreak() {
   _incrementDayIntensity(today);
   if (_streakRecordedDate === today) return;
   _streakRecordedDate = today;
-  await supa
+  const { error } = await supa
     .from("daily_streaks")
     .upsert(
       { user_id: currentUser.id, date: today },
       { onConflict: "user_id,date", ignoreDuplicates: true },
     );
+  if (error) throw error;
   await loadStreak();
 }
 
@@ -400,35 +402,54 @@ function _xpFromScore(score) {
 }
 
 function _calcUserXP() {
-  let xp = 0;
-  Object.keys(quizScoresGlobal).forEach(
-    (k) => (xp += _xpFromScore(quizScoresGlobal[k])),
-  );
-  Object.keys(kalScoresGlobal).forEach(
-    (k) => (xp += _xpFromScore(kalScoresGlobal[k])),
-  );
-  Object.keys(gramScores).forEach((k) => (xp += _xpFromScore(gramScores[k])));
-  Object.keys(hanziScoresGlobal).forEach((k) => {
-    if (hanziScoresGlobal[k] >= 100) xp += XP_WEIGHT.flat;
-  });
-  Object.keys(ceritaScores).forEach((k) => {
-    if (ceritaScores[k] >= 95) xp += XP_WEIGHT.flat;
-  });
-  const capXP = (v) => Math.min(v || 0, XP_WEIGHT.high);
-  Object.keys(fcScoresGlobal).forEach((k) => (xp += capXP(fcScoresGlobal[k])));
-  Object.keys(nadaScoresGlobal).forEach(
-    (k) => (xp += capXP(nadaScoresGlobal[k])),
-  );
-  Object.keys(speakingScoresGlobal).forEach(
-    (k) => (xp += capXP(speakingScoresGlobal[k])),
-  );
-  Object.keys(ceritaQuizScoresGlobal).forEach((k) => {
-    const score = ceritaQuizScoresGlobal[k];
-    if (score >= 80) xp += 20;
-    else if (score >= 60) xp += 12;
-    else xp += 6;
-  });
-  return xp;
+  const rows = [
+    ...Object.entries(quizScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "quiz",
+      score,
+    })),
+    ...Object.entries(kalScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "kal",
+      score,
+    })),
+    ...Object.entries(gramScores).map(([key, score]) => ({
+      key,
+      type: "grammar",
+      score,
+    })),
+    ...Object.entries(hanziScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "hanzi",
+      score,
+    })),
+    ...Object.entries(ceritaScores).map(([key, score]) => ({
+      key,
+      type: "cerita",
+      score,
+    })),
+    ...Object.entries(fcScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "fc_session",
+      score,
+    })),
+    ...Object.entries(nadaScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "nada_session",
+      score,
+    })),
+    ...Object.entries(speakingScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "speaking_session",
+      score,
+    })),
+    ...Object.entries(ceritaQuizScoresGlobal).map(([key, score]) => ({
+      key,
+      type: "cerita_quiz",
+      score,
+    })),
+  ];
+  return calcXPFromRows(rows);
 }
 
 function _calcMaxXP() {
@@ -683,9 +704,10 @@ export async function upsertScore(type, key, score, meta = null) {
     updated_at: new Date().toISOString(),
   };
   if (meta !== null) payload.meta = meta;
-  await supa
+  const { error } = await supa
     .from("user_scores")
     .upsert(payload, { onConflict: "user_id,type,key" });
+  if (error) throw error;
   invalidateStatsCache(); // ← PATCH: reset cache supaya XP fresh dari server
   _recordDailyStreak().catch(console.error);
 }
@@ -693,12 +715,13 @@ export async function upsertScore(type, key, score, meta = null) {
 export async function deleteScore(type, key) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
-  await supa
+  const { error } = await supa
     .from("user_scores")
     .delete()
     .eq("user_id", currentUser.id)
     .eq("type", type)
     .eq("key", key);
+  if (error) throw error;
 }
 
 export async function saveScore(key, score, meta = null) {
@@ -1135,12 +1158,12 @@ export function updateDailyProgress() {
   const qv = document.getElementById("mc-quiz-val");
   const qf = document.getElementById("mc-quiz-fill");
   if (qv) qv.textContent = `${quizDone} / ${totalQuiz}`;
-  if (qf) qf.style.width = (quizDone / totalQuiz) * 100 + "%";
+  if (qf) qf.style.width = `${totalQuiz ? (quizDone / totalQuiz) * 100 : 0}%`;
 
   const kv = document.getElementById("mc-kal-val");
   const kf = document.getElementById("mc-kal-fill");
   if (kv) kv.textContent = `${kalDone} / ${totalKal}`;
-  if (kf) kf.style.width = (kalDone / totalKal) * 100 + "%";
+  if (kf) kf.style.width = `${totalKal ? (kalDone / totalKal) * 100 : 0}%`;
 
   _renderStreak();
   _renderLevel().catch((err) =>

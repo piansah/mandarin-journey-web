@@ -10,6 +10,7 @@ const XP_MID  = 18;
 const XP_LOW  = 9;
 const XP_FLAT = 36;
 const XP_CAP  = 36;
+const XP_TULIS = 36;
 
 function xpFromScore(score: number): number {
   if (score >= 80) return XP_HIGH;
@@ -44,6 +45,12 @@ function calcXPFromRows(rows: ScoreRow[]): number {
         break;
       case "cerita_quiz":
         xp += score >= 80 ? 20 : score >= 60 ? 12 : 6;
+        break;
+      case "tulis_session":
+        if (score >= 100) xp += XP_TULIS;
+        break;
+      case "lesson":
+        xp += score || 0;
         break;
     }
   }

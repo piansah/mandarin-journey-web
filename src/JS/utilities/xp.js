@@ -94,3 +94,30 @@ export function calcXPLesson(correct, combo5Bonus = 0, combo10Bonus = 0) {
     XP.LESSON_BASE + correct * XP.LESSON_PER_BENAR + combo5Bonus + combo10Bonus
   );
 }
+
+/** Agregasi XP dari rows user_scores */
+export function calcXPFromRows(rows = []) {
+  let xp = 0;
+  for (const { type, score } of rows) {
+    if (type === "quiz" || type === "kal" || type === "grammar") {
+      xp += calcXPFromPct(score || 0);
+    } else if (type === "hanzi") {
+      if ((score || 0) >= 100) xp += XP.HANZI_SELESAI;
+    } else if (type === "cerita") {
+      if ((score || 0) >= 95) xp += XP.CERITA_SELESAI;
+    } else if (type === "cerita_quiz") {
+      xp += calcXPCeritaQuiz(score || 0);
+    } else if (
+      type === "fc_session" ||
+      type === "nada_session" ||
+      type === "speaking_session"
+    ) {
+      xp += Math.min(score || 0, XP.SESSION_CAP);
+    } else if (type === "tulis_session") {
+      if ((score || 0) >= 100) xp += XP.TULIS_SELESAI;
+    } else if (type === "lesson") {
+      xp += score || 0;
+    }
+  }
+  return xp;
+}
