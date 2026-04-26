@@ -31,7 +31,7 @@ const _NAVBAR_SCREENS = [
 export function _syncNavbar() {
   const navbar = document.getElementById("bottom-navbar");
   if (!navbar) return;
-  const activeScreen = document.querySelector(".screen.active")?.id || "dash";
+  const activeScreen = document.querySelector(".screen.active")?.id || "petualangan-screen";
   const anyLayerOpen = document.querySelectorAll(".layer.active").length > 0;
   const shouldShow = _NAVBAR_SCREENS.includes(activeScreen) && !anyLayerOpen;
   navbar.style.display = shouldShow ? "" : "none";
@@ -45,7 +45,7 @@ export function updateNavbar(_screenId) {
 }
 
 export function bnavGoTo(screenId) {
-  if (screenId === "dash") {
+  if (screenId === "petualangan-screen") {
     backToDash();
     return;
   }
@@ -69,7 +69,7 @@ function _cleanupCurrentScreen() {
 
 function _getSnapshot() {
   const activeScreen =
-    document.querySelector(".screen.active")?.id || "dash";
+    document.querySelector(".screen.active")?.id || "petualangan-screen";
   const activeLayers = [...document.querySelectorAll(".layer.active")].map(
     (l) => l.id,
   );
@@ -88,9 +88,9 @@ function _restoreSnapshot(snap) {
   document.body.style.overflow = "";
 
   if (snap.activeLayers.length > 0) {
-    // Ada layer aktif → base screen dash
-    const dash = document.getElementById("dash");
-    if (dash) dash.classList.add("active");
+    // Ada layer aktif → base screen petualangan-screen
+    const petualangan = document.getElementById("petualangan-screen");
+    if (petualangan) petualangan.classList.add("active");
   } else {
     const screenEl = document.getElementById(snap.activeScreen);
     if (screenEl) screenEl.classList.add("active");
@@ -106,14 +106,14 @@ function _restoreSnapshot(snap) {
 
   if (snap.activeLayers.length > 0) {
     _navStack = snap.activeLayers.map((id) => ({ type: "layer", id }));
-  } else if (snap.activeScreen === "dash") {
-    _navStack = [{ type: "dash" }];
+  } else if (snap.activeScreen === "petualangan-screen") {
+    _navStack = [{ type: "petualangan-screen" }];
   } else {
     _navStack = [{ type: "screen", id: snap.activeScreen }];
   }
 
   const anyLayer = snap.activeLayers.length > 0;
-  const isDash = snap.activeScreen === "dash" || anyLayer;
+  const isDash = snap.activeScreen === "petualangan-screen" || anyLayer;
   setFabVisible(!anyLayer && isDash);
 
   // Re-render layer konten supaya tidak stuck kosong setelah back nav
@@ -235,7 +235,7 @@ export function closeLayer(id, _suppressHistory = false) {
   document.body.style.overflow = "";
   _navStack = _navStack.filter((s) => !(s.type === "layer" && s.id === id));
   const anyLayerOpen = document.querySelectorAll(".layer.active").length > 0;
-  const onDash = document.getElementById("dash")?.classList.contains("active");
+  const onDash = document.getElementById("petualangan-screen")?.classList.contains("active");
   setFabVisible(!anyLayerOpen && !!onDash);
   if (!_suppressHistory) _pushAppHistory();
   _syncNavbar();
@@ -257,7 +257,7 @@ export function showScreen(id) {
   newScreen.scrollTop = _screenScrollPos[id] ?? 0;
   _navStack = [{ type: "screen", id }];
   _pushAppHistory();
-  setFabVisible(id === "dash");
+  setFabVisible(id === "petualangan-screen");
   _syncNavbar();
   _triggerScreenInit(id);
   if (id === "search-screen") {
@@ -278,10 +278,10 @@ export function backToDash() {
   document
     .querySelectorAll(".screen")
     .forEach((s) => s.classList.remove("active"));
-  const dash = document.getElementById("dash");
-  dash.classList.add("active");
-  dash.scrollTop = _screenScrollPos["dash"] ?? 0;
-  _navStack = [{ type: "dash" }];
+  const petualangan = document.getElementById("petualangan-screen");
+  petualangan.classList.add("active");
+  petualangan.scrollTop = _screenScrollPos["petualangan-screen"] ?? 0;
+  _navStack = [{ type: "petualangan-screen" }];
   _pushAppHistory();
   setFabVisible(true);
   _syncNavbar();
@@ -295,7 +295,7 @@ export function backToLayer(id) {
   document
     .querySelectorAll(".layer")
     .forEach((l) => l.classList.remove("active"));
-  document.getElementById("dash").classList.add("active");
+  document.getElementById("petualangan-screen").classList.add("active");
   document.getElementById(id).classList.add("active");
   document.body.style.overflow = "hidden";
   _navStack = [{ type: "layer", id }];
@@ -316,8 +316,8 @@ export function initAppHistory() {
 
   const anyActive = document.querySelector(".screen.active");
   if (!anyActive) {
-    const dash = document.getElementById("dash");
-    if (dash) dash.classList.add("active");
+    const petualangan = document.getElementById("petualangan-screen");
+    if (petualangan) petualangan.classList.add("active");
   }
 
   _appHistory = [_getSnapshot()];
