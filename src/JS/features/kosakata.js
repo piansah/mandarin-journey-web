@@ -1765,69 +1765,78 @@ export function closeContohForm() {
 }
 
 export async function saveContoh() {
-  const hanzi = document.getElementById("contoh-hanzi")?.value.trim();
-  const pinyin = document.getElementById("contoh-pinyin")?.value.trim() || null;
-  const arti = document.getElementById("contoh-arti")?.value.trim() || null;
   const msg = document.getElementById("contoh-msg");
-
-  if (!hanzi) {
-    if (msg) {
-      msg.className = "auth-msg err";
-      msg.textContent = "Kalimat Hanzi wajib diisi.";
-    }
-    return;
-  }
-
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    if (msg) {
-      msg.className = "auth-msg err";
-      msg.textContent = "Login dulu untuk menambah contoh.";
-    }
-    return;
-  }
-
   const btn = document.getElementById("contoh-save-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
-  }
 
-  const wordHanzi = _currentKosWord?.hanzi;
-  let error;
+  try {
+    const hanzi = document.getElementById("contoh-hanzi")?.value.trim();
+    const pinyin = document.getElementById("contoh-pinyin")?.value.trim() || null;
+    const arti = document.getElementById("contoh-arti")?.value.trim() || null;
 
-  if (_editingContohId) {
-    ({ error } = await supa
-      .from("word_examples")
-      .update({ hanzi, pinyin, arti })
-      .eq("id", _editingContohId)
-      .eq("added_by", currentUser.id));
-  } else {
-    ({ error } = await supa.from("word_examples").insert({
-      word_hanzi: wordHanzi,
-      hanzi,
-      pinyin,
-      arti,
-      added_by: currentUser.id,
-    }));
-  }
+    if (!hanzi) {
+      if (msg) {
+        msg.className = "auth-msg err";
+        msg.textContent = "Kalimat Hanzi wajib diisi.";
+      }
+      return;
+    }
 
-  if (error) {
+    if (!_currentKosWord || !_currentKosWord.hanzi) {
+      if (msg) {
+        msg.className = "auth-msg err";
+        msg.textContent = "Data kata dasar tidak ditemukan. Silakan buka ulang detail kata.";
+      }
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      if (msg) {
+        msg.className = "auth-msg err";
+        msg.textContent = "Sesi habis. Silakan login kembali.";
+      }
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
+    }
+
+    const wordHanzi = _currentKosWord.hanzi;
+    let error;
+
+    if (_editingContohId) {
+      ({ error } = await supa
+        .from("word_examples")
+        .update({ hanzi, pinyin, arti })
+        .eq("id", _editingContohId)
+        .eq("added_by", currentUser.id));
+    } else {
+      ({ error } = await supa.from("word_examples").insert({
+        word_hanzi: wordHanzi,
+        hanzi,
+        pinyin,
+        arti,
+        added_by: currentUser.id,
+      }));
+    }
+
+    if (error) throw error;
+
+    closeContohForm();
+    await _loadKosWordExamples(wordHanzi);
+  } catch (err) {
+    console.error("saveContoh Error:", err);
     if (btn) {
       btn.disabled = false;
-      btn.textContent = _editingContohId
-        ? "Simpan Perubahan"
-        : "+ Tambah Contoh";
+      btn.textContent = _editingContohId ? "Simpan Perubahan" : "+ Tambah Contoh";
     }
     if (msg) {
       msg.className = "auth-msg err";
-      msg.textContent = "Gagal: " + error.message;
+      msg.textContent = "Gagal menyimpan: " + (err.message || "Terjadi kesalahan jaringan");
     }
-    return;
   }
-
-  closeContohForm();
-  await _loadKosWordExamples(wordHanzi);
 }
 
 export async function deleteContoh(id) {

@@ -46,14 +46,14 @@
       <button
         class="ob-arrow-nav ob-arrow-prev"
         id="ob-arrow-prev"
-        onclick="_obGoTo(_obCur - 1)"
+        onclick="window._obGoTo(_obCur - 1)"
       >
         &#8592;
       </button>
       <button
         class="ob-arrow-nav ob-arrow-next"
         id="ob-arrow-next"
-        onclick="_obGoTo(_obCur + 1)"
+        onclick="window._obGoTo(_obCur + 1)"
       >
         &#8594;
       </button>
@@ -434,21 +434,21 @@
                 Kami akan membuka tier yang sesuai untukmu.
               </div>
               <div class="ob-pl-opts" id="pl-opts-0">
-                <div class="ob-pl-opt" data-val="0" onclick="_plSelect(0, 0)">
+                <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(0, 0)">
                   <div class="ob-pl-badge">零</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Belum pernah belajar</div>
                     <div class="ob-pl-ohsk">Mulai dari nol</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="1" onclick="_plSelect(0, 1)">
+                <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(0, 1)">
                   <div class="ob-pl-badge">基</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Pemula — sedikit kosakata</div>
                     <div class="ob-pl-ohsk">HSK 1–2</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="2" onclick="_plSelect(0, 2)">
+                <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(0, 2)">
                   <div class="ob-pl-badge">中</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">
@@ -457,7 +457,7 @@
                     <div class="ob-pl-ohsk">HSK 3</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="3" onclick="_plSelect(0, 3)">
+                <div class="ob-pl-opt" data-val="3" onclick="window._plSelect(0, 3)">
                   <div class="ob-pl-badge">进</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">
@@ -466,7 +466,7 @@
                     <div class="ob-pl-ohsk">HSK 4–5</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="4" onclick="_plSelect(0, 4)">
+                <div class="ob-pl-opt" data-val="4" onclick="window._plSelect(0, 4)">
                   <div class="ob-pl-badge">精</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">
@@ -497,7 +497,7 @@
                 Membantu kami menyesuaikan mode belajarmu.
               </div>
               <div class="ob-pl-opts" id="pl-opts-1">
-                <div class="ob-pl-opt" data-val="0" onclick="_plSelect(1, 0)">
+                <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(1, 0)">
                   <div class="ob-pl-badge">否</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">
@@ -506,14 +506,14 @@
                     <div class="ob-pl-ohsk">Pinyin tampil di semua latihan</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="1" onclick="_plSelect(1, 1)">
+                <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(1, 1)">
                   <div class="ob-pl-badge">半</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Sebagian — karakter umum saja</div>
                     <div class="ob-pl-ohsk">Pinyin muncul saat dibutuhkan</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="2" onclick="_plSelect(1, 2)">
+                <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(1, 2)">
                   <div class="ob-pl-badge">是</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Bisa — tidak butuh Pinyin</div>
@@ -521,7 +521,7 @@
                   </div>
                 </div>
               </div>
-              <button class="ob-pl-back" onclick="_plBack(8)">Kembali</button>
+              <button class="ob-pl-back" onclick="window._plBack(8)">Kembali</button>
             </div>
           </div>
         </div>
@@ -543,7 +543,7 @@
                 Kami akan rekomendasikan urutan latihan yang tepat.
               </div>
               <div class="ob-pl-opts" id="pl-opts-2">
-                <div class="ob-pl-opt" data-val="0" onclick="_plSelect(2, 0)">
+                <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(2, 0)">
                   <div class="ob-pl-badge">旅</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">
@@ -551,26 +551,26 @@
                     </div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="1" onclick="_plSelect(2, 1)">
+                <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(2, 1)">
                   <div class="ob-pl-badge">试</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Persiapan ujian HSK</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="2" onclick="_plSelect(2, 2)">
+                <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(2, 2)">
                   <div class="ob-pl-badge">业</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Keperluan kerja atau bisnis</div>
                   </div>
                 </div>
-                <div class="ob-pl-opt" data-val="3" onclick="_plSelect(2, 3)">
+                <div class="ob-pl-opt" data-val="3" onclick="window._plSelect(2, 3)">
                   <div class="ob-pl-badge">趣</div>
                   <div class="ob-pl-info">
                     <div class="ob-pl-oname">Hobi & minat budaya</div>
                   </div>
                 </div>
               </div>
-              <button class="ob-pl-back" onclick="_plBack(9)">Kembali</button>
+              <button class="ob-pl-back" onclick="window._plBack(9)">Kembali</button>
             </div>
           </div>
         </div>
@@ -590,7 +590,7 @@
               <button
                 class="ob-pl-start-btn"
                 id="ob-pl-start-btn"
-                onclick="_plFinish()"
+                onclick="window._plFinish()"
               >
                 Mulai Petualangan
               </button>
@@ -605,7 +605,7 @@
 
       <!-- Tombol Mulai Belajar — hanya muncul di slide 6, lanjut ke placement -->
       <div class="ob-finish-bar" id="ob-finish-bar">
-        <button class="ob-btn" id="ob-btn" onclick="_obStartPlacement()">
+        <button class="ob-btn" id="ob-btn" onclick="window._obStartPlacement()">
           Mulai Belajar
         </button>
       </div>
@@ -626,7 +626,7 @@
         <button
           id="btn-login"
           class="btn-google"
-          onclick="doGoogleLoginScreen()"
+          onclick="window.doGoogleLoginScreen()"
         >
           <svg
             width="18"
@@ -737,7 +737,7 @@
             class="srs-due-badge"
             id="srs-due-badge"
             style="display: none; cursor: pointer"
-            onclick="startFCDue()"
+            onclick="window.startFCDue()"
           >
             ⏰ <span id="srs-due-count">0</span> due — Review
           </span>
@@ -774,7 +774,7 @@
         <div class="menu-grid">
           <div
             class="menu-card mc-vok"
-            onclick="
+            onclick="window.
               _kosActiveHSK = 'all';
               clearKosGlobalSearch();
               document
@@ -810,7 +810,7 @@
             <div class="mc-arrow">❯❯</div>
           </div>
 
-          <div class="menu-card mc-quiz" onclick="openLayer('layer-quiz')">
+          <div class="menu-card mc-quiz" onclick="window.openLayer('layer-quiz')">
             <div class="mc-icon">📝</div>
             <div class="mc-title">Quiz Harian</div>
             <div class="mc-sub">100 soal per day · 4 bagian · diacak</div>
@@ -833,7 +833,7 @@
 
           <div
             class="menu-card mc-grammar"
-            onclick="openLayer('layer-grammar')"
+            onclick="window.openLayer('layer-grammar')"
           >
             <div class="mc-icon">🚀</div>
             <div class="mc-title">Tata Bahasa</div>
@@ -855,7 +855,7 @@
             <div class="mc-arrow">❯❯</div>
           </div>
 
-          <div class="menu-card mc-hanzi" onclick="openLayer('layer-hanzi')">
+          <div class="menu-card mc-hanzi" onclick="window.openLayer('layer-hanzi')">
             <div class="mc-icon">👁️</div>
             <div class="mc-title">Flashcard Kumulatif</div>
             <div class="mc-sub">
@@ -880,7 +880,7 @@
 
           <div
             class="menu-card mc-kalimat"
-            onclick="openLayer('layer-kalimat')"
+            onclick="window.openLayer('layer-kalimat')"
           >
             <div class="mc-icon">💬</div>
             <div class="mc-title">Quiz Kumulatif</div>
@@ -905,7 +905,7 @@
           <!-- MENU CARD: BACA CERITA -->
           <div
             class="menu-card mc-cerita"
-            onclick="
+            onclick="window.
               openLayer('layer-cerita');
               renderCeritaList();
             "
@@ -940,7 +940,7 @@
       <!-- LAYER: QUIZ LIST -->
       <div class="layer" id="layer-quiz">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeLayer('layer-quiz')">❮❮</div>
+          <div class="btn-back" onclick="window.closeLayer('layer-quiz')">❮❮</div>
           <div>
             <div class="layer-title">📝 Quiz Harian</div>
             <div class="layer-sub" id="layer-quiz-sub">
@@ -949,56 +949,56 @@
           </div>
         </div>
         <div class="hsk-dropdown-wrap" id="hsk-filter-quiz">
-          <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
             <span class="hsk-dropdown-val">Semua</span>
             <span class="hsk-dropdown-arrow">▾</span>
             <div class="hsk-dropdown-menu">
               <div
                 class="hsk-dropdown-item active"
                 data-level="all"
-                onclick="filterHSKDropdown(event, 'quiz', 'all', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'all', this)"
               >
                 Semua
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk1"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk1', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk1', this)"
               >
                 HSK 1
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk2"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk2', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk2', this)"
               >
                 HSK 2
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk3"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk3', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk3', this)"
               >
                 HSK 3
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk4"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk4', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk4', this)"
               >
                 HSK 4
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk5"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk5', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk5', this)"
               >
                 HSK 5
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk6"
-                onclick="filterHSKDropdown(event, 'quiz', 'hsk6', this)"
+                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk6', this)"
               >
                 HSK 6
               </div>
@@ -1026,7 +1026,7 @@
       <!-- LAYER: DAFTAR KATA — GRID DECK -->
       <div class="layer" id="layer-kos">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeLayer('layer-kos')">❮❮</div>
+          <div class="btn-back" onclick="window.closeLayer('layer-kos')">❮❮</div>
           <div style="flex: 1">
             <div class="layer-title">🃏 Daftar Kata</div>
             <div class="layer-sub" id="kos-layer-sub">
@@ -1037,56 +1037,56 @@
 
         <!-- HSK Filter Dropdown (hidden when searching) -->
         <div class="hsk-dropdown-wrap" id="hsk-filter-kos">
-          <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
             <span class="hsk-dropdown-val">Semua</span>
             <span class="hsk-dropdown-arrow">▾</span>
             <div class="hsk-dropdown-menu">
               <div
                 class="hsk-dropdown-item active"
                 data-level="all"
-                onclick="filterHSKDropdown(event, 'kos', 'all', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'all', this)"
               >
                 Semua
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk1"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk1', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk1', this)"
               >
                 HSK 1
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk2"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk2', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk2', this)"
               >
                 HSK 2
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk3"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk3', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk3', this)"
               >
                 HSK 3
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk4"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk4', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk4', this)"
               >
                 HSK 4
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk5"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk5', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk5', this)"
               >
                 HSK 5
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk6"
-                onclick="filterHSKDropdown(event, 'kos', 'hsk6', this)"
+                onclick="window.filterHSKDropdown(event, 'kos', 'hsk6', this)"
               >
                 HSK 6
               </div>
@@ -1121,7 +1121,7 @@
       <!-- LAYER: DAFTAR KATA — ISI DECK -->
       <div class="layer" id="layer-kos-deck">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeKosDeck()">❮❮</div>
+          <div class="btn-back" onclick="window.closeKosDeck()">❮❮</div>
           <div style="flex: 1">
             <div class="layer-title" id="kos-deck-title">Daftar Kata</div>
             <div class="layer-sub" id="kos-deck-sub"></div>
@@ -1133,7 +1133,7 @@
             id="kos-search"
             name="kosakata-search"
             placeholder="Cari Hanzi, Pinyin, atau Arti..."
-            oninput="filterKos()"
+            oninput="window.filterKos()"
             autocomplete="off"
             autocorrect="off"
             autocapitalize="off"
@@ -1201,7 +1201,7 @@
       <!-- LAYER: DAFTAR KATA — DETAIL KATA -->
       <div class="layer" id="layer-kos-word">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeKosWord()">❮❮</div>
+          <div class="btn-back" onclick="window.closeKosWord()">❮❮</div>
           <div style="flex: 1">
             <div class="layer-title" id="kos-word-title">Detail Kata</div>
             <div class="layer-sub" id="kos-word-sub"></div>
@@ -1209,9 +1209,8 @@
           <button
             class="btn-add-vok"
             id="btn-kwd-add"
-            onclick="openKosContohForm()"
-          >
-            + Tambah
+            onclick="window.openKosContohForm()"
+          >            + Tambah
           </button>
         </div>
 
@@ -1260,7 +1259,7 @@
       <!-- LAYER: Flashcard Kumulatif LIST -->
       <div class="layer" id="layer-hanzi">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeLayer('layer-hanzi')">❮❮</div>
+          <div class="btn-back" onclick="window.closeLayer('layer-hanzi')">❮❮</div>
           <div>
             <div class="layer-title">👁️ Flashcard Kumulatif</div>
             <div class="layer-sub">
@@ -1269,56 +1268,56 @@
           </div>
         </div>
         <div class="hsk-dropdown-wrap" id="hsk-filter-hanzi">
-          <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
             <span class="hsk-dropdown-val">Semua</span>
             <span class="hsk-dropdown-arrow">▾</span>
             <div class="hsk-dropdown-menu">
               <div
                 class="hsk-dropdown-item active"
                 data-level="all"
-                onclick="filterHSKDropdown(event, 'hanzi', 'all', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'all', this)"
               >
                 Semua
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk1"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk1', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk1', this)"
               >
                 HSK 1
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk2"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk2', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk2', this)"
               >
                 HSK 2
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk3"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk3', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk3', this)"
               >
                 HSK 3
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk4"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk4', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk4', this)"
               >
                 HSK 4
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk5"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk5', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk5', this)"
               >
                 HSK 5
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk6"
-                onclick="filterHSKDropdown(event, 'hanzi', 'hsk6', this)"
+                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk6', this)"
               >
                 HSK 6
               </div>
@@ -1346,7 +1345,7 @@
       <!-- LAYER: POLA KALIMAT (GRAMMAR) -->
       <div class="layer" id="layer-grammar">
         <div class="layer-hd">
-          <div class="btn-back" onclick="closeLayer('layer-grammar')">❮❮</div>
+          <div class="btn-back" onclick="window.closeLayer('layer-grammar')">❮❮</div>
           <div>
             <div class="layer-title">🚀 Tata Bahasa</div>
             <div class="layer-sub" id="layer-grammar-sub">
@@ -1355,56 +1354,56 @@
           </div>
         </div>
         <div class="hsk-dropdown-wrap" id="hsk-filter-grammar">
-          <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
             <span class="hsk-dropdown-val">Semua</span>
             <span class="hsk-dropdown-arrow">▾</span>
             <div class="hsk-dropdown-menu">
               <div
                 class="hsk-dropdown-item active"
                 data-level="all"
-                onclick="filterHSKDropdown(event, 'grammar', 'all', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'all', this)"
               >
                 Semua
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk1"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk1', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk1', this)"
               >
                 HSK 1
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk2"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk2', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk2', this)"
               >
                 HSK 2
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk3"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk3', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk3', this)"
               >
                 HSK 3
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk4"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk4', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk4', this)"
               >
                 HSK 4
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk5"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk5', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk5', this)"
               >
                 HSK 5
               </div>
               <div
                 class="hsk-dropdown-item"
                 data-level="hsk6"
-                onclick="filterHSKDropdown(event, 'grammar', 'hsk6', this)"
+                onclick="window.filterHSKDropdown(event, 'grammar', 'hsk6', this)"
               >
                 HSK 6
               </div>
@@ -1433,7 +1432,7 @@
     <!-- LAYER: KALIMAT LIST (outside #dash, same z-level) -->
     <div class="layer" id="layer-kalimat">
       <div class="layer-hd">
-        <div class="btn-back" onclick="closeLayer('layer-kalimat')">❮❮</div>
+        <div class="btn-back" onclick="window.closeLayer('layer-kalimat')">❮❮</div>
         <div>
           <div class="layer-title">💬 Quiz Kumulatif</div>
           <div class="layer-sub" id="layer-kal-sub">
@@ -1442,56 +1441,56 @@
         </div>
       </div>
       <div class="hsk-dropdown-wrap" id="hsk-filter-kalimat">
-        <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
           <span class="hsk-dropdown-val">Semua</span>
           <span class="hsk-dropdown-arrow">▾</span>
           <div class="hsk-dropdown-menu">
             <div
               class="hsk-dropdown-item active"
               data-level="all"
-              onclick="filterHSKDropdown(event, 'kalimat', 'all', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'all', this)"
             >
               Semua
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk1"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk1', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk1', this)"
             >
               HSK 1
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk2"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk2', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk2', this)"
             >
               HSK 2
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk3"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk3', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk3', this)"
             >
               HSK 3
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk4"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk4', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk4', this)"
             >
               HSK 4
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk5"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk5', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk5', this)"
             >
               HSK 5
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk6"
-              onclick="filterHSKDropdown(event, 'kalimat', 'hsk6', this)"
+              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk6', this)"
             >
               HSK 6
             </div>
@@ -1519,7 +1518,7 @@
     <!-- LAYER: BACA CERITA -->
     <div class="layer" id="layer-cerita">
       <div class="layer-hd">
-        <div class="btn-back" onclick="closeLayer('layer-cerita')">❮❮</div>
+        <div class="btn-back" onclick="window.closeLayer('layer-cerita')">❮❮</div>
         <div>
           <div class="layer-title">📖 Mode Membaca</div>
           <div class="layer-sub">
@@ -1528,56 +1527,56 @@
         </div>
       </div>
       <div class="hsk-dropdown-wrap" id="hsk-filter-cerita">
-        <div class="hsk-dropdown" onclick="toggleHSKDropdown(this)">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
           <span class="hsk-dropdown-val">Semua</span>
           <span class="hsk-dropdown-arrow">▾</span>
           <div class="hsk-dropdown-menu">
             <div
               class="hsk-dropdown-item active"
               data-level="all"
-              onclick="filterHSKDropdown(event, 'cerita', 'all', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'all', this)"
             >
               Semua
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk1"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk1', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk1', this)"
             >
               HSK 1
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk2"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk2', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk2', this)"
             >
               HSK 2
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk3"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk3', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk3', this)"
             >
               HSK 3
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk4"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk4', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk4', this)"
             >
               HSK 4
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk5"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk5', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk5', this)"
             >
               HSK 5
             </div>
             <div
               class="hsk-dropdown-item"
               data-level="hsk6"
-              onclick="filterHSKDropdown(event, 'cerita', 'hsk6', this)"
+              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk6', this)"
             >
               HSK 6
             </div>
@@ -1614,7 +1613,7 @@
             <div class="score-num" id="live-score">0</div>
             <div class="score-lbl">dari <span id="ans-count">0</span></div>
           </div>
-          <div class="btn-back" onclick="closeQuiz()">❮❮</div>
+          <div class="btn-back" onclick="window.closeQuiz()">❮❮</div>
         </div>
         <div
           class="prog-bar"
@@ -1637,35 +1636,35 @@
           >
             <button
               class="quiz-tab active"
-              onclick="filterQuizTab('all', true)"
+              onclick="window.filterQuizTab('all', true)"
               id="qtab-all"
             >
               Semua
             </button>
             <button
               class="quiz-tab"
-              onclick="filterQuizTab(0, true)"
+              onclick="window.filterQuizTab(0, true)"
               id="qtab-0"
             >
               Tipe 1
             </button>
             <button
               class="quiz-tab"
-              onclick="filterQuizTab(1, true)"
+              onclick="window.filterQuizTab(1, true)"
               id="qtab-1"
             >
               Tipe 2
             </button>
             <button
               class="quiz-tab"
-              onclick="filterQuizTab(2, true)"
+              onclick="window.filterQuizTab(2, true)"
               id="qtab-2"
             >
               Tipe 3
             </button>
             <button
               class="quiz-tab"
-              onclick="filterQuizTab(3, true)"
+              onclick="window.filterQuizTab(3, true)"
               id="qtab-3"
             >
               Tipe 4
@@ -1674,7 +1673,7 @@
           <div id="quiz-main"></div>
           <div class="submit-wrap">
             <div class="warn" id="warn-box"></div>
-            <button class="btn-submit" onclick="submitQuiz()">
+            <button class="btn-submit" onclick="window.submitQuiz()">
               📊 Lihat Hasil
             </button>
           </div>
@@ -1701,7 +1700,7 @@
               </div>
             </div>
             <div class="result-msg" id="r-msg"></div>
-            <button class="btn-retry" onclick="confirmRetryQuiz()">
+            <button class="btn-retry" onclick="window.confirmRetryQuiz()">
               🔀 Acak Ulang &amp; Coba Lagi
             </button>
           </div>
@@ -1752,7 +1751,7 @@
             <div class="score-num" id="fc-count-num">0</div>
             <div class="score-lbl">dari <span id="fc-count-denom">0</span></div>
           </div>
-          <div class="btn-back" onclick="closeFC()">❮❮</div>
+          <div class="btn-back" onclick="window.closeFC()">❮❮</div>
         </div>
       </div>
       <div class="fc-prog"><div class="fc-prog-fill" id="fc-prog"></div></div>
@@ -1804,14 +1803,14 @@
               <!-- <button
                 id="spk-btn-listen"
                 class="spk-tb-btn"
-                onclick="_spkListen()"
+                onclick="window._spkListen()"
               >
                 <span class="spk-tb-icon">▶</span> Dengarkan
               </button> -->
               <button
                 id="spk-btn-mic"
                 class="spk-tb-btn"
-                onclick="_spkToggleRec()"
+                onclick="window._spkToggleRec()"
               >
                 <span class="spk-tb-icon" id="spk-mic-icon">🎙</span>
                 <span id="spk-mic-txt">Coba Ucapkan</span>
@@ -1856,7 +1855,7 @@
             <div class="n" id="h-done">0</div>
             <div class="l">dari <span id="h-left">100</span></div>
           </div>
-          <div class="btn-back" onclick="closeHanzi()">❮❮</div>
+          <div class="btn-back" onclick="window.closeHanzi()">❮❮</div>
         </div>
         <div
           class="hanzi-prog"
@@ -1887,7 +1886,7 @@
             </div>
           </div>
           <div id="hanzi-main"></div>
-          <button class="btn-reset-h" onclick="resetHanzi()">
+          <button class="btn-reset-h" onclick="window.resetHanzi()">
             🔄 Reset Semua
           </button>
           <div class="h-prog-txt" id="h-prog-txt">0 dari 100 selesai</div>
@@ -1908,7 +1907,7 @@
           justify-content: center;
         "
       >
-        <button class="btn-latihan-hanzi" onclick="startHanziLatihan()">
+        <button class="btn-latihan-hanzi" onclick="window.startHanziLatihan()">
           Latihan
         </button>
       </div>
@@ -1935,7 +1934,7 @@
             <div class="n" id="kal-live">0</div>
             <div class="l">dari <span id="kal-ans">0</span></div>
           </div>
-          <div class="btn-back" onclick="closeKalimat()">❮❮</div>
+          <div class="btn-back" onclick="window.closeKalimat()">❮❮</div>
         </div>
         <div
           class="kal-prog"
@@ -1959,35 +1958,35 @@
           >
             <button
               class="quiz-tab active"
-              onclick="filterKalTab('all', true)"
+              onclick="window.filterKalTab('all', true)"
               id="ktab-all"
             >
               Semua
             </button>
             <button
               class="quiz-tab"
-              onclick="filterKalTab(0, true)"
+              onclick="window.filterKalTab(0, true)"
               id="ktab-0"
             >
               Tipe 1
             </button>
             <button
               class="quiz-tab"
-              onclick="filterKalTab(1, true)"
+              onclick="window.filterKalTab(1, true)"
               id="ktab-1"
             >
               Tipe 2
             </button>
             <button
               class="quiz-tab"
-              onclick="filterKalTab(2, true)"
+              onclick="window.filterKalTab(2, true)"
               id="ktab-2"
             >
               Tipe 3
             </button>
             <button
               class="quiz-tab"
-              onclick="filterKalTab(3, true)"
+              onclick="window.filterKalTab(3, true)"
               id="ktab-3"
             >
               Tipe 4
@@ -1996,7 +1995,7 @@
           <div id="kal-main"></div>
           <div class="submit-wrap">
             <div class="warn" id="kal-warn" style="display: none"></div>
-            <button class="btn-submit" onclick="submitKalimat()">
+            <button class="btn-submit" onclick="window.submitKalimat()">
               📊 Lihat Hasil
             </button>
           </div>
@@ -2023,7 +2022,7 @@
               </div>
             </div>
             <div class="kal-res-msg" id="kr-msg"></div>
-            <button class="btn-retry2" onclick="confirmRetryKalimat()">
+            <button class="btn-retry2" onclick="window.confirmRetryKalimat()">
               🔀 Acak Ulang &amp; Coba Lagi
             </button>
           </div>
@@ -2070,7 +2069,7 @@
             <div class="n" id="gram-score-n">0</div>
             <div class="l">dari <span id="gram-score-l">0</span></div>
           </div>
-          <div class="btn-back" onclick="closeGrammar()">❮❮</div>
+          <div class="btn-back" onclick="window.closeGrammar()">❮❮</div>
         </div>
       </div>
 
@@ -2091,7 +2090,7 @@
                 <span
                   class="gram-theory-toggle"
                   id="gram-theory-toggle"
-                  onclick="toggleGramTheory()"
+                  onclick="window.toggleGramTheory()"
                   >Lihat contoh ▾</span
                 >
               </div>
@@ -2111,7 +2110,7 @@
               <button
                 class="gram-counter-reset"
                 id="gram-counter-reset"
-                onclick="confirmGramRestart()"
+                onclick="window.confirmGramRestart()"
                 title="Ulangi dari awal"
               >
                 ↺
@@ -2144,7 +2143,7 @@
                   <button
                     class="gram-btn-check"
                     id="gram-btn-check"
-                    onclick="gramCheck()"
+                    onclick="window.gramCheck()"
                   >
                     ✓ Cek Jawaban
                   </button>
@@ -2175,10 +2174,10 @@
               </div>
             </div>
             <div class="gram-done-btns">
-              <button class="gram-done-btn" onclick="confirmGramRestart()">
+              <button class="gram-done-btn" onclick="window.confirmGramRestart()">
                 🔄 Ulangi
               </button>
-              <button class="gram-done-btn" onclick="closeGrammar()">
+              <button class="gram-done-btn" onclick="window.closeGrammar()">
                 ❮❮ Kembali
               </button>
             </div>
@@ -2193,20 +2192,20 @@
           <button
             class="gram-btn-nav primary"
             style="width: 100%"
-            onclick="gramStartSoal()"
+            onclick="window.gramStartSoal()"
           >
             Mulai Latihan
           </button>
         </div>
         <!-- Fase Soal -->
         <div id="gram-footer-soal" style="display: none" class="gram-nav">
-          <button class="gram-btn-nav" id="gram-btn-prev" onclick="gramPrev()">
+          <button class="gram-btn-nav" id="gram-btn-prev" onclick="window.gramPrev()">
             Teori
           </button>
           <button
             class="gram-btn-nav primary"
             id="gram-btn-next"
-            onclick="gramNext()"
+            onclick="window.gramNext()"
             style="display: none"
           >
             Lanjut
@@ -2228,7 +2227,7 @@
             style="display: none"
           ></p>
         </div>
-        <div class="btn-back" onclick="closeCerita()">❮❮</div>
+        <div class="btn-back" onclick="window.closeCerita()">❮❮</div>
       </div>
 
       <!-- Progress bar tipis -->
@@ -2255,28 +2254,28 @@
         <button
           class="cerita-prog-badge"
           id="cerita-prog-badge"
-          onclick="confirmCeritaReset()"
+          onclick="window.confirmCeritaReset()"
         >
           <span id="cerita-progress-label">0%</span>
         </button>
         <div class="cerita-controls">
           <div class="cerita-ctrl-group">
-            <button class="cerita-btn" onclick="changeCeritaFont(-2)">
+            <button class="cerita-btn" onclick="window.changeCeritaFont(-2)">
               A−
             </button>
             <span id="cerita-font-label" class="cerita-ctrl-val">22px</span>
-            <button class="cerita-btn" onclick="changeCeritaFont(2)">A+</button>
+            <button class="cerita-btn" onclick="window.changeCeritaFont(2)">A+</button>
           </div>
           <div class="cerita-ctrl-group">
-            <button class="cerita-btn" onclick="changeCeritaSpeed(-0.5)">
+            <button class="cerita-btn" onclick="window.changeCeritaSpeed(-0.5)">
               −
             </button>
             <span id="cerita-speed-val" class="cerita-ctrl-val">1×</span>
-            <button class="cerita-btn" onclick="changeCeritaSpeed(0.5)">
+            <button class="cerita-btn" onclick="window.changeCeritaSpeed(0.5)">
               +
             </button>
           </div>
-          <button class="cerita-play-btn" onclick="toggleCeritaScroll()">
+          <button class="cerita-play-btn" onclick="window.toggleCeritaScroll()">
             <span id="cerita-play-icon">▶</span>
             <span id="cerita-play-label" class="play-label">Auto-scroll</span>
           </button>
@@ -2291,7 +2290,7 @@
         <button
           class="pet-tier-toggle"
           id="pet-tier-toggle"
-          onclick="_petToggleDropdown()"
+          onclick="window._petToggleDropdown()"
         >
           <span class="pet-tier-toggle-label" id="pet-tier-toggle-label"
             >Tingkat Pemula</span
@@ -2317,7 +2316,7 @@
           <button
             class="pet-tier-opt active"
             data-tier="pemula"
-            onclick="_petSwitchTier('pemula')"
+            onclick="window._petSwitchTier('pemula')"
           >
             <div class="pet-tier-opt-main">
               <span class="pet-tier-opt-label">Tingkat Pemula</span>
@@ -2343,7 +2342,7 @@
           <button
             class="pet-tier-opt"
             data-tier="menengah"
-            onclick="_petSwitchTier('menengah')"
+            onclick="window._petSwitchTier('menengah')"
           >
             <div class="pet-tier-opt-main">
               <span class="pet-tier-opt-label">Tingkat Menengah</span>
@@ -2370,7 +2369,7 @@
           <button
             class="pet-tier-opt"
             data-tier="lanjut"
-            onclick="_petSwitchTier('lanjut')"
+            onclick="window._petSwitchTier('lanjut')"
           >
             <div class="pet-tier-opt-main">
               <span class="pet-tier-opt-label">Tingkat Lanjut</span>
@@ -2397,7 +2396,7 @@
           <button
             class="pet-tier-opt"
             data-tier="master"
-            onclick="_petSwitchTier('master')"
+            onclick="window._petSwitchTier('master')"
           >
             <div class="pet-tier-opt-main">
               <span class="pet-tier-opt-label">Tingkat Master</span>
@@ -2424,7 +2423,7 @@
           <button
             class="pet-tier-opt"
             data-tier="fasih"
-            onclick="_petSwitchTier('fasih')"
+            onclick="window._petSwitchTier('fasih')"
           >
             <div class="pet-tier-opt-main">
               <span class="pet-tier-opt-label">Tingkat Fasih</span>
@@ -2454,7 +2453,7 @@
       </div>
       <!-- Skip confirmation modal -->
       <div class="pet-skip-modal" id="pet-skip-modal" style="display: none">
-        <div class="pet-skip-backdrop" onclick="_petSkipCancel()"></div>
+        <div class="pet-skip-backdrop" onclick="window._petSkipCancel()"></div>
         <div class="pet-skip-panel">
           <div class="pet-skip-icon">⚠️</div>
           <div class="pet-skip-title">Lewati tier ini?</div>
@@ -2463,13 +2462,13 @@
             tetap harus diselesaikan satu per satu.
           </div>
           <div class="pet-skip-actions">
-            <button class="pet-skip-btn-cancel" onclick="_petSkipCancel()">
+            <button class="pet-skip-btn-cancel" onclick="window._petSkipCancel()">
               Kembali
             </button>
             <button
               class="pet-skip-btn-confirm"
               id="pet-skip-confirm-btn"
-              onclick="_petSkipConfirm()"
+              onclick="window._petSkipConfirm()"
             >
               Ya, Lewati
             </button>
@@ -2481,7 +2480,7 @@
     <!-- SEARCH SCREEN -->
     <div id="search-screen" class="screen">
       <div class="search-hd">
-        <div class="btn-back" onclick="backToDash()">❮❮</div>
+        <div class="btn-back" onclick="window.backToDash()">❮❮</div>
         <div style="flex: 1; margin: 0 12px; position: relative">
           <input
             type="search"
@@ -2494,12 +2493,12 @@
             autocorrect="off"
             autocapitalize="off"
             spellcheck="false"
-            oninput="onKosGlobalSearch()"
+            oninput="window.onKosGlobalSearch()"
           />
           <span
             id="kos-global-clear"
             class="search-clear-btn"
-            onclick="clearKosGlobalSearch()"
+            onclick="window.clearKosGlobalSearch()"
             style="display: none"
             >✕</span
           >
@@ -2536,7 +2535,7 @@
           <div class="lesson-feedback-status" id="lessonFeedbackStatus"></div>
           <div class="lesson-feedback-answer" id="lessonFeedbackAnswer"></div>
         </div>
-        <button class="lesson-btn-cek" id="lessonBtnCek" onclick="handleCek()">
+        <button class="lesson-btn-cek" id="lessonBtnCek" onclick="window.handleCek()">
           ✓ Cek Jawaban
         </button>
       </div>
@@ -2555,7 +2554,7 @@
         </div>
         <button
           class="prof-edit-btn"
-          onclick="_profStartEditName()"
+          onclick="window._profStartEditName()"
           title="Edit nama"
         >
           <svg
@@ -2603,14 +2602,14 @@
             <div
               class="period-tab active"
               data-period="week"
-              onclick="sosialSwitchPeriod('week', this)"
+              onclick="window.sosialSwitchPeriod('week', this)"
             >
               Minggu ini
             </div>
             <div
               class="period-tab"
               data-period="month"
-              onclick="sosialSwitchPeriod('month', this)"
+              onclick="window.sosialSwitchPeriod('month', this)"
             >
               Bulan
             </div>
@@ -2704,7 +2703,7 @@
       onclick="if (event.target === this) closeAuthModal();"
     >
       <div class="modal">
-        <div class="modal-close" onclick="closeAuthModal()">✕</div>
+        <div class="modal-close" onclick="window.closeAuthModal()">✕</div>
         <div id="auth-content"></div>
       </div>
     </div>
@@ -2715,7 +2714,7 @@
       onclick="if (event.target === this) closeVokForm();"
     >
       <div class="modal" style="max-width: 460px">
-        <div class="modal-close" onclick="closeVokForm()">✕</div>
+        <div class="modal-close" onclick="window.closeVokForm()">✕</div>
         <div id="vok-form-content"></div>
       </div>
     </div>
@@ -2726,7 +2725,7 @@
       onclick="if (event.target === this) closeDeckModal();"
     >
       <div class="modal-wrap" style="position: relative">
-        <div class="modal-close" onclick="closeDeckModal()">✕</div>
+        <div class="modal-close" onclick="window.closeDeckModal()">✕</div>
         <div id="deck-form-content"></div>
       </div>
     </div>
@@ -2737,7 +2736,7 @@
       onclick="if (event.target === this) closeDeckDelModal();"
     >
       <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="closeDeckDelModal()">✕</div>
+        <div class="modal-close" onclick="window.closeDeckDelModal()">✕</div>
         <div class="modal-title" style="color: #f87171">Hapus Deck?</div>
         <div
           class="modal-sub"
@@ -2761,7 +2760,7 @@
         <div style="display: flex; gap: 10px">
           <button
             class="btn-submit"
-            onclick="closeDeckDelModal()"
+            onclick="window.closeDeckDelModal()"
             style="
               flex: 1;
               background: var(--sur2);
@@ -2794,7 +2793,7 @@
       onclick="if (event.target === this) closeContohForm();"
     >
       <div class="modal-wrap" style="position: relative">
-        <div class="modal-close" onclick="closeContohForm()">✕</div>
+        <div class="modal-close" onclick="window.closeContohForm()">✕</div>
         <div id="contoh-form-content"></div>
       </div>
     </div>
@@ -2805,7 +2804,7 @@
       onclick="if (event.target === this) closeKosDelModal();"
     >
       <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="closeKosDelModal()">✕</div>
+        <div class="modal-close" onclick="window.closeKosDelModal()">✕</div>
         <div class="modal-title" style="color: #f87171">Hapus Kata?</div>
         <div
           class="modal-sub"
@@ -2815,7 +2814,7 @@
         <div style="display: flex; gap: 10px">
           <button
             class="btn-submit"
-            onclick="closeKosDelModal()"
+            onclick="window.closeKosDelModal()"
             style="
               flex: 1;
               background: var(--sur2);
@@ -2847,7 +2846,7 @@
       onclick="if (event.target === this) closeRetryConfirm();"
     >
       <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="closeRetryConfirm()">✕</div>
+        <div class="modal-close" onclick="window.closeRetryConfirm()">✕</div>
         <div class="modal-title">Acak Ulang &amp; Coba Lagi?</div>
         <div
           class="modal-sub"
@@ -2871,7 +2870,7 @@
         <div style="display: flex; gap: 10px">
           <button
             class="btn-submit"
-            onclick="closeRetryConfirm()"
+            onclick="window.closeRetryConfirm()"
             style="
               flex: 1;
               background: var(--sur2);
@@ -2919,7 +2918,7 @@
         <button
           class="btn-google"
           id="btn-google-login"
-          onclick="doGoogleLogin()"
+          onclick="window.doGoogleLogin()"
         >
           <svg
             width="18"
@@ -2966,7 +2965,7 @@
         <div class="upv2-header">
           <div
             class="upv2-avatar-ring"
-            onclick="openAvatarPicker()"
+            onclick="window.openAvatarPicker()"
             title="Ganti avatar"
           >
             <!-- avatar img/initials diisi oleh showUserPanel() -->
@@ -2975,7 +2974,7 @@
             <span class="upv2-name" id="upv2-name-display"></span>
             <button
               class="upv2-rename-btn"
-              onclick="toggleRenameInput()"
+              onclick="window.toggleRenameInput()"
               title="Ganti nama"
             >
               ✏️
@@ -2993,10 +2992,10 @@
               maxlength="30"
               placeholder="Nama baru..."
             />
-            <button class="upv2-rename-save" onclick="saveDisplayName()">
+            <button class="upv2-rename-save" onclick="window.saveDisplayName()">
               Simpan
             </button>
-            <button class="upv2-rename-cancel" onclick="toggleRenameInput()">
+            <button class="upv2-rename-cancel" onclick="window.toggleRenameInput()">
               Batal
             </button>
           </div>
@@ -3021,10 +3020,10 @@
         </div>
 
         <div class="upv2-footer">
-          <button class="btn-ganti-avatar" onclick="openAvatarPicker()">
+          <button class="btn-ganti-avatar" onclick="window.openAvatarPicker()">
             Ganti Avatar
           </button>
-          <button class="btn-logout" onclick="doLogout()">Logout</button>
+          <button class="btn-logout" onclick="window.doLogout()">Logout</button>
         </div>
       </div>
     </template>
@@ -3038,7 +3037,7 @@
       <div
         class="bnav-item active"
         data-screen="petualangan-screen"
-        onclick="bnavGoTo('petualangan-screen')"
+        onclick="window.bnavGoTo('petualangan-screen')"
         role="button"
         tabindex="0"
       >
@@ -3064,7 +3063,7 @@
       <div
         class="bnav-item"
         data-screen="dash"
-        onclick="bnavGoTo('dash')"
+        onclick="window.bnavGoTo('dash')"
         role="button"
         tabindex="0"
       >
@@ -3090,7 +3089,7 @@
       <div
         class="bnav-item"
         data-screen="search-screen"
-        onclick="showScreen('search-screen')"
+        onclick="window.showScreen('search-screen')"
         role="button"
         tabindex="0"
       >
@@ -3115,7 +3114,7 @@
       <div
         class="bnav-item"
         data-screen="sosial-screen"
-        onclick="bnavGoTo('sosial-screen')"
+        onclick="window.bnavGoTo('sosial-screen')"
         role="button"
         tabindex="0"
       >
@@ -3141,7 +3140,7 @@
       <div
         class="bnav-item"
         data-screen="profile-screen"
-        onclick="bnavGoTo('profile-screen')"
+        onclick="window.bnavGoTo('profile-screen')"
         role="button"
         tabindex="0"
       >
