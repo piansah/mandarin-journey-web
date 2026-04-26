@@ -293,7 +293,8 @@ async function _runKosGlobalSearch() {
     const { data } = await supa
       .from("word_compounds")
       .select("hanzi, pinyin, arti, badge")
-      .ilike("hanzi", `%${q}%`)
+      .or(`hanzi.ilike.%${q}%,pinyin.ilike.%${q}%,arti.ilike.%${q}%`)
+      .order("frequency", { ascending: false })
       .limit(30);
     if (data) {
       const hskHanziSet = new Set(hskResults.map((r) => r.hanzi));
