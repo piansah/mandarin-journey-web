@@ -1597,15 +1597,13 @@ async function _renderWordTab() {
       didLongPress = false,
       didMove = false,
       startX = 0,
-      startY = 0,
-      _handled = false;
+      startY = 0;
 
     item.addEventListener(
       "touchstart",
       (e) => {
         didLongPress = false;
         didMove = false;
-        _handled = false;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         pressTimer = setTimeout(() => {
@@ -1635,10 +1633,8 @@ async function _renderWordTab() {
     item.addEventListener("touchend", () => {
       clearTimeout(pressTimer);
       if (!didLongPress && !didMove) {
-        _handled = true;
         speakMandarin(w.hanzi, 0.7);
-        item.style.opacity = "0.6";
-        setTimeout(() => (item.style.opacity = ""), 300);
+        _openWordCompound(w);
       }
     });
 
@@ -1656,14 +1652,9 @@ async function _renderWordTab() {
 
     item.addEventListener("mouseup", () => {
       clearTimeout(pressTimer);
-      if (_handled) {
-        _handled = false;
-        return;
-      }
       if (!didLongPress) {
         speakMandarin(w.hanzi, 0.7);
-        item.style.opacity = "0.6";
-        setTimeout(() => (item.style.opacity = ""), 300);
+        _openWordCompound(w);
       }
     });
 
