@@ -69,7 +69,7 @@ function _cleanupCurrentScreen() {
 
 function _getSnapshot() {
   const activeScreen =
-    document.querySelector(".screen.active")?.id || "petualangan-screen";
+    document.querySelector(".screen.active")?.id || "dash";
   const activeLayers = [...document.querySelectorAll(".layer.active")].map(
     (l) => l.id,
   );
@@ -316,8 +316,8 @@ export function initAppHistory() {
 
   const anyActive = document.querySelector(".screen.active");
   if (!anyActive) {
-    const petualangan = document.getElementById("petualangan-screen");
-    if (petualangan) petualangan.classList.add("active");
+    const dash = document.getElementById("dash");
+    if (dash) dash.classList.add("active");
   }
 
   _appHistory = [_getSnapshot()];

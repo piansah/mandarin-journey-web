@@ -555,7 +555,7 @@ export function lessonClose() {
       }
     }
 
-    showScreen("petualangan-screen");
+    showScreen("dash");
   };
 
   if (doneScreen?.classList.contains("active")) {

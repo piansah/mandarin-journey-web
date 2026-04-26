@@ -115,7 +115,7 @@ export function closeTulisHanzi() {
     backToLayer(_sourceScreen || "layer-kos-deck");
     return;
   }
-  showScreen(_sourceScreen || "petualangan-screen");
+  showScreen(_sourceScreen || "dash");
 }
 
 /* ══════════════════════════════════════════════════════════════

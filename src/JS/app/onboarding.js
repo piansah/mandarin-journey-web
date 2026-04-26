@@ -246,7 +246,7 @@ async function _finishOnboarding() {
   setTimeout(() => {
     el.style.display = "none";
     el.classList.remove("hiding");
-    showScreen("petualangan-screen");
+    showScreen("dash");
     if (typeof window.renderHeatmap === "function") {
       window.renderHeatmap().then(() => {
         window.checkTour?.();
