@@ -805,10 +805,10 @@
    WORD TAB
    ══════════════════════════════════════════════════════════════ */
 .kwd-native-list {
-  padding: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  padding: 12px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .kwd-word-card {
   background: var(--sur);

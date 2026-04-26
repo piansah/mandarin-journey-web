@@ -1597,13 +1597,15 @@ async function _renderWordTab() {
       didLongPress = false,
       didMove = false,
       startX = 0,
-      startY = 0;
+      startY = 0,
+      _handled = false;
 
     item.addEventListener(
       "touchstart",
       (e) => {
         didLongPress = false;
         didMove = false;
+        _handled = false;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         pressTimer = setTimeout(() => {
@@ -1632,13 +1634,19 @@ async function _renderWordTab() {
 
     item.addEventListener("touchend", () => {
       clearTimeout(pressTimer);
-      if (!didLongPress && !didMove) _openWordCompound(w);
+      if (!didLongPress && !didMove) {
+        _handled = true;
+        speakMandarin(w.hanzi, 0.7);
+        item.style.opacity = "0.6";
+        setTimeout(() => (item.style.opacity = ""), 300);
+      }
     });
 
     item.addEventListener("mousedown", () => {
       didLongPress = false;
       didMove = false;
       pressTimer = setTimeout(() => {
+        if (didMove) return;
         didLongPress = true;
         speakMandarin(w.hanzi, 0.7);
         item.style.opacity = "0.6";
@@ -1648,7 +1656,15 @@ async function _renderWordTab() {
 
     item.addEventListener("mouseup", () => {
       clearTimeout(pressTimer);
-      if (!didLongPress) _openWordCompound(w);
+      if (_handled) {
+        _handled = false;
+        return;
+      }
+      if (!didLongPress) {
+        speakMandarin(w.hanzi, 0.7);
+        item.style.opacity = "0.6";
+        setTimeout(() => (item.style.opacity = ""), 300);
+      }
     });
 
     item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
