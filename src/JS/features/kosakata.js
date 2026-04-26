@@ -26,6 +26,7 @@ import {
   _buildQueryTokens,
   _matchPinyinTokens,
   _stripTones,
+  _getPinyinRegex,
 } from "../utilities/pinyin.js";
 import { startFC } from "./flashcard.js";
 import {
@@ -290,10 +291,11 @@ async function _runKosGlobalSearch() {
   // 2. Cari di word_compounds (Extra)
   let extraResults = [];
   try {
+    const pyRegex = _getPinyinRegex(raw);
     const { data } = await supa
       .from("word_compounds")
       .select("hanzi, pinyin, arti, badge")
-      .or(`hanzi.ilike.%${q}%,pinyin.ilike.%${q}%,arti.ilike.%${q}%`)
+      .or(`hanzi.ilike.%${q}%,arti.ilike.%${q}%,pinyin.imatch."${pyRegex}"`)
       .order("frequency", { ascending: false })
       .limit(30);
     if (data) {

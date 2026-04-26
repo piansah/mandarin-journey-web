@@ -128,3 +128,27 @@ export function _matchPinyinTokens(pyDB, queryTokens) {
   }
   return true;
 }
+
+/**
+ * Mengubah string pinyin tanpa nada menjadi Regex Postgres
+ * Contoh: "wo jia" -> "w[oōóǒò]\s*j[iīíǐì][aāáǎà]"
+ */
+export function _getPinyinRegex(query) {
+  const clean = _stripTones(query.toLowerCase());
+  const vowelMap = {
+    a: "[aāáǎà]",
+    e: "[eēéěè]",
+    i: "[iīíǐì]",
+    o: "[oōóǒò]",
+    u: "[uūúǔù]",
+    v: "[vüǖǘǚǜ]",
+    ü: "[vüǖǘǚǜ]",
+  };
+  let re = "";
+  for (const char of clean) {
+    if (vowelMap[char]) re += vowelMap[char];
+    else if (char === " ") re += "\\s*";
+    else re += char;
+  }
+  return re;
+}
