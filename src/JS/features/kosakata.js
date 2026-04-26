@@ -2,6 +2,7 @@
    KOSAKATA.JS — Daftar Kata (Deck Grid, Isi Deck, Vok Forms)
    ============================================================ */
 
+import HanziWriter from "hanzi-writer";
 import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
 import {
@@ -35,7 +36,6 @@ import {
   loadTierStartDecks,
 } from "../utilities/tier-unlock.js";
 
-// Kolom eksplisit flashcard_cards yang ada di DB
 const FC_CARD_COLS =
   "id, set_id, hanzi, pinyin, arti, catatan, added_by, created_at, word_class";
 
@@ -75,8 +75,107 @@ function _applyKosDeckFilter() {
    GLOBAL WORD SEARCH
 ══════════════════════════════════════════════════════════════ */
 let _globalSearchCache = null;
+let _extractedWordsCache = null;
 let _globalSearchTimer = null;
 let _initGlobalSearchCachePromise = null;
+let _initExtractedWordsPromise = null;
+
+export async function initExtractedWordsCache() {
+  if (_extractedWordsCache) return;
+  if (_initExtractedWordsPromise) return _initExtractedWordsPromise;
+
+  _initExtractedWordsPromise = (async () => {
+    try {
+      await initGlobalSearchCache();
+      const { count: totalItems } = await supa
+        .from("hanzi_items")
+        .select("*", { count: "exact", head: true });
+      const cached = lsGet("extracted_words_cache");
+      if (cached && cached.version === totalItems) {
+        _extractedWordsCache = cached.words;
+        return;
+      }
+      await _generateExtractedWords(totalItems);
+    } catch (e) {
+      console.error("[Kosakata] Cache init error:", e);
+    }
+  })();
+
+  return _initExtractedWordsPromise;
+}
+
+async function _generateExtractedWords(totalItems) {
+  const allItems = await _fetchAllHanziItems();
+  const hskMap = new Set((_globalSearchCache || []).map((c) => c.hanzi));
+  const wordFrequency = {};
+  const wordPinyin = {};
+
+  allItems.forEach((item) => {
+    const tokens = _tokenizeByPinyin(item.hanzi, item.pinyin);
+    tokens.forEach((token) => {
+      if (token.hanzi.length < 2) return;
+      if (hskMap.has(token.hanzi)) return;
+      if (!/[\u4e00-\u9fff]/.test(token.hanzi)) return;
+      wordFrequency[token.hanzi] = (wordFrequency[token.hanzi] || 0) + 1;
+      if (!wordPinyin[token.hanzi]) wordPinyin[token.hanzi] = token.pinyin;
+    });
+  });
+
+  const words = Object.keys(wordFrequency)
+    .filter((hz) => wordFrequency[hz] >= 2)
+    .map((hz) => ({
+      hanzi: hz,
+      pinyin: wordPinyin[hz],
+      frequency: wordFrequency[hz],
+      badge: wordFrequency[hz] >= 5 ? "common" : "native",
+    }));
+
+  _extractedWordsCache = words;
+  lsSet("extracted_words_cache", {
+    version: totalItems,
+    generated_at: Date.now(),
+    words: words,
+  });
+}
+
+async function _fetchAllHanziItems() {
+  const PAGE = 1000;
+  let from = 0;
+  let all = [];
+  while (true) {
+    const { data, error } = await supa
+      .from("hanzi_items")
+      .select("hanzi, pinyin")
+      .order("hanzi_key", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
+
+function _tokenizeByPinyin(hanzi, pinyin) {
+  if (!hanzi || !pinyin) return [];
+  const pyParts = pinyin.split(/\s+/).filter(Boolean);
+  const tokens = [];
+  let hzIdx = 0;
+  pyParts.forEach((py) => {
+    const syllableCount = _countSyllables(py);
+    const hzPart = hanzi.substring(hzIdx, hzIdx + syllableCount);
+    if (hzPart) tokens.push({ hanzi: hzPart, pinyin: py });
+    hzIdx += syllableCount;
+  });
+  return tokens;
+}
+
+function _countSyllables(pinyinToken) {
+  const syllables = pinyinToken
+    .toLowerCase()
+    .match(/[a-zü]+[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ1-5]?/gi);
+  return syllables ? syllables.length : 0;
+}
 
 export async function initGlobalSearchCache() {
   if (_globalSearchCache) return;
@@ -121,7 +220,6 @@ export async function initGlobalSearchCache() {
     let allCards = [];
 
     while (true) {
-      // FIX: gunakan kolom eksplisit, bukan select("*")
       const { data, error } = await supa
         .from("flashcard_cards")
         .select(FC_CARD_COLS)
@@ -242,6 +340,11 @@ async function _runKosGlobalSearch() {
       '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat kosakata...</div>';
     await initGlobalSearchCache();
   }
+
+  if (!_extractedWordsCache && _initExtractedWordsPromise === null) {
+    initExtractedWordsCache();
+  }
+
   if (!_globalSearchCache) {
     resultsEl.innerHTML =
       '<div style="text-align:center;padding:32px;color:var(--dim);">Gagal memuat data.</div>';
@@ -253,11 +356,10 @@ async function _runKosGlobalSearch() {
   const hasTone = queryTokens.some((t) => t.toned !== null);
   const isID = _isIndonesianQuery(raw);
 
-  const results = _globalSearchCache.filter((c) => {
+  const hskResults = _globalSearchCache.filter((c) => {
     const hanzi = (c.hanzi || "").toLowerCase();
     const arti = (c.arti || "").toLowerCase();
     const py = c.pinyin || "";
-
     if (hanzi.includes(q)) return true;
     if (hasTone) {
       if (_matchPinyinTokens(py, queryTokens)) return true;
@@ -290,7 +392,29 @@ async function _runKosGlobalSearch() {
     return arti.includes(q);
   });
 
-  if (results.length === 0) {
+  let extraResults = [];
+  if (_extractedWordsCache) {
+    extraResults = _extractedWordsCache.filter((w) => {
+      const hanzi = w.hanzi.toLowerCase();
+      const py = w.pinyin.toLowerCase();
+      if (hanzi.includes(q)) return true;
+      if (hasTone) {
+        if (_matchPinyinTokens(py, queryTokens)) return true;
+      } else {
+        const qStrip = _stripTones(q);
+        if (
+          _stripTones(py)
+            .replace(/\s+/g, "")
+            .includes(qStrip.replace(/\s+/g, ""))
+        )
+          return true;
+      }
+      return false;
+    });
+  }
+
+  const totalCount = hskResults.length + extraResults.length;
+  if (totalCount === 0) {
     resultsEl.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">🔍</div><div>Tidak ditemukan untuk "<strong style="color:var(--txt);">${raw}</strong>"</div></div>`;
     return;
   }
@@ -301,21 +425,31 @@ async function _runKosGlobalSearch() {
       deckMap[s.id] = s.badge || s.title;
     });
 
-  resultsEl.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${results.length} kata ditemukan</div><div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;"></div>`;
+  resultsEl.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${totalCount} kata ditemukan</div><div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;"></div>`;
 
   const listEl = document.getElementById("kos-global-list");
-  window._globalResults = results;
+  const mergedResults = [
+    ...hskResults.map((r) => ({ ...r, type: "hsk" })),
+    ...extraResults.map((r) => ({ ...r, type: "extra" })),
+  ];
+  window._globalResults = mergedResults;
 
   const frag = document.createDocumentFragment();
-  results.forEach((c, idx) => {
-    const deckLabel = deckMap[c.set_id]
-      ? `<span style="font-size:9px;background:rgba(232,201,109,0.12);color:var(--gold);border:1px solid rgba(232,201,109,0.25);border-radius:5px;padding:1px 6px;">${deckMap[c.set_id]}</span>`
-      : "";
+  mergedResults.forEach((c, idx) => {
+    let badgeHtml = "";
+    if (c.type === "hsk") {
+      const label = deckMap[c.set_id] || `HSK ${c.hsk_level}`;
+      badgeHtml = `<span class="badge-hsk">${label}</span>`;
+    } else {
+      const label = c.badge === "common" ? "Common" : "Native";
+      badgeHtml = `<span class="badge-${c.badge}">${label}</span>`;
+    }
+
     const item = document.createElement("div");
     item.className = "kos-item";
     item.dataset.gidx = idx;
     item.style.cursor = "pointer";
-    item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${deckLabel}</div>`;
+    item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${badgeHtml}</div>`;
 
     const hanzi = c.hanzi || "";
     let pressTimer = null,
@@ -343,6 +477,7 @@ async function _runKosGlobalSearch() {
       },
       { passive: true },
     );
+
     item.addEventListener(
       "touchmove",
       (e) => {
@@ -355,28 +490,25 @@ async function _runKosGlobalSearch() {
       },
       { passive: true },
     );
+
     item.addEventListener("touchend", () => {
       clearTimeout(pressTimer);
       if (!didLongPress && !didMove) openKosWordFromGlobal(idx);
     });
+
     item.addEventListener("mousedown", () => {
       didLongPress = false;
       pressTimer = setTimeout(() => {
-        if (didMove) return;
         didLongPress = true;
         if (hanzi) speakMandarin(hanzi, 0.7);
-        item.style.opacity = "0.6";
-        setTimeout(() => {
-          item.style.opacity = "";
-        }, 300);
       }, 500);
     });
+
     item.addEventListener("mouseup", () => {
       clearTimeout(pressTimer);
       if (!didLongPress) openKosWordFromGlobal(idx);
     });
-    item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-    item.addEventListener("contextmenu", (e) => e.preventDefault());
+
     frag.appendChild(item);
   });
   listEl.appendChild(frag);
@@ -392,12 +524,10 @@ export function openKosWordFromGlobal(idx) {
     });
   const titleEl = document.getElementById("kos-deck-title");
   if (titleEl) titleEl.textContent = deckMap[card.set_id] || "";
-
   document
     .querySelectorAll(".screen")
     .forEach((s) => s.classList.remove("active"));
   document.getElementById("dash")?.classList.add("active");
-
   openKosWord(card);
 }
 
@@ -423,17 +553,13 @@ function _updateKosProgress(sets) {
   const valEl = document.getElementById("mc-kos-val");
   const fillEl = document.getElementById("mc-kos-fill");
   if (!valEl || !fillEl) return;
-
   const defaultSets = sets.filter((s) => s.is_default);
   const total = defaultSets.length;
   if (total === 0) return;
-
   const fcScores = window.fcScores || {};
-  // FIX: key di user_scores adalah "fc1", "fc2" bukan "1", "2"
   const done = defaultSets.filter(
     (s) => fcScores[`fc${s.id}`] !== undefined,
   ).length;
-
   const pct = Math.round((done / total) * 100);
   valEl.textContent = `${done} / ${total}`;
   fillEl.style.width = pct + "%";
@@ -450,7 +576,6 @@ export async function refreshKosDashboardProgress() {
       )
       .eq("is_default", true)
       .order("id", { ascending: true });
-
     if (!error && sets) kosSetsCache = sets;
   }
 
@@ -494,7 +619,6 @@ function buildKosDeckGrid(sets) {
     const hskLevel = `hsk${hskNum}`;
     const wordCount = s.flashcard_cards?.[0]?.count ?? 20;
     const badge = s.badge || `HSK ${hskNum}`;
-    // FIX: gunakan fcScores dengan key yang benar
     const isDone = fcScores[`fc${s.id}`] !== undefined;
     const statusTxt = isDone ? `${wordCount}/${wordCount}` : "Belum";
     const statusCls = isDone ? "done" : "new";
@@ -559,7 +683,6 @@ export async function restoreKosDeckLayer() {
     await renderKosDeckGrid();
     return;
   }
-
   _updateMulaiBtn(kosCurrentSetId);
   closeKosTooltip();
   await loadKosDeckData(kosCurrentSetId);
@@ -578,7 +701,6 @@ function _updateMulaiBtn(setId) {
 
   const currentSet = sorted[idx];
   const fcScores = window.fcScores || {};
-  // FIX: gunakan key yang benar untuk cek prevDone
   const prevDone =
     idx === 0 ? true : fcScores[`fc${sorted[idx - 1].id}`] !== undefined;
 
@@ -597,11 +719,8 @@ export function toggleKosTooltip() {
   const tooltip = document.getElementById("kos-latihan-tooltip");
   if (!tooltip) return;
   const isOpen = tooltip.classList.contains("visible");
-  if (isOpen) {
-    closeKosTooltip();
-  } else {
-    _openKosTooltip();
-  }
+  if (isOpen) closeKosTooltip();
+  else _openKosTooltip();
 }
 
 function _openKosTooltip() {
@@ -650,7 +769,6 @@ export function closeKosTooltip() {
   const tooltip = document.getElementById("kos-latihan-tooltip");
   if (!tooltip) return;
   tooltip.classList.remove("visible");
-
   const mulaiBtn = document.getElementById("kos-mulai-btn");
   if (mulaiBtn) mulaiBtn.textContent = "Mulai Latihan";
 }
@@ -661,7 +779,6 @@ export async function loadKosDeckData(setId) {
   listEl.innerHTML =
     '<div class="kos-empty"><span class="spinner"></span></div>';
 
-  // FIX: gunakan kolom eksplisit, bukan select("*")
   const { data, error } = await supa
     .from("flashcard_cards")
     .select(FC_CARD_COLS)
@@ -688,7 +805,6 @@ export function closeKosDeck() {
     history.back();
     return;
   }
-
   if (typeof window.closeLayer === "function")
     window.closeLayer("layer-kos-deck", true);
   if (typeof window.openLayer === "function") window.openLayer("layer-kos");
@@ -769,9 +885,6 @@ export function renderKosItems() {
 
   const frag = document.createDocumentFragment();
   kosFiltered.forEach((c, idx) => {
-    // FIX: hapus referensi contoh_hanzi/contoh_pinyin yang tidak ada di DB
-    const hasContoh = false;
-
     const item = document.createElement("div");
     item.className = "kos-item";
     item.dataset.idx = idx;
@@ -787,7 +900,6 @@ export function renderKosItems() {
 
     const metaEl = document.createElement("div");
     metaEl.className = "kos-meta";
-    // FIX: hapus badge contoh karena kolom tidak ada
     metaEl.innerHTML = `<span class="kos-no">#${idx + 1}</span>`;
 
     item.appendChild(hzEl);
@@ -880,7 +992,6 @@ export function renderKosItems() {
 export async function openKosFlashcard() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-
   const mulaiBtn = document.getElementById("kos-mulai-btn");
   if (mulaiBtn?.dataset.locked === "1") {
     const reason = mulaiBtn.dataset.lockReason;
@@ -890,7 +1001,6 @@ export async function openKosFlashcard() {
     showToast(lockMessage(reason, { prevTitle }), "err");
     return;
   }
-
   document
     .querySelectorAll(".layer")
     .forEach((l) => l.classList.remove("active"));
@@ -900,7 +1010,6 @@ export async function openKosFlashcard() {
 export function openKosNada() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-
   const mulaiBtn = document.getElementById("kos-mulai-btn");
   if (mulaiBtn?.dataset.locked === "1") {
     const reason = mulaiBtn.dataset.lockReason;
@@ -910,7 +1019,6 @@ export function openKosNada() {
     showToast(lockMessage(reason, { prevTitle }), "err");
     return;
   }
-
   if (typeof window.startNadaLatihan === "function") {
     window.startNadaLatihan(kosAllData, kosCurrentTitle);
   }
@@ -919,7 +1027,6 @@ export function openKosNada() {
 export function openKosTulis() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-
   const mulaiBtn = document.getElementById("kos-mulai-btn");
   if (mulaiBtn?.dataset.locked === "1") {
     const reason = mulaiBtn.dataset.lockReason;
@@ -929,7 +1036,6 @@ export function openKosTulis() {
     showToast(lockMessage(reason, { prevTitle }), "err");
     return;
   }
-
   window.startTulisHanzi(kosAllData, kosCurrentTitle, "layer-kos-deck");
 }
 
@@ -944,9 +1050,7 @@ export function refreshKosPersonal() {
   filterKos();
 }
 
-export function invalidateKosLockCache() {
-  // dipertahankan untuk kompatibilitas pemanggil eksternal
-}
+export function invalidateKosLockCache() {}
 
 /* ══════════════════════════════════════════════════════════════
    KOSAKATA PERSONAL
@@ -954,7 +1058,6 @@ export function invalidateKosLockCache() {
 export async function loadKosvok() {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
-  // FIX: gunakan kolom eksplisit
   const { data, error } = await supa
     .from("flashcard_cards")
     .select(FC_CARD_COLS)
@@ -1004,27 +1107,49 @@ export function renderFCPersonalList() {
     .join("");
 }
 
+/* ══════════════════════════════════════════════════════════════
+   KOS WORD DETAIL
+══════════════════════════════════════════════════════════════ */
 let _kosWordCache = {};
 let _currentKosWord = null;
+let _activeKwdTab = "kalimat";
+let _strokeWriters = [];
+
+// ── Stroke state ──
+let _strokeChars = [];
+let _strokeCharIdx = 0;
+let _strokeStrokeIdx = 0;
+let _strokeLocked = false;
+let _strokeTotalStrokes = 0;
+// Flag: true = animasi sedang berjalan, null = idle
+let _strokeAnimation = null;
 
 export async function openKosWord(card) {
   _currentKosWord = card;
-  const subEl = document.getElementById("kos-word-sub");
-  const bodyEl = document.getElementById("kos-word-body");
+  _activeKwdTab = "kalimat";
 
+  const titleEl = document.getElementById("kos-word-title");
+  const subEl = document.getElementById("kos-word-sub");
+  if (titleEl) titleEl.textContent = "Detail Kata";
   const deckDesc =
     kosSetsCache?.find((s) => s.id === card.set_id)?.description || "";
   if (subEl) subEl.textContent = deckDesc;
 
-  if (bodyEl)
-    bodyEl.innerHTML =
-      '<div style="text-align:center;padding:60px 20px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat contoh...</div>';
-
   if (typeof window.openLayer === "function")
     window.openLayer("layer-kos-word");
 
-  const _heroHz = card.hanzi || "";
+  _switchTab("kalimat", true);
+  _renderHero();
+  _initKwdGestures();
 
+  await _loadKosWordExamples(card.hanzi);
+}
+
+function _renderHero() {
+  const container = document.getElementById("kwd-hero-container");
+  if (!container) return;
+
+  const card = _currentKosWord;
   const _WORD_CLASS_LABEL = {
     noun: "Nomina · 名词 (míngcí)",
     verb: "Verba · 动词 (dòngcí)",
@@ -1041,24 +1166,417 @@ export async function openKosWord(card) {
   };
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
 
-  // FIX: hapus semua referensi contoh_hanzi/contoh_pinyin/contoh_arti
-  let html = `
+  container.innerHTML = `
     <div class="kwd-hero" style="position:relative;">
-      <button class="kwd-speak-icon" onclick="window.speakMandarin(document.querySelector('.kwd-hz').textContent, 0.7)" title="Dengar pengucapan">🔊</button>
-      <div class="kwd-hz">${_heroHz}</div>
+      <button class="kwd-speak-icon" onclick="window.speakMandarin(_currentKosWord.hanzi, 0.7)" title="Dengar pengucapan">🔊</button>
+      <div class="kwd-hz">${card.hanzi || ""}</div>
       <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
       <div class="kwd-arti">${card.arti || ""}</div>
       ${wcLabel ? `<div class="kwd-word-class">${wcLabel}</div>` : ""}
       ${card.catatan ? `<div class="kwd-catatan">📝 ${card.catatan}</div>` : ""}
     </div>`;
+}
 
-  if (bodyEl) {
-    bodyEl.innerHTML =
-      html +
-      `<div id="kwd-examples-list" style="padding-top:8px;"><div style="text-align:center;padding:28px;color:var(--dim);font-size:12px;"><span class="spinner"></span></div></div>`;
+export function _switchTab(tabName, force = false) {
+  if (_activeKwdTab === tabName && !force) return;
+
+  if (_activeKwdTab === "stroke" && tabName !== "stroke") {
+    _destroyStrokeBottomBar();
   }
 
-  await _loadKosWordExamples(card.hanzi);
+  _activeKwdTab = tabName;
+
+  const tabs = document.querySelectorAll(".kwd-tab");
+  const contents = document.querySelectorAll(".kwd-tab-content");
+  const indicator = document.querySelector(".kwd-tab-indicator");
+
+  tabs.forEach((t, i) => {
+    const isActive = t.dataset.tab === tabName;
+    t.classList.toggle("active", isActive);
+    if (isActive && indicator) {
+      indicator.style.transform = `translateX(${i * 100}%)`;
+    }
+  });
+
+  contents.forEach((c) => {
+    c.classList.toggle("active", c.id === `kwd-content-${tabName}`);
+  });
+
+  const addBtn = document.getElementById("btn-kwd-add");
+  if (addBtn) addBtn.style.display = tabName === "kalimat" ? "" : "none";
+
+  if (tabName === "stroke") _renderStrokeTab();
+  if (tabName === "word") _renderWordTab();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STROKE TAB — PLECO STYLE
+   - Tidak auto play saat dibuka
+   - Play button: jalankan animasi stroke per stroke
+   - Pause/stop: hentikan sequence
+   - Next/Prev: lompat stroke, hentikan sequence
+══════════════════════════════════════════════════════════════ */
+function _renderStrokeTab() {
+  const contentEl = document.getElementById("kwd-content-stroke");
+  if (!contentEl) return;
+
+  const hanzi = _currentKosWord.hanzi || "";
+  _strokeChars = [...hanzi];
+  _strokeCharIdx = 0;
+  _strokeStrokeIdx = 0;
+  _strokeLocked = false;
+  _strokeTotalStrokes = 0;
+  _strokeAnimation = null;
+
+  _destroyStrokeWriters();
+
+  const charDotsHtml =
+    _strokeChars.length > 1
+      ? `<div class="kwd-sb-char-dots" id="kwd-sb-char-dots">
+          ${_strokeChars
+            .map(
+              (_, i) =>
+                `<div class="kwd-sb-char-dot ${i === 0 ? "active" : ""}" data-idx="${i}" onclick="window._strokeGoToChar(${i})"></div>`,
+            )
+            .join("")}
+        </div>`
+      : "";
+
+  contentEl.innerHTML = `
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;">
+      <div id="kwd-stroke-slider" class="kwd-stroke-slider">
+        ${_strokeChars
+          .map(
+            (char, i) => `
+          <div class="kwd-stroke-slide" data-index="${i}">
+            <div class="kwd-stroke-counter" id="kwd-sc-${i}">${i + 1} / ${_strokeChars.length}</div>
+            <div id="stroke-target-${i}" class="kwd-stroke-target"></div>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+      ${charDotsHtml}
+    </div>
+    <div class="kwd-stroke-bottom" id="kwd-stroke-bottom">
+      <div class="kwd-sb-controls">
+        <button class="kwd-sb-btn" onclick="window._strokePrev()" title="Stroke sebelumnya">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <button class="kwd-sb-btn kwd-sb-play-btn" id="kwd-sb-play-btn" onclick="window._strokePlayPause()" title="Play / Pause">
+          <svg id="kwd-sb-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+        <button class="kwd-sb-btn" onclick="window._strokeNext()" title="Stroke berikutnya">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+        <div class="kwd-sb-sep"></div>
+        <button class="kwd-sb-btn kwd-sb-lock-btn" id="kwd-sb-lock-btn" onclick="window._strokeToggleLock()" title="Lock / Unlock slide">
+          <svg id="kwd-sb-lock-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+
+  _strokeChars.forEach((char, i) => _initStrokeWriter(char, i));
+
+  const slider = document.getElementById("kwd-stroke-slider");
+  if (slider) {
+    slider.addEventListener("scroll", () => {
+      if (_strokeLocked) return;
+      const slideH = slider.clientHeight;
+      const idx = Math.round(slider.scrollTop / slideH);
+      if (idx !== _strokeCharIdx) {
+        // Stop sequence saat ganti karakter
+        _strokeAnimation = null;
+        _updatePlayIcon(false);
+        _strokeCharIdx = idx;
+        _strokeStrokeIdx = 0;
+        _updateStrokeUI();
+      }
+      _syncCharDots(idx);
+    });
+  }
+
+  // Init UI saja, tidak auto play
+  setTimeout(() => {
+    _updateStrokeUI();
+  }, 300);
+}
+
+function _initStrokeWriter(char, index) {
+  const targetId = `stroke-target-${index}`;
+  const size = Math.min(window.innerWidth * 0.82, 380);
+
+  const writer = HanziWriter.create(targetId, char, {
+    width: size,
+    height: size,
+    padding: Math.floor(size * 0.08),
+    strokeColor: "#e8e8f4",
+    outlineColor: "#2a2a3e",
+    drawingColor: "#e8c96d",
+    showOutline: true,
+    showCharacter: false,
+    charDataLoader: (char, onLoad, onError) => {
+      fetch(
+        `https://cdn.jsdelivr.net/npm/hanzi-writer-data@latest/${char}.json`,
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          if (index === _strokeCharIdx) {
+            _strokeTotalStrokes = data.strokes?.length || 0;
+            _updateStrokeUI();
+          }
+          onLoad(data);
+        })
+        .catch(onError);
+    },
+  });
+
+  _strokeWriters[index] = writer;
+}
+
+// Play stroke satu per satu secara berurutan, bisa di-interrupt via _strokeAnimation flag
+function _playStrokeSequence(charIdx, fromIdx) {
+  const writer = _strokeWriters[charIdx];
+  if (!writer) return;
+
+  // Cek flag — jika null, sequence dihentikan
+  if (!_strokeAnimation) {
+    _updatePlayIcon(false);
+    return;
+  }
+
+  if (fromIdx >= _strokeTotalStrokes) {
+    // Selesai semua stroke
+    _strokeAnimation = null;
+    _strokeStrokeIdx = _strokeTotalStrokes;
+    _updatePlayIcon(false);
+    _updateStrokeUI();
+    return;
+  }
+
+  _strokeStrokeIdx = fromIdx;
+  _updateStrokeUI();
+
+  writer.animateStroke(fromIdx, {
+    onComplete: () => {
+      _strokeStrokeIdx = fromIdx + 1;
+      _updateStrokeUI();
+      _playStrokeSequence(charIdx, fromIdx + 1);
+    },
+  });
+}
+
+function _strokePlayFromBeginning(charIdx) {
+  const writer = _strokeWriters[charIdx];
+  if (!writer) return;
+  // Reset visual dulu
+  writer.hideCharacter({ duration: 0 });
+  writer.showOutline({ duration: 0 });
+  _strokeStrokeIdx = 0;
+  _strokeAnimation = true;
+  _updatePlayIcon(true);
+  _updateStrokeUI();
+  _playStrokeSequence(charIdx, 0);
+}
+
+function _strokePlayStroke(charIdx, strokeIdx) {
+  const writer = _strokeWriters[charIdx];
+  if (!writer) return;
+  _strokeAnimation = true;
+  _updatePlayIcon(true);
+  _playStrokeSequence(charIdx, strokeIdx);
+}
+
+window._strokePlayPause = () => {
+  if (_strokeAnimation) {
+    // Stop — set flag null, sequence akan berhenti di onComplete berikutnya
+    _strokeAnimation = null;
+    _updatePlayIcon(false);
+  } else {
+    if (_strokeStrokeIdx >= _strokeTotalStrokes) {
+      // Sudah selesai semua, replay dari awal
+      _strokePlayFromBeginning(_strokeCharIdx);
+    } else {
+      // Lanjut dari stroke saat ini
+      _strokePlayStroke(_strokeCharIdx, _strokeStrokeIdx);
+    }
+  }
+};
+
+window._strokeNext = () => {
+  // Stop sequence
+  _strokeAnimation = null;
+  _updatePlayIcon(false);
+
+  const writer = _strokeWriters[_strokeCharIdx];
+  if (!writer || _strokeStrokeIdx >= _strokeTotalStrokes) return;
+
+  // Tampilkan stroke ini instan
+  writer.animateStroke(_strokeStrokeIdx, { strokeAnimationSpeed: 999 });
+  _strokeStrokeIdx++;
+  _updateStrokeUI();
+};
+
+window._strokePrev = () => {
+  // Stop sequence
+  _strokeAnimation = null;
+  _updatePlayIcon(false);
+
+  const writer = _strokeWriters[_strokeCharIdx];
+  if (!writer || _strokeStrokeIdx <= 0) return;
+
+  _strokeStrokeIdx--;
+  writer.hideCharacter({ duration: 0 });
+  writer.showOutline({ duration: 0 });
+  for (let i = 0; i < _strokeStrokeIdx; i++) {
+    writer.animateStroke(i, { strokeAnimationSpeed: 999 });
+  }
+  _updateStrokeUI();
+};
+
+window._strokeGoToChar = (idx) => {
+  if (_strokeLocked) return;
+  const slider = document.getElementById("kwd-stroke-slider");
+  if (!slider) return;
+  slider.scrollTo({ top: idx * slider.clientHeight, behavior: "smooth" });
+};
+
+window._strokeToggleLock = () => {
+  _strokeLocked = !_strokeLocked;
+  const slider = document.getElementById("kwd-stroke-slider");
+  const lockBtn = document.getElementById("kwd-sb-lock-btn");
+  if (slider) slider.style.overflowY = _strokeLocked ? "hidden" : "scroll";
+  if (lockBtn) lockBtn.classList.toggle("active", _strokeLocked);
+  const lockIcon = document.getElementById("kwd-sb-lock-icon");
+  if (lockIcon) {
+    lockIcon.innerHTML = _strokeLocked
+      ? `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`
+      : `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>`;
+  }
+};
+
+function _syncCharDots(activeIdx) {
+  document.querySelectorAll(".kwd-sb-char-dot").forEach((d, i) => {
+    d.classList.toggle("active", i === activeIdx);
+  });
+}
+
+function _updatePlayIcon(isPlaying) {
+  const icon = document.getElementById("kwd-sb-play-icon");
+  if (!icon) return;
+  if (isPlaying) {
+    icon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+  } else {
+    icon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
+  }
+}
+
+function _updateStrokeUI() {
+  const label = document.getElementById("kwd-sb-stroke-label");
+  if (label)
+    label.textContent = `Stroke ${_strokeStrokeIdx} / ${_strokeTotalStrokes}`;
+}
+
+function _destroyStrokeBottomBar() {
+  _strokeAnimation = null;
+}
+
+function _destroyStrokeWriters() {
+  _strokeAnimation = null;
+  _strokeWriters = [];
+}
+
+/* ── Word Tab Logic ── */
+function _renderWordTab() {
+  const container = document.getElementById("kwd-native-list");
+  if (!container) return;
+
+  const hanzi = _currentKosWord.hanzi;
+  if (!_extractedWordsCache) {
+    container.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
+    initExtractedWordsCache().then(() => _renderWordTab());
+    return;
+  }
+
+  const related = _extractedWordsCache.filter((w) => w.hanzi.includes(hanzi));
+
+  if (related.length === 0) {
+    container.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata turunan yang ditemukan di contoh kalimat.</div>';
+    return;
+  }
+
+  container.innerHTML = related
+    .map((w) => {
+      const hskWord = _globalSearchCache?.find((h) => h.hanzi === w.hanzi);
+      const badge = hskWord
+        ? `HSK ${hskWord.hsk_level}`
+        : w.badge === "common"
+          ? "Common"
+          : "Native";
+      const badgeCls = hskWord ? "hsk" : w.badge;
+      return `
+      <div class="kwd-word-card" onclick="window._openKwdRelated('${w.hanzi}')">
+        <div class="kwd-word-badge ${badgeCls}">${badge}</div>
+        <div class="kwd-word-hz">${w.hanzi}</div>
+        <div class="kwd-word-py">${colorPy(w.pinyin)}</div>
+      </div>`;
+    })
+    .join("");
+}
+
+export function _openKwdRelated(hanzi) {
+  const hskWord = _globalSearchCache?.find((h) => h.hanzi === hanzi);
+  if (hskWord) {
+    openKosWord(hskWord);
+  } else {
+    showToast(
+      `"${hanzi}" adalah kata natural yang ditemukan di contoh kalimat.`,
+      "info",
+    );
+  }
+}
+
+/* ── Gesture System ── */
+function _initKwdGestures() {
+  const body = document.getElementById("kos-word-body");
+  if (!body) return;
+
+  let startX = 0,
+    startY = 0;
+
+  body.ontouchstart = (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  };
+
+  body.ontouchend = (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx > 0) _navTab(-1);
+      else _navTab(1);
+    }
+  };
+}
+
+function _navTab(dir) {
+  const tabNames = ["kalimat", "stroke", "word"];
+  let idx = tabNames.indexOf(_activeKwdTab);
+  idx += dir;
+  if (idx >= 0 && idx < tabNames.length) _switchTab(tabNames[idx]);
 }
 
 async function _loadKosWordExamples(hanzi) {
@@ -1102,9 +1620,9 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     allItems.push(u.hanzi || "");
     const actions = isOwner
       ? `<div class="kwd-ex-actions">
-        <button class="kwd-ex-btn" onclick="event.stopPropagation();window.openContohEdit(${u.id},'${(u.hanzi || "").replace(/'/g, "\\'")}','${(u.pinyin || "").replace(/'/g, "\\'")}','${(u.arti || "").replace(/'/g, "\\'")}')">✏️ Edit</button>
-        <button class="kwd-ex-btn del" onclick="event.stopPropagation();window.deleteContoh(${u.id})">✕</button>
-      </div>`
+          <button class="kwd-ex-btn" onclick="event.stopPropagation();window.openContohEdit(${u.id},'${(u.hanzi || "").replace(/'/g, "\\'")}','${(u.pinyin || "").replace(/'/g, "\\'")}','${(u.arti || "").replace(/'/g, "\\'")}')">✏️ Edit</button>
+          <button class="kwd-ex-btn del" onclick="event.stopPropagation();window.deleteContoh(${u.id})">✕</button>
+        </div>`
       : "";
     html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
       ${u.hanzi ? `<div class="kwd-ex-hz">${u.hanzi}</div>` : ""}
@@ -1131,6 +1649,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
 }
 
 export function closeKosWord() {
+  _destroyStrokeWriters();
   const wordLayer = document.getElementById("layer-kos-word");
   if (wordLayer) wordLayer.classList.remove("active");
   setNavStack(_navStack.filter((s) => s.id !== "layer-kos-word"));
@@ -1272,16 +1791,14 @@ export async function deleteContoh(id) {
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => {
     const screen = document.getElementById("search-screen");
-    if (screen?.classList.contains("active")) {
-      _injectSearchBgCards();
-    }
+    if (screen?.classList.contains("active")) _injectSearchBgCards();
   });
   const searchScreen = document.getElementById("search-screen");
   if (searchScreen)
     observer.observe(searchScreen, { attributeFilter: ["class"] });
 });
 
-/* ── Expose ke window untuk dipanggil dari HTML ── */
+/* ── Expose ke window ── */
 window.filterKosHSK = filterKosHSK;
 window.warmUpGlobalSearchCache = warmUpGlobalSearchCache;
 window.onKosGlobalSearch = onKosGlobalSearch;
@@ -1309,7 +1826,11 @@ window.closeContohForm = closeContohForm;
 window.saveContoh = saveContoh;
 window.deleteContoh = deleteContoh;
 window.initGlobalSearchCache = initGlobalSearchCache;
+window.initExtractedWordsCache = initExtractedWordsCache;
 window.toggleKosTooltip = toggleKosTooltip;
 window.closeKosTooltip = closeKosTooltip;
 window.openKosTulis = openKosTulis;
 window._injectSearchBgCards = _injectSearchBgCards;
+window._switchTab = _switchTab;
+window._openKwdRelated = _openKwdRelated;
+window._currentKosWord = null;

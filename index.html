@@ -1131,7 +1131,6 @@
           <input
             class="kos-search"
             id="kos-search"
-            
             name="kosakata-search"
             placeholder="Cari Hanzi, Pinyin, atau Arti..."
             oninput="filterKos()"
@@ -1204,23 +1203,56 @@
         <div class="layer-hd">
           <div class="btn-back" onclick="closeKosWord()">❮❮</div>
           <div style="flex: 1">
-            <div class="layer-title">Contoh Kalimat</div>
+            <div class="layer-title" id="kos-word-title">Detail Kata</div>
             <div class="layer-sub" id="kos-word-sub"></div>
           </div>
-          <button class="btn-add-vok" onclick="openKosContohForm()">
+          <button
+            class="btn-add-vok"
+            id="btn-kwd-add"
+            onclick="openKosContohForm()"
+          >
             + Tambah
           </button>
         </div>
+
         <div class="kos-word-body" id="kos-word-body">
-          <div
-            style="
-              text-align: center;
-              padding: 60px 20px;
-              color: var(--dim);
-              font-size: 13px;
-            "
-          >
-            <span class="spinner"></span>Memuat...
+
+          <!-- Tab Bar — sekarang di dalam body, di bawah hero -->
+          <div class="kwd-tabs">
+            <div
+              class="kwd-tab active"
+              data-tab="kalimat"
+              onclick="window._switchTab('kalimat')"
+            >
+              Kalimat
+            </div>
+            <div
+              class="kwd-tab"
+              data-tab="stroke"
+              onclick="window._switchTab('stroke')"
+            >
+              Stroke
+            </div>
+            <div
+              class="kwd-tab"
+              data-tab="word"
+              onclick="window._switchTab('word')"
+            >
+              Word
+            </div>
+            <div class="kwd-tab-indicator"></div>
+          </div>
+
+          <!-- Tab Contents -->
+          <div class="kwd-tab-content active" id="kwd-content-kalimat">
+            <div id="kwd-hero-container"></div>
+            <div id="kwd-examples-list" style="padding-top: 8px"></div>
+          </div>
+          <div class="kwd-tab-content" id="kwd-content-stroke">
+            <div id="kwd-stroke-slider" class="kwd-stroke-slider"></div>
+          </div>
+          <div class="kwd-tab-content" id="kwd-content-word">
+            <div id="kwd-native-list" class="kwd-native-list"></div>
           </div>
         </div>
       </div>
@@ -3132,4 +3164,3 @@
     </nav>
   </body>
 </html>
-

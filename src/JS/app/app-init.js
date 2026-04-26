@@ -31,6 +31,11 @@ async function _initAppWrapped() {
     // Bersihkan sisa resume state dari sesi sebelumnya
     window.clearLessonStateFromStorage?.();
     await initApp();
+    
+    // Background cache initialization
+    if (window.initExtractedWordsCache) {
+      window.initExtractedWordsCache();
+    }
   } finally {
     clearTimeout(_appReadyFallback);
     document.body.classList.add("app-ready");
