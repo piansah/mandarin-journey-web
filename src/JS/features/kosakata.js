@@ -1678,10 +1678,42 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
   }
 
   listEl.innerHTML = html;
+
   listEl
     .querySelectorAll(".kwd-example-card[data-speak-idx]")
     .forEach((card) => {
-      card.addEventListener("click", () => {
+      let startX = 0,
+        startY = 0,
+        didMove = false;
+
+      card.addEventListener(
+        "touchstart",
+        (e) => {
+          didMove = false;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        },
+        { passive: true },
+      );
+
+      card.addEventListener(
+        "touchmove",
+        (e) => {
+          const dx = Math.abs(e.touches[0].clientX - startX);
+          const dy = Math.abs(e.touches[0].clientY - startY);
+          if (dx > 8 || dy > 8) didMove = true;
+        },
+        { passive: true },
+      );
+
+      card.addEventListener("touchend", () => {
+        if (didMove) return;
+        const idx = parseInt(card.dataset.speakIdx);
+        const text = allItems[idx];
+        if (text) speakMandarin(text, 0.8);
+      });
+
+      card.addEventListener("mouseup", () => {
         const idx = parseInt(card.dataset.speakIdx);
         const text = allItems[idx];
         if (text) speakMandarin(text, 0.8);
