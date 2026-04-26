@@ -33,9 +33,7 @@ async function _initAppWrapped() {
     await initApp();
     
     // Background cache initialization
-    if (window.initExtractedWordsCache) {
-      window.initExtractedWordsCache();
-    }
+    window.warmUpGlobalSearchCache?.();
   } finally {
     clearTimeout(_appReadyFallback);
     document.body.classList.add("app-ready");

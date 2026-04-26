@@ -1881,7 +1881,6 @@ window.closeContohForm = closeContohForm;
 window.saveContoh = saveContoh;
 window.deleteContoh = deleteContoh;
 window.initGlobalSearchCache = initGlobalSearchCache;
-window.initExtractedWordsCache = initExtractedWordsCache;
 window.toggleKosTooltip = toggleKosTooltip;
 window.closeKosTooltip = closeKosTooltip;
 window.openKosTulis = openKosTulis;
