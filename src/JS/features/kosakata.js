@@ -75,107 +75,8 @@ function _applyKosDeckFilter() {
    GLOBAL WORD SEARCH
 ══════════════════════════════════════════════════════════════ */
 let _globalSearchCache = null;
-let _extractedWordsCache = null;
 let _globalSearchTimer = null;
 let _initGlobalSearchCachePromise = null;
-let _initExtractedWordsPromise = null;
-
-export async function initExtractedWordsCache() {
-  if (_extractedWordsCache) return;
-  if (_initExtractedWordsPromise) return _initExtractedWordsPromise;
-
-  _initExtractedWordsPromise = (async () => {
-    try {
-      await initGlobalSearchCache();
-      const { count: totalItems } = await supa
-        .from("hanzi_items")
-        .select("*", { count: "exact", head: true });
-      const cached = lsGet("extracted_words_cache");
-      if (cached && cached.version === totalItems) {
-        _extractedWordsCache = cached.words;
-        return;
-      }
-      await _generateExtractedWords(totalItems);
-    } catch (e) {
-      console.error("[Kosakata] Cache init error:", e);
-    }
-  })();
-
-  return _initExtractedWordsPromise;
-}
-
-async function _generateExtractedWords(totalItems) {
-  const allItems = await _fetchAllHanziItems();
-  const hskMap = new Set((_globalSearchCache || []).map((c) => c.hanzi));
-  const wordFrequency = {};
-  const wordPinyin = {};
-
-  allItems.forEach((item) => {
-    const tokens = _tokenizeByPinyin(item.hanzi, item.pinyin);
-    tokens.forEach((token) => {
-      if (token.hanzi.length < 2) return;
-      if (hskMap.has(token.hanzi)) return;
-      if (!/[\u4e00-\u9fff]/.test(token.hanzi)) return;
-      wordFrequency[token.hanzi] = (wordFrequency[token.hanzi] || 0) + 1;
-      if (!wordPinyin[token.hanzi]) wordPinyin[token.hanzi] = token.pinyin;
-    });
-  });
-
-  const words = Object.keys(wordFrequency)
-    .filter((hz) => wordFrequency[hz] >= 2)
-    .map((hz) => ({
-      hanzi: hz,
-      pinyin: wordPinyin[hz],
-      frequency: wordFrequency[hz],
-      badge: wordFrequency[hz] >= 5 ? "common" : "native",
-    }));
-
-  _extractedWordsCache = words;
-  lsSet("extracted_words_cache", {
-    version: totalItems,
-    generated_at: Date.now(),
-    words: words,
-  });
-}
-
-async function _fetchAllHanziItems() {
-  const PAGE = 1000;
-  let from = 0;
-  let all = [];
-  while (true) {
-    const { data, error } = await supa
-      .from("hanzi_items")
-      .select("hanzi, pinyin")
-      .order("hanzi_key", { ascending: true })
-      .range(from, from + PAGE - 1);
-    if (error || !data || data.length === 0) break;
-    all = all.concat(data);
-    if (data.length < PAGE) break;
-    from += PAGE;
-  }
-  return all;
-}
-
-function _tokenizeByPinyin(hanzi, pinyin) {
-  if (!hanzi || !pinyin) return [];
-  const pyParts = pinyin.split(/\s+/).filter(Boolean);
-  const tokens = [];
-  let hzIdx = 0;
-  pyParts.forEach((py) => {
-    const syllableCount = _countSyllables(py);
-    const hzPart = hanzi.substring(hzIdx, hzIdx + syllableCount);
-    if (hzPart) tokens.push({ hanzi: hzPart, pinyin: py });
-    hzIdx += syllableCount;
-  });
-  return tokens;
-}
-
-function _countSyllables(pinyinToken) {
-  const syllables = pinyinToken
-    .toLowerCase()
-    .match(/[a-zü]+[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ1-5]?/gi);
-  return syllables ? syllables.length : 0;
-}
 
 export async function initGlobalSearchCache() {
   if (_globalSearchCache) return;
@@ -341,10 +242,6 @@ async function _runKosGlobalSearch() {
     await initGlobalSearchCache();
   }
 
-  if (!_extractedWordsCache && _initExtractedWordsPromise === null) {
-    initExtractedWordsCache();
-  }
-
   if (!_globalSearchCache) {
     resultsEl.innerHTML =
       '<div style="text-align:center;padding:32px;color:var(--dim);">Gagal memuat data.</div>';
@@ -356,18 +253,18 @@ async function _runKosGlobalSearch() {
   const hasTone = queryTokens.some((t) => t.toned !== null);
   const isID = _isIndonesianQuery(raw);
 
+  // 1. Filter dari cache HSK
   const hskResults = _globalSearchCache.filter((c) => {
     const hanzi = (c.hanzi || "").toLowerCase();
     const arti = (c.arti || "").toLowerCase();
-    const py = c.pinyin || "";
+    const py = (c.pinyin || "").toLowerCase();
     if (hanzi.includes(q)) return true;
     if (hasTone) {
       if (_matchPinyinTokens(py, queryTokens)) return true;
     } else {
-      const pyLower = py.toLowerCase();
       const qStrip = _stripTones(q);
       const queryParts = qStrip.split(/\s+/).filter(Boolean);
-      const syllables = _stripTones(pyLower).split(/\s+/).filter(Boolean);
+      const syllables = _stripTones(py).split(/\s+/).filter(Boolean);
       if (queryParts.length > 1) {
         const found = syllables.some((_, i) =>
           queryParts.every((qp, j) => syllables[i + j]?.startsWith(qp)),
@@ -375,8 +272,6 @@ async function _runKosGlobalSearch() {
         if (found) return true;
       } else {
         if (syllables.some((s) => s.startsWith(qStrip))) return true;
-        const syllablesRaw = pyLower.split(/\s+/).filter(Boolean);
-        if (syllablesRaw.some((s) => s.startsWith(q))) return true;
       }
     }
     if (isID) {
@@ -392,25 +287,20 @@ async function _runKosGlobalSearch() {
     return arti.includes(q);
   });
 
+  // 2. Cari di word_compounds (Extra)
   let extraResults = [];
-  if (_extractedWordsCache) {
-    extraResults = _extractedWordsCache.filter((w) => {
-      const hanzi = w.hanzi.toLowerCase();
-      const py = w.pinyin.toLowerCase();
-      if (hanzi.includes(q)) return true;
-      if (hasTone) {
-        if (_matchPinyinTokens(py, queryTokens)) return true;
-      } else {
-        const qStrip = _stripTones(q);
-        if (
-          _stripTones(py)
-            .replace(/\s+/g, "")
-            .includes(qStrip.replace(/\s+/g, ""))
-        )
-          return true;
-      }
-      return false;
-    });
+  try {
+    const { data } = await supa
+      .from("word_compounds")
+      .select("hanzi, pinyin, arti, badge")
+      .ilike("hanzi", `%${q}%`)
+      .limit(30);
+    if (data) {
+      const hskHanziSet = new Set(hskResults.map((r) => r.hanzi));
+      extraResults = data.filter((w) => !hskHanziSet.has(w.hanzi));
+    }
+  } catch (e) {
+    console.error("[Kosakata] Extra search error:", e);
   }
 
   const totalCount = hskResults.length + extraResults.length;
@@ -442,7 +332,7 @@ async function _runKosGlobalSearch() {
       badgeHtml = `<span class="badge-hsk">${label}</span>`;
     } else {
       const label = c.badge === "common" ? "Common" : "Native";
-      badgeHtml = `<span class="badge-${c.badge}">${label}</span>`;
+      badgeHtml = `<span class="badge-${c.badge || "native"}">${label}</span>`;
     }
 
     const item = document.createElement("div");
