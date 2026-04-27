@@ -1,5 +1,5 @@
 /* © 2026 Piansah — Mandarin Journey Service Worker v5 */
-const CACHE_NAME = "mandarin-journey-v11";
+const CACHE_NAME = "mandarin-journey-v12";
 
 const STATIC_ASSETS = [
   "/",
@@ -38,6 +38,7 @@ const STATIC_ASSETS = [
   "/src/CSS/profile.css",
   "/src/CSS/app-init.css",
   "/src/CSS/tulis-hanzi.css",
+  "/src/CSS/report.css",
 
   /* ── JS: core ── */
   "/src/JS/core/config.js",
@@ -71,6 +72,7 @@ const STATIC_ASSETS = [
   "/src/JS/features/sosial.js",
   "/src/JS/features/speaking.js",
   "/src/JS/features/tulis-hanzi.js",
+  "/src/JS/features/report.js",
 
   /* ── JS: lesson (split module) ── */
   "/src/JS/lesson/check.js",

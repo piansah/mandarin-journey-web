@@ -31,6 +31,7 @@ import "./CSS/avatar.css";
 import "./CSS/done-screen.css";
 import "./CSS/search.css";
 import "./CSS/app-init.css";
+import "./CSS/report.css";
 /* ── Icons ── */
 import "/src/assets/icon.js";
 /* ── JS: Core (config harus paling pertama) ── */
@@ -63,6 +64,7 @@ import "./JS/features/speaking.js";
 import "./JS/features/tulis-hanzi.js";
 import "./JS/features/profile.js";
 import "./JS/features/sosial.js";
+import { initBugReportFAB } from "./JS/features/report.js";
 /* ── JS: Lesson (urutan penting) ── */
 import "./JS/lesson/state.js";
 import "./JS/lesson/index.js";

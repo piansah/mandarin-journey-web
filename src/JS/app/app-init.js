@@ -32,6 +32,9 @@ async function _initAppWrapped() {
     window.clearLessonStateFromStorage?.();
     await initApp();
     
+    // Bug Report FAB
+    window.initBugReportFAB?.();
+    
     // Background cache initialization
     window.warmUpGlobalSearchCache?.();
   } finally {

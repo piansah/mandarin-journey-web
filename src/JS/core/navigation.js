@@ -38,6 +38,12 @@ export function _syncNavbar() {
   document.querySelectorAll(".bnav-item").forEach((item) => {
     item.classList.toggle("active", item.dataset.screen === activeScreen);
   });
+
+  // Sync Bug Report FAB (Only on Profile Screen and no layers open)
+  const isProfile = activeScreen === "profile-screen";
+  if (typeof window.toggleBugReportFAB === "function") {
+    window.toggleBugReportFAB(isProfile && !anyLayerOpen);
+  }
 }
 
 export function updateNavbar(_screenId) {
