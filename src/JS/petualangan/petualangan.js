@@ -74,9 +74,11 @@ async function fetchPetualanganData() {
   const currentTier = getCurrentTier();
   let tierUnlocked = getTierUnlocked();
 
+  // ✅ Fetch sections & units hanya untuk tier aktif
   const { data: sections, error: errS } = await supa
     .from("adv_sections")
     .select("*")
+    .eq("tier", currentTier)
     .order("order");
 
   if (errS) {
@@ -84,9 +86,12 @@ async function fetchPetualanganData() {
     return null;
   }
 
+  const sectionIds = sections.map((s) => s.id);
+
   const { data: units, error: errU } = await supa
     .from("adv_units")
     .select("*")
+    .in("section_id", sectionIds)
     .order("order");
 
   if (errU) {
@@ -94,25 +99,21 @@ async function fetchPetualanganData() {
     return null;
   }
 
-  const { data: lessonRows, error: errL } = await supa
-    .from("adv_lesson_questions")
-    .select("unit_id, lesson_order");
-
-  if (errL) console.error("lesson counts error:", errL);
-
+  // ✅ FIX #1: pakai kolom total_lessons langsung
   const lessonMaxMap = {};
-  (lessonRows || []).forEach(({ unit_id, lesson_order }) => {
-    if (!lessonMaxMap[unit_id] || lesson_order > lessonMaxMap[unit_id])
-      lessonMaxMap[unit_id] = lesson_order;
+  units.forEach((u) => {
+    lessonMaxMap[u.id] = u.total_lessons || 0;
   });
 
   const progressMap = {};
   if (currentUser) {
-    // Baca progress lesson (tanpa unlocked_tiers — sudah pindah ke user_profile)
+    // ✅ Hanya ambil progress untuk unit yang relevan
+    const unitIds = units.map((u) => u.id);
     const { data: progressRows, error: errP } = await supa
       .from("user_lesson_progress")
       .select("unit_id, completed_lesson_order")
-      .eq("user_id", currentUser.id);
+      .eq("user_id", currentUser.id)
+      .in("unit_id", unitIds);
 
     if (!errP) {
       (progressRows || []).forEach(({ unit_id, completed_lesson_order }) => {
@@ -120,14 +121,12 @@ async function fetchPetualanganData() {
       });
     }
 
-    // Baca unlocked_tiers dari user_profile via tier-unlock.js
     await loadUnlockedTiers();
     const loaded = getUnlockedTiers();
     setTierUnlocked(loaded);
     tierUnlocked = loaded;
   }
 
-  // Pastikan pemula selalu terbuka
   if (!tierUnlocked.pemula) {
     setTierUnlocked({ ...tierUnlocked, pemula: true });
     tierUnlocked = { ...tierUnlocked, pemula: true };
@@ -141,57 +140,48 @@ async function fetchPetualanganData() {
     return a.order - b.order;
   });
 
-  const unitsByTier = {
-    pemula: [],
-    menengah: [],
-    lanjut: [],
-    master: [],
-    fasih: [],
-  };
-  sortedUnits.forEach((u) => {
-    const sec = sections.find((s) => s.id === u.section_id);
-    const tier = sec?.tier || "pemula";
-    if (unitsByTier[tier]) unitsByTier[tier].push(u);
-  });
-
   const computedStatus = {};
+  const tiersToUnlock = [];
 
-  for (const tier of TIER_ORDER) {
-    const tierUnits = unitsByTier[tier];
-    for (let i = 0; i < tierUnits.length; i++) {
-      const u = tierUnits[i];
-      const total = lessonMaxMap[u.id] || 0;
-      const done = progressMap[u.id] || 0;
-      const isCompleted = total > 0 && done >= total;
+  // ✅ Hanya proses tier aktif, bukan semua tier
+  const tierUnits = sortedUnits; // sudah difilter by sectionIds
+  for (let i = 0; i < tierUnits.length; i++) {
+    const u = tierUnits[i];
+    const total = lessonMaxMap[u.id] || 0;
+    const done = progressMap[u.id] || 0;
+    const isCompleted = total > 0 && done >= total;
 
-      if (isCompleted) {
-        computedStatus[u.id] = "completed";
-      } else if (i === 0 && tierUnlocked[tier]) {
-        computedStatus[u.id] = "available";
-      } else if (i > 0 && computedStatus[tierUnits[i - 1].id] === "completed") {
-        computedStatus[u.id] = "available";
-      } else {
-        computedStatus[u.id] = "locked";
-      }
-    }
-
-    const nextTier = TIER_ORDER[TIER_ORDER.indexOf(tier) + 1];
-    if (nextTier) {
-      const allDone =
-        tierUnits.length > 0 &&
-        tierUnits.every((u) => computedStatus[u.id] === "completed");
-      if (allDone) await unlockTier(nextTier);
+    if (isCompleted) {
+      computedStatus[u.id] = "completed";
+    } else if (i === 0 && tierUnlocked[currentTier]) {
+      computedStatus[u.id] = "available";
+    } else if (i > 0 && computedStatus[tierUnits[i - 1].id] === "completed") {
+      computedStatus[u.id] = "available";
+    } else {
+      computedStatus[u.id] = "locked";
     }
   }
+
+  const allDone =
+    tierUnits.length > 0 &&
+    tierUnits.every((u) => computedStatus[u.id] === "completed");
+  if (allDone) {
+    const nextTier = TIER_ORDER[TIER_ORDER.indexOf(currentTier) + 1];
+    if (nextTier) tiersToUnlock.push(nextTier);
+  }
+
+  // fire-and-forget
+  tiersToUnlock.forEach((tier) => unlockTier(tier));
 
   const getCompleted = (id) => progressMap[id] || 0;
   const getNextLesson = (id) => (progressMap[id] || 0) + 1;
 
-  _allSectionsData = sections.map((sec) => ({
+  const tierSectionsData = sections.map((sec) => ({
     ...sec,
     colorClass: `section-${sec.id}`,
     units: units
       .filter((u) => u.section_id === sec.id)
+      .sort((a, b) => a.order - b.order)
       .map((u) => ({
         ...u,
         status: computedStatus[u.id] || "locked",
@@ -201,7 +191,13 @@ async function fetchPetualanganData() {
       })),
   }));
 
-  _allSectionsData.forEach((section) => {
+  // ✅ Simpan ke cache per tier, bukan replace semua
+  _allSectionsData = [
+    ..._allSectionsData.filter((s) => s.tier !== currentTier),
+    ...tierSectionsData,
+  ];
+
+  tierSectionsData.forEach((section) => {
     section.units.forEach((unit) => {
       _allUnits[unit.id] = unit;
       _allSections[unit.id] = section;
@@ -210,7 +206,7 @@ async function fetchPetualanganData() {
 
   _syncDropdownState();
 
-  return _allSectionsData.filter((s) => s.tier === currentTier);
+  return tierSectionsData;
 }
 
 /* ══════════════════════════════════════════
@@ -227,7 +223,6 @@ async function refreshPetualangan() {
     master: false,
     fasih: false,
   });
-  // Reset tier-unlock.js state juga (sync dua arah)
   if (typeof window._setTierUnlockedFromGlobal === "function") {
     window._setTierUnlockedFromGlobal({
       pemula: true,
@@ -347,6 +342,9 @@ async function renderPetualanganPath() {
     return;
   }
 
+  // ✅ FIX #3: cache offsetWidth sekali sebelum loop, hindari reflow berulang
+  const canvasW = Math.min(container.offsetWidth || 320, 360);
+
   let html = "";
 
   sections.forEach((section, sectionIdx) => {
@@ -367,7 +365,6 @@ async function renderPetualanganPath() {
     const completed = pathUnits.filter((u) => u.status === "completed").length;
     const total = pathUnits.length;
 
-    const canvasW = Math.min(container.offsetWidth || 320, 360);
     const nodeR = 46;
     const spacing = 95;
     const padTop = nodeR + 8;
@@ -425,6 +422,8 @@ async function renderPetualanganPath() {
     <svg class="snake-path-svg" width="${canvasW}" height="${canvasH}"
         viewBox="0 0 ${canvasW} ${canvasH}"
         style="position:absolute;top:0;left:0;pointer-events:none;">
+      <path d="${snakePath}" fill="none" stroke="var(--bdr)" stroke-width="10" stroke-linecap="round"/>
+      ${greenSegments}
     </svg>
     `;
 
@@ -502,10 +501,7 @@ async function renderPetualanganPath() {
             screenEl.scrollTo({ top: targetScroll, behavior: "smooth" });
         }
       }
-      // requestAnimationFrame(() => _injectBgCards(container));
     });
-  } else {
-    // requestAnimationFrame(() => _injectBgCards(container));
   }
 
   if (isRefresh) {

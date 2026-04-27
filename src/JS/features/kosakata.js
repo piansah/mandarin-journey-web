@@ -578,6 +578,13 @@ export async function restoreKosDeckLayer() {
   }
   _updateMulaiBtn(kosCurrentSetId);
   closeKosTooltip();
+
+  // ✅ FIX: skip reload jika data sudah ada
+  if (kosInitialized && kosAllData.length > 0) {
+    filterKos();
+    return;
+  }
+
   await loadKosDeckData(kosCurrentSetId);
 }
 
@@ -1099,6 +1106,7 @@ export function _switchTab(tabName, force = false) {
   if (addBtn) addBtn.style.display = tabName === "kalimat" ? "" : "none";
 
   if (tabName === "stroke") _renderStrokeTab();
+  if (tabName === "char") _renderCharTab();
   if (tabName === "word") _renderWordTab();
 }
 
@@ -1561,6 +1569,154 @@ async function _renderWordTab() {
   container.appendChild(frag);
 }
 
+let _decompCache = {};
+let _dictMap = null;
+let _dictLoading = null;
+
+async function _loadDictMap() {
+  if (_dictMap) return _dictMap;
+  if (_dictLoading) return _dictLoading;
+
+  _dictLoading = (async () => {
+    try {
+      const res = await fetch(
+        "https://cdn.jsdelivr.net/gh/skishore/makemeahanzi@master/dictionary.txt",
+      );
+      if (!res.ok) throw new Error("fetch failed");
+      const text = await res.text();
+      const map = {};
+      text.split("\n").forEach((line) => {
+        if (!line.trim()) return;
+        try {
+          const obj = JSON.parse(line);
+          if (obj.character) map[obj.character] = obj;
+        } catch {}
+      });
+      _dictMap = map;
+      return map;
+    } catch (e) {
+      console.error("[Char] gagal load dictionary:", e);
+      _dictMap = {};
+      return {};
+    }
+  })();
+
+  return _dictLoading;
+}
+
+async function _renderCharTab() {
+  const container = document.getElementById("kwd-char-container");
+  if (!container) return;
+
+  const hanzi = _currentKosWord?.hanzi || "";
+  const chars = [...hanzi];
+
+  container.innerHTML =
+    '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span>Memuat data karakter...</div>';
+
+  const dict = await _loadDictMap();
+
+  const IDS_LABEL = {
+    "⿰": "kiri · kanan",
+    "⿱": "atas · bawah",
+    "⿲": "kiri · tengah · kanan",
+    "⿳": "atas · tengah · bawah",
+    "⿴": "luar · dalam",
+    "⿵": "atas terbuka · dalam",
+    "⿶": "bawah terbuka · dalam",
+    "⿷": "kiri terbuka · dalam",
+    "⿸": "kiri atas · dalam",
+    "⿹": "kanan atas · dalam",
+    "⿺": "kiri bawah · dalam",
+    "⿻": "bertumpang",
+  };
+
+  // Ambil pinyin+arti dari cache atau dict
+  function _getCompInfo(char) {
+    const cached = _globalSearchCache?.find((h) => h.hanzi === char);
+    if (cached) return { pinyin: cached.pinyin || "", arti: cached.arti || "" };
+    const d = dict[char];
+    if (d) {
+      const py = d.pinyin?.join(", ") || "";
+      const def = d.definition || "";
+      return { pinyin: py, arti: def };
+    }
+    return { pinyin: "", arti: "" };
+  }
+
+  let html = "";
+
+  for (const char of chars) {
+    const entry = dict[char];
+    const rawDecomp = entry?.decomposition || "";
+    const idsChar = rawDecomp?.[0] || "";
+    const structLabel = IDS_LABEL[idsChar] || "";
+    const charInfo = _getCompInfo(char);
+
+    const components = rawDecomp
+      ? [...rawDecomp].filter(
+          (c) =>
+            c !== idsChar &&
+            c !== "？" &&
+            !/^[⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻]$/.test(c),
+        )
+      : [];
+
+    html += `<div class="kwd-char-block">`;
+
+    // Header karakter utama
+    html += `
+      <div class="kwd-char-main">
+        <div class="kwd-char-hz" onclick="window.speakMandarin('${char}',0.7)" style="cursor:pointer">${char}</div>
+        <div class="kwd-char-main-info">
+          ${charInfo.pinyin ? `<div class="kwd-char-main-py">${colorPy(charInfo.pinyin)}</div>` : ""}
+          ${charInfo.arti ? `<div class="kwd-char-main-def">${charInfo.arti}</div>` : ""}
+          ${structLabel ? `<div class="kwd-char-struct">${idsChar} · ${structLabel}</div>` : ""}
+        </div>
+      </div>`;
+
+    if (components.length === 0) {
+      html += `<div class="kwd-char-no-decomp">Tidak ada data komponen.</div>`;
+    } else {
+      html += `<div class="kwd-char-arrow">↓ komponen</div>`;
+      html += `<div class="kwd-char-components">`;
+
+      for (const comp of components) {
+        const compEntry = dict[comp];
+        const compRaw = compEntry?.decomposition || "";
+        const compIds = compRaw?.[0] || "";
+        const subComps = compRaw
+          ? [...compRaw].filter(
+              (c) =>
+                c !== compIds &&
+                c !== "？" &&
+                !/^[⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻]$/.test(c),
+            )
+          : [];
+        const compInfo = _getCompInfo(comp);
+
+        html += `
+          <div class="kwd-char-comp" onclick="window._openKwdRelated('${comp}')">
+            <div class="kwd-char-comp-hz">${comp}</div>
+            <div class="kwd-char-comp-detail">
+              ${compInfo.pinyin ? `<div class="kwd-char-comp-py">${colorPy(compInfo.pinyin)}</div>` : ""}
+              ${compInfo.arti ? `<div class="kwd-char-comp-def">${compInfo.arti}</div>` : ""}
+              ${subComps.length > 0 ? `<div class="kwd-char-comp-sub">${subComps.join(" · ")}</div>` : ""}
+            </div>
+          </div>`;
+      }
+
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  container.innerHTML =
+    html ||
+    `<div style="text-align:center;padding:48px;color:var(--dim);">Tidak ada data.</div>`;
+}
+
 function _openWordCompound(w) {
   // Cari di flashcard cache dulu
   const hskWord = _globalSearchCache?.find((h) => h.hanzi === w.hanzi);
@@ -1617,7 +1773,7 @@ function _initKwdGestures() {
 }
 
 function _navTab(dir) {
-  const tabNames = ["kalimat", "stroke", "word"];
+  const tabNames = ["kalimat", "stroke", "char", "word"];
   let idx = tabNames.indexOf(_activeKwdTab);
   idx += dir;
   if (idx >= 0 && idx < tabNames.length) _switchTab(tabNames[idx]);
@@ -1733,6 +1889,13 @@ export function closeKosWord() {
     ? "hidden"
     : "";
   _pushAppHistory();
+
+  // ✅ FIX: restore list jika kosAllData sudah ada
+  if (kosInitialized && kosAllData.length > 0) {
+    filterKos();
+  } else if (kosCurrentSetId) {
+    loadKosDeckData(kosCurrentSetId);
+  }
 }
 
 /* ── Contoh Kalimat Form ── */
@@ -1914,6 +2077,7 @@ window.openKosContohForm = openKosContohForm;
 window.openContohEdit = openContohEdit;
 window.closeContohForm = closeContohForm;
 window.saveContoh = saveContoh;
+window._renderCharTab = _renderCharTab;
 window.deleteContoh = deleteContoh;
 window.initGlobalSearchCache = initGlobalSearchCache;
 window.toggleKosTooltip = toggleKosTooltip;

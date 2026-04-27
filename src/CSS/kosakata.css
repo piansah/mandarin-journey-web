@@ -414,7 +414,7 @@
   height: 2px;
   background: var(--gold);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: calc((100% - 20px) / 3);
+  width: calc((100% - 20px) / 4);
 }
 
 /* Tab Content */
@@ -433,6 +433,11 @@
 #kwd-content-kalimat {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+#kwd-content-char {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px 80px;
 }
 
 /* Tab Stroke: flex-direction diset di sini, display dikontrol oleh .kwd-tab-content */
@@ -855,4 +860,91 @@
   background: rgba(232, 201, 109, 0.1);
   color: var(--gold);
   border: 1px solid rgba(232, 201, 109, 0.2);
+}
+
+.kwd-char-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--sur2);
+  border-radius: 14px;
+  margin-bottom: 4px;
+}
+.kwd-char-hz {
+  font-size: 52px;
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--txt);
+  line-height: 1;
+  min-width: 60px;
+  text-align: center;
+}
+.kwd-char-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.kwd-char-main-py {
+  font-size: 15px;
+  font-weight: 600;
+}
+.kwd-char-main-def {
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.4;
+}
+.kwd-char-struct {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+.kwd-char-arrow {
+  text-align: center;
+  font-size: 11px;
+  color: var(--dim);
+  padding: 6px 0 4px;
+  letter-spacing: 0.5px;
+}
+.kwd-char-components {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.kwd-char-comp {
+  flex: 1;
+  min-width: 120px;
+  background: var(--sur2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: opacity 0.15s;
+}
+.kwd-char-comp:active { opacity: 0.6; }
+.kwd-char-comp-hz {
+  font-size: 36px;
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--txt);
+  min-width: 42px;
+  text-align: center;
+}
+.kwd-char-comp-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kwd-char-comp-py { font-size: 13px; font-weight: 600; }
+.kwd-char-comp-def { font-size: 11px; color: var(--dim); line-height: 1.4; }
+.kwd-char-comp-sub { font-size: 10px; color: var(--dim); opacity: 0.6; margin-top: 2px; }
+.kwd-char-no-decomp {
+  font-size: 12px;
+  color: var(--dim);
+  text-align: center;
+  padding: 12px;
+}
+.kwd-char-block {
+  margin-bottom: 20px;
 }
