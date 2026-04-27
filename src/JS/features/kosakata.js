@@ -206,15 +206,17 @@ function _injectSearchBgCards() {
   const screenW = window.innerWidth || 390;
   const screenH = window.innerHeight || 844;
   const frag = document.createDocumentFragment();
-  for (let i = 0; i < 18; i++) {
+  // Tambah jumlah kartu agar lebih "unlimited" feel-nya
+  for (let i = 0; i < 24; i++) {
     const size = [30, 36, 44][Math.floor(Math.random() * 3)];
     const el = document.createElement("div");
     el.className = "pet-bg-card";
     el.textContent = HANZI[Math.floor(Math.random() * HANZI.length)];
-    el.style.cssText = `left:${Math.random() * (screenW - size)}px;top:${Math.random() * (screenH - size)}px;width:${size}px;height:${size}px;font-size:${(size * 0.45).toFixed(0)}px;transform:rotate(${((Math.random() - 0.5) * 48).toFixed(1)}deg);animation-duration:${(3.5 + Math.random() * 2.5).toFixed(2)}s;animation-delay:-${(Math.random() * 5).toFixed(2)}s;pointer-events:none;position:absolute;`;
+    el.style.cssText = `left:${Math.random() * (screenW - size)}px;top:${Math.random() * (screenH - size)}px;width:${size}px;height:${size}px;font-size:${(size * 0.45).toFixed(0)}px;transform:rotate(${((Math.random() - 0.5) * 48).toFixed(1)}deg);animation-duration:${(3.5 + Math.random() * 2.5).toFixed(2)}s;animation-delay:-${(Math.random() * 5).toFixed(2)}s;pointer-events:none;position:absolute;z-index:0;`;
     frag.appendChild(el);
   }
-  container.appendChild(frag);
+  // Prepend agar di belakang .search-results
+  container.insertBefore(frag, container.firstChild);
 }
 
 async function _runKosGlobalSearch() {
@@ -1740,10 +1742,7 @@ export function _openKwdRelated(hanzi) {
   if (hskWord) {
     openKosWord(hskWord);
   } else {
-    showToast(
-      `"${hanzi}" adalah kata natural`,
-      "info",
-    );
+    showToast(`"${hanzi}" adalah kata natural`, "info");
   }
 }
 
