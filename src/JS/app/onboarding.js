@@ -267,6 +267,13 @@ async function _finishOnboarding(skipDBUpdate = false) {
     el.style.display = "none";
     el.classList.remove("hiding");
     showScreen("petualangan-screen");
+
+    // Reload data setelah onboarding selesai
+    if (typeof window.loadScores === "function")
+      window.loadScores().catch(console.error);
+    if (typeof window.loadDashboardCounts === "function")
+      window.loadDashboardCounts().catch(console.error);
+
     if (typeof window.renderHeatmap === "function") {
       window.renderHeatmap().then(() => {
         window.checkTour?.();
