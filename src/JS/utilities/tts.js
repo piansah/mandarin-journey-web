@@ -98,38 +98,39 @@ export function speakMandarin(text, silent = false) {
 
   if (!silent) _ttsShowSpeedBadge(label, rate);
 
-  // Fix: Paksa cancel dan hapus timeout sebelumnya
+  // Safari FIX: Harus dipanggil langsung di main thread (tanpa setTimeout)
+  // agar dianggap sebagai User Activation.
   window.speechSynthesis.cancel();
-  if (_ttsTimeout) clearTimeout(_ttsTimeout);
+
+  const utter = new SpeechSynthesisUtterance(text);
+  // Safari butuh lang yang spesifik
+  utter.lang = "zh-CN";
+  utter.rate = rate;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+
+  // Cari voice Mandarin
+  const voices = window.speechSynthesis.getVoices();
+  const zhVoice = voices.find(
+    (v) =>
+      v.lang === "zh-CN" ||
+      v.lang === "zh-TW" ||
+      v.lang.startsWith("zh") ||
+      v.name.includes("Mandarin") ||
+      v.name.includes("Chinese"),
+  );
+  if (zhVoice) utter.voice = zhVoice;
+
+  utter.onend = () => {
+    _ttsCurrentText = null;
+  };
+  utter.onerror = (e) => {
+    console.error("TTS Error:", e);
+    _ttsCurrentText = null;
+  };
 
   _ttsCurrentText = text;
-
-  _ttsTimeout = setTimeout(() => {
-    // Double check: pastikan tidak ada yang sedang bicara
-    window.speechSynthesis.cancel();
-
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "zh-CN";
-    utter.rate = rate;
-    utter.pitch = 1;
-
-    // Ambil voices terbaru
-    const voices = window.speechSynthesis.getVoices();
-    const zhVoice = voices.find(
-      (v) => v.lang.startsWith("zh-CN") || v.lang.startsWith("zh"),
-    );
-    if (zhVoice) utter.voice = zhVoice;
-
-    utter.onend = () => {
-      _ttsCurrentText = null;
-    };
-    utter.onerror = () => {
-      _ttsCurrentText = null;
-    };
-
-    window.speechSynthesis.speak(utter);
-    _ttsTimeout = null;
-  }, 50); 
+  window.speechSynthesis.speak(utter);
 }
 
 export function cancelTTS() {
