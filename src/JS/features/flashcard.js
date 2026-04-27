@@ -528,8 +528,8 @@ export function renderFCCard() {
 
   const numEl = document.getElementById("fc-count-num");
   const denomEl = document.getElementById("fc-count-denom");
-  if (numEl) numEl.textContent = _fcHafal;
-  if (denomEl) denomEl.textContent = _fcBaseLength;
+  if (numEl) numEl.textContent = fcIdx + 1;
+  if (denomEl) denomEl.textContent = fcCards.length;
 }
 
 /* ══════════════════════════════════════════════════════════════
