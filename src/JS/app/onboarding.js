@@ -193,6 +193,10 @@ function _showOnboarding() {
   const el = document.getElementById("onboarding-overlay");
   if (!el) return;
   document.body.classList.add("ob-open");
+  
+  // Paksa app-ready agar tidak stuck di skeleton utama
+  document.body.classList.add("app-ready");
+  
   _obRenderDots();
   el.style.display = "flex";
   _obCur = 0;

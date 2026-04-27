@@ -94,18 +94,22 @@ export async function initAuth() {
         window.resetTiersCache?.();
         await loadUnlockedTiers();
         closeAuthModal();
+
+        // Cek onboarding
+        const obShown = await window.checkOnboarding?.();
+
         const onLoginScreen = document
           .getElementById("login-screen")
           ?.classList.contains("active");
         const anyScreenActive = !!document.querySelector(".screen.active");
 
-        // Perbaikan: cek onboarding dulu sebelum pindah screen
-        const obShown = await window.checkOnboarding?.();
-
         if ((onLoginScreen || !anyScreenActive) && !obShown) {
           showScreen("petualangan-screen");
           window.checkTour?.();
         }
+
+        // DEFER LOADING: Jika sedang onboarding, jangan load data berat dulu
+        if (obShown) return;
 
         const now = Date.now();
         if (now - _lastBackgroundLoad < 5_000) return;

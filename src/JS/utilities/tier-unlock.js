@@ -180,14 +180,21 @@ export function resolveCumulativeLock({
 
   const entryPoint = getEntryPointDeck(tableName);
 
+  // Global bypass: deck sebelum entry point → bebas
   if (deckIndex + 1 < entryPoint) {
     return { isLocked: false, reason: null };
   }
 
-  if (deckIndex + 1 === entryPoint) {
+  // Entry point deck: cek unlock_after jika ada, jangan auto-bypass
+  // Deck pertama (deckIndex === 0) tetap harus cek sequential jika unlock_after > 0
+  if (
+    deckIndex + 1 === entryPoint &&
+    (unlockAfter === 0 || unlockAfter == null)
+  ) {
     return { isLocked: false, reason: null };
   }
 
+  // Sequential lock
   const requiredQuizzes = (deckIndex + 1) * unlockAfter;
   const isUnlocked = (completedQuizCount || 0) >= requiredQuizzes;
   return isUnlocked
