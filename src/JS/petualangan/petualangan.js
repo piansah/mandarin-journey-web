@@ -419,13 +419,12 @@ async function renderPetualanganPath() {
     html += `<div class="snake-canvas-wrap" style="width:${canvasW}px; height:${canvasH}px; position:relative; margin:0 auto;">`;
 
     html += `
-    <svg class="snake-path-svg" width="${canvasW}" height="${canvasH}"
-        viewBox="0 0 ${canvasW} ${canvasH}"
-        style="position:absolute;top:0;left:0;pointer-events:none;">
-      <path d="${snakePath}" fill="none" stroke="var(--bdr)" stroke-width="10" stroke-linecap="round"/>
-      ${greenSegments}
-    </svg>
-    `;
+        <svg class="snake-path-svg" width="${canvasW}" height="${canvasH}"
+            viewBox="0 0 ${canvasW} ${canvasH}"
+            style="position:absolute;top:0;left:0;pointer-events:none;">
+        ${greenSegments}
+        </svg>
+        `;
 
     if (challengeUnit) {
       const cp = _getCurveCP(canvasW, startY, endY);
