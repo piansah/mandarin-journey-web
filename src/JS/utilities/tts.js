@@ -71,6 +71,11 @@ function _ttsShowSpeedBadge(label, rate) {
 export function speakMandarin(text, silent = false) {
   if (!window.speechSynthesis || !text) return;
 
+  // Lock: Jika dipanggil lagi dalam < 150ms, abaikan.
+  const now = Date.now();
+  if (now - _lastSpeakTime < 150) return;
+  _lastSpeakTime = now;
+
   // Pastikan voices sudah ter-load
   if (_ttsVoices.length === 0) {
     _ttsVoices = window.speechSynthesis.getVoices();
@@ -92,11 +97,6 @@ export function speakMandarin(text, silent = false) {
   }, 8000);
 
   if (!silent) _ttsShowSpeedBadge(label, rate);
-
-  // Lock: Jika dipanggil lagi dalam < 150ms, abaikan.
-  const now = Date.now();
-  if (now - _lastSpeakTime < 150) return;
-  _lastSpeakTime = now;
 
   // Fix: Paksa cancel dan hapus timeout sebelumnya
   window.speechSynthesis.cancel();
