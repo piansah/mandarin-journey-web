@@ -25,6 +25,9 @@ if (window.speechSynthesis) {
 }
 
 let _ttsBadgeTimer = null;
+let _ttsTimeout = null;
+let _lastSpeakTime = 0; // Lock untuk cegah double call beruntun
+
 function _ttsShowSpeedBadge(label, rate) {
   let badge = document.getElementById("tts-speed-badge");
   if (!badge) {
@@ -90,17 +93,27 @@ export function speakMandarin(text, silent = false) {
 
   if (!silent) _ttsShowSpeedBadge(label, rate);
 
-  // Fix: cancel dulu, lalu delay sebentar sebelum speak
-  speechSynthesis.cancel();
+  // Lock: Jika dipanggil lagi dalam < 150ms, abaikan.
+  const now = Date.now();
+  if (now - _lastSpeakTime < 150) return;
+  _lastSpeakTime = now;
+
+  // Fix: Paksa cancel dan hapus timeout sebelumnya
+  window.speechSynthesis.cancel();
+  if (_ttsTimeout) clearTimeout(_ttsTimeout);
+
   _ttsCurrentText = text;
 
-  setTimeout(() => {
+  _ttsTimeout = setTimeout(() => {
+    // Double check: pastikan tidak ada yang sedang bicara
+    window.speechSynthesis.cancel();
+
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "zh-CN";
     utter.rate = rate;
     utter.pitch = 1;
 
-    // Reload voices kalau masih kosong
+    // Ambil voices terbaru
     const voices = window.speechSynthesis.getVoices();
     const zhVoice = voices.find(
       (v) => v.lang.startsWith("zh-CN") || v.lang.startsWith("zh"),
@@ -114,8 +127,9 @@ export function speakMandarin(text, silent = false) {
       _ttsCurrentText = null;
     };
 
-    speechSynthesis.speak(utter);
-  }, 50); // delay 50ms setelah cancel
+    window.speechSynthesis.speak(utter);
+    _ttsTimeout = null;
+  }, 50); 
 }
 
 export function cancelTTS() {
@@ -125,6 +139,10 @@ export function cancelTTS() {
   if (_ttsTapTimer) {
     clearTimeout(_ttsTapTimer);
     _ttsTapTimer = null;
+  }
+  if (_ttsTimeout) {
+    clearTimeout(_ttsTimeout);
+    _ttsTimeout = null;
   }
   speechSynthesis.cancel();
 }
