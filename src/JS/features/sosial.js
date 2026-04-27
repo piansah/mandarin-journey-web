@@ -500,24 +500,26 @@ async function _loadXPLeaderboard(period) {
     if (startDate) query = query.gte("updated_at", startDate.toISOString());
     const { data: scores, error } = await query;
     if (error) throw error;
-    if (!scores || scores.length === 0) {
-      if (requestId !== _leaderboardRequestId) return;
-      _leaderboardCache = [];
-      _myRank = null;
-      _rankList = [];
-      _lastLoadedPeriod = period;
-      _renderXPLeaderboardEmpty();
-      return;
-    }
+
+    const currentUser = getCurrentUser();
     const userScoresMap = new Map();
-    scores.forEach((s) => {
-      if (!userScoresMap.has(s.user_id)) userScoresMap.set(s.user_id, []);
-      userScoresMap.get(s.user_id).push({ type: s.type, score: s.score });
-    });
+    if (scores) {
+      scores.forEach((s) => {
+        if (!userScoresMap.has(s.user_id)) userScoresMap.set(s.user_id, []);
+        userScoresMap.get(s.user_id).push({ type: s.type, score: s.score });
+      });
+    }
+
     const userXPMap = new Map();
     for (const [userId, userScores] of userScoresMap.entries()) {
       userXPMap.set(userId, calcXPFromRows(userScores));
     }
+
+    // Paksa masukkan diri sendiri jika belum ada di map (XP 0)
+    if (currentUser && !userXPMap.has(currentUser.id)) {
+      userXPMap.set(currentUser.id, 0);
+    }
+
     const userIds = Array.from(userXPMap.keys());
     if (userIds.length === 0) {
       if (requestId !== _leaderboardRequestId) return;
@@ -528,6 +530,7 @@ async function _loadXPLeaderboard(period) {
       _renderXPLeaderboardEmpty();
       return;
     }
+
     const [{ data: profiles }, streakData] = await Promise.all([
       supa
         .from("user_profile")
@@ -551,7 +554,7 @@ async function _loadXPLeaderboard(period) {
       for (const [uid, dates] of datesByUser.entries())
         streakMap.set(uid, _calcStreak(dates));
     }
-    const currentUser = getCurrentUser();
+
     const leaderboard = [];
     for (const [userId, totalXP] of userXPMap.entries()) {
       const profile = profileMap.get(userId);
