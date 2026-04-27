@@ -170,12 +170,10 @@ export async function initGlobalSearchCache() {
         .from("flashcard_sets")
         .select("id, badge, title, hsk_level")
         .eq("created_by", userId)
+        .eq("is_default", false)
         .order("id", { ascending: true });
       if (!e2 && ownSets) {
-        const existingIds = new Set(sets.map((s) => s.id));
-        ownSets.forEach((s) => {
-          if (!existingIds.has(s.id)) sets.push(s);
-        });
+        sets = [...sets, ...ownSets];
       }
     }
 
@@ -656,11 +654,20 @@ export async function loadKosDeckData(setId) {
     return;
   }
 
-  const currentUser = getCurrentUser();
-  const personal = (currentUser ? kosvokData : []).filter(
-    (c) => c.set_id === setId,
-  );
-  kosAllData = [...data.filter((c) => !c.added_by), ...personal];
+  // Cek apakah ini deck HSK (default) atau personal
+  const isDefault = kosSetsCache?.find((s) => s.id === setId)?.is_default ?? false;
+
+  if (isDefault) {
+    const currentUser = getCurrentUser();
+    const personal = (currentUser ? kosvokData : []).filter(
+      (c) => c.set_id === setId,
+    );
+    kosAllData = [...data.filter((c) => !c.added_by), ...personal];
+  } else {
+    // Deck personal: ambil semua kartu apa adanya
+    kosAllData = data;
+  }
+
   kosInitialized = true;
   filterKos();
 }
@@ -748,6 +755,8 @@ export function renderKosItems() {
   }
   window._kosFilteredData = kosFiltered;
 
+  const isPersonal = kosSetsCache?.find(s => s.id === kosCurrentSetId)?.is_default === false;
+
   const frag = document.createDocumentFragment();
   kosFiltered.forEach((c, idx) => {
     const item = document.createElement("div");
@@ -765,7 +774,16 @@ export function renderKosItems() {
 
     const metaEl = document.createElement("div");
     metaEl.className = "kos-meta";
-    metaEl.innerHTML = `<span class="kos-no">#${idx + 1}</span>`;
+    
+    let delBtnHtml = "";
+    if (isPersonal) {
+      delBtnHtml = `<button class="kos-deck-del" style="opacity:1;position:static;margin-bottom:4px;" onclick="event.stopPropagation(); window._deleteCardFromDeck(${c.id}, '${(c.hanzi || "").replace(/'/g, "\\'")}')">✕</button>`;
+    }
+
+    metaEl.innerHTML = `
+      ${delBtnHtml}
+      <span class="kos-no">#${idx + 1}</span>
+    `;
 
     item.appendChild(hzEl);
     item.appendChild(infoEl);
@@ -781,6 +799,23 @@ export function renderKosItems() {
   listEl.innerHTML = "";
   listEl.appendChild(frag);
 }
+
+window._deleteCardFromDeck = async (cardId, hanzi) => {
+  if (!confirm(`Hapus "${hanzi}" dari deck ini?`)) return;
+
+  try {
+    const { error } = await supa.from("flashcard_cards").delete().eq("id", cardId);
+    if (error) throw error;
+    showToast("Berhasil dihapus", "ok");
+    
+    // Update local state
+    kosAllData = kosAllData.filter(c => c.id !== cardId);
+    filterKos();
+  } catch (e) {
+    console.error("_deleteCardFromDeck:", e);
+    showToast("Gagal menghapus kata", "err");
+  }
+};
 
 /** Helper: cek lock. Return true = locked (sudah show toast). */
 function _checkKosLock() {
@@ -924,6 +959,9 @@ export async function openKosWord(card) {
   _switchTab("kalimat", true);
   _renderHero();
   _initKwdGestures();
+
+  // ✅ Fix: Auto active hero word, stop previous if any
+  if (card.hanzi) speakMandarin(card.hanzi);
 
   await _loadKosWordExamples(card.hanzi);
 }
@@ -1688,7 +1726,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
         if (text) speakMandarin(text);
       });
 
-      card.addEventListener("mouseup", () => {
+      card.addEventListener("click", () => {
         const idx = parseInt(card.dataset.speakIdx);
         const text = allItems[idx];
         if (text) speakMandarin(text);
