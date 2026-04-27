@@ -134,10 +134,19 @@ export async function initKeys() {
 // jika dashboard.js belum me-resolve-nya.
 
 /* ── initApp — dipanggil dari app-init.js ── */
+let _resolveAppReady;
+window.appReadyPromise = new Promise((resolve) => {
+  _resolveAppReady = resolve;
+});
+
 export async function initApp() {
-  await initKeys();
-  if (typeof window.initAuth === "function") await window.initAuth();
-  if (typeof window.initNavbar === "function") window.initNavbar();
-  if (typeof window.warmUpGlobalSearchCache === "function")
-    window.warmUpGlobalSearchCache();
+  try {
+    await initKeys();
+    if (typeof window.initAuth === "function") await window.initAuth();
+    if (typeof window.initNavbar === "function") window.initNavbar();
+    if (typeof window.warmUpGlobalSearchCache === "function")
+      window.warmUpGlobalSearchCache();
+  } finally {
+    _resolveAppReady(true);
+  }
 }

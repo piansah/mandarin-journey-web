@@ -34,6 +34,20 @@ let _profFollowCounts = { followers: 0, following: 0 };
 export async function initProfileScreen() {
   if (_profInitInProgress) return; // cegah concurrent init
   _profInitInProgress = true;
+
+  // Tunggu app init selesai agar auth & keys siap
+  try {
+    if (window.appReadyPromise) {
+      // Timeout 10 detik untuk app ready
+      await Promise.race([
+        window.appReadyPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("App Ready Timeout")), 10000))
+      ]);
+    }
+  } catch (e) {
+    console.error("Profile: App ready timeout/error", e);
+  }
+
   _profSetHeaderLogoutBtn();
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -41,20 +55,30 @@ export async function initProfileScreen() {
     _profInitInProgress = false;
     return;
   }
+
   _renderProfileSkeleton();
+
   try {
-    await Promise.all([
-      _loadProfileData(),
-      _loadProfileStats(),
-      _loadFollowCounts(),
-      initAvatarSystem(),
+    // Gunakan timeout untuk keseluruhan fetch agar tidak stuck skeleton
+    await Promise.race([
+      Promise.all([
+        _loadProfileData(),
+        _loadProfileStats(),
+        _loadFollowCounts(),
+        initAvatarSystem(),
+      ]),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 12000))
     ]);
   } catch (e) {
     console.error("initProfileScreen error:", e);
+    // Jika error, pastikan stats minimal terisi agar tidak crash saat render
+    if (!_profStats.xp) {
+      _profStats = { xp: 0, level: 1, kosakataCount: 0, sesiCount: 0, akurasi: 0, rank: "--", streak: 0 };
+    }
   } finally {
     _profInitInProgress = false;
+    _renderProfileFull();
   }
-  _renderProfileFull();
 }
 
 /* ══════════════════════════════════════════

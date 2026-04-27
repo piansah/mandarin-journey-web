@@ -174,23 +174,49 @@ function _isFollowing(userId) {
 export async function initSosialScreen() {
   if (_sosialInitInProgress) return; // cegah concurrent init
   _sosialInitInProgress = true;
+
+  // Tunggu app init selesai
+  try {
+    if (window.appReadyPromise) {
+      await Promise.race([
+        window.appReadyPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("App Ready Timeout")), 10000))
+      ]);
+    }
+  } catch (e) {
+    console.error("Sosial: App ready timeout/error", e);
+  }
+
   const currentUser = getCurrentUser();
   if (!currentUser) {
     _renderGuest();
     _sosialInitInProgress = false;
     return;
   }
+
   _leaderboardCache = null;
   _myRank = null;
   _rankList = [];
   _lastLoadedPeriod = null;
+
   try {
-    await _loadMyFollowing();
     _ensureXPDOM();
     _renderSkeleton();
-    await _loadXPLeaderboard(_activePeriod);
+
+    // Jalankan fetch dengan timeout
+    await Promise.race([
+      (async () => {
+        await _loadMyFollowing();
+        await _loadXPLeaderboard(_activePeriod);
+      })(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 12000))
+    ]);
   } catch (e) {
     console.error("initSosialScreen error:", e);
+    const listEl = document.getElementById("xp-leaderboard-list");
+    if (listEl) {
+      listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">⚠️</div><div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div></div>`;
+    }
   } finally {
     _sosialInitInProgress = false;
   }
