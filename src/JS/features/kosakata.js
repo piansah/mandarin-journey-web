@@ -44,12 +44,14 @@ import {
  * @param {string} hanzi - teks yang diucapkan saat long-press
  * @param {Function} onTap - callback saat tap biasa
  */
+
 function _attachLongPressTTS(el, hanzi, onTap) {
   let pressTimer = null,
     didLongPress = false,
     didMove = false;
   let startX = 0,
     startY = 0;
+  let _wasTouched = false;
 
   const _triggerLongPress = () => {
     didLongPress = true;
@@ -89,16 +91,22 @@ function _attachLongPressTTS(el, hanzi, onTap) {
 
   el.addEventListener("touchend", () => {
     clearTimeout(pressTimer);
+    _wasTouched = true;
+    setTimeout(() => {
+      _wasTouched = false;
+    }, 500);
     if (!didLongPress && !didMove && onTap) onTap();
   });
 
   el.addEventListener("mousedown", () => {
+    if (_wasTouched) return;
     didLongPress = false;
     didMove = false;
     pressTimer = setTimeout(_triggerLongPress, 500);
   });
 
   el.addEventListener("mouseup", () => {
+    if (_wasTouched) return;
     clearTimeout(pressTimer);
     if (!didLongPress && onTap) onTap();
   });
@@ -655,7 +663,8 @@ export async function loadKosDeckData(setId) {
   }
 
   // Cek apakah ini deck HSK (default) atau personal
-  const isDefault = kosSetsCache?.find((s) => s.id === setId)?.is_default ?? false;
+  const isDefault =
+    kosSetsCache?.find((s) => s.id === setId)?.is_default ?? false;
 
   if (isDefault) {
     const currentUser = getCurrentUser();
@@ -755,7 +764,8 @@ export function renderKosItems() {
   }
   window._kosFilteredData = kosFiltered;
 
-  const isPersonal = kosSetsCache?.find(s => s.id === kosCurrentSetId)?.is_default === false;
+  const isPersonal =
+    kosSetsCache?.find((s) => s.id === kosCurrentSetId)?.is_default === false;
 
   const frag = document.createDocumentFragment();
   kosFiltered.forEach((c, idx) => {
@@ -774,7 +784,7 @@ export function renderKosItems() {
 
     const metaEl = document.createElement("div");
     metaEl.className = "kos-meta";
-    
+
     let delBtnHtml = "";
     if (isPersonal) {
       delBtnHtml = `<button class="kos-deck-del" style="opacity:1;position:static;margin-bottom:4px;" onclick="event.stopPropagation(); window._deleteCardFromDeck(${c.id}, '${(c.hanzi || "").replace(/'/g, "\\'")}')">✕</button>`;
@@ -804,12 +814,15 @@ window._deleteCardFromDeck = async (cardId, hanzi) => {
   if (!confirm(`Hapus "${hanzi}" dari deck ini?`)) return;
 
   try {
-    const { error } = await supa.from("flashcard_cards").delete().eq("id", cardId);
+    const { error } = await supa
+      .from("flashcard_cards")
+      .delete()
+      .eq("id", cardId);
     if (error) throw error;
     showToast("Berhasil dihapus", "ok");
-    
+
     // Update local state
-    kosAllData = kosAllData.filter(c => c.id !== cardId);
+    kosAllData = kosAllData.filter((c) => c.id !== cardId);
     filterKos();
   } catch (e) {
     console.error("_deleteCardFromDeck:", e);
@@ -960,7 +973,7 @@ export async function openKosWord(card) {
   _renderHero();
   _initKwdGestures();
 
-  // ✅ Fix: Auto active hero word, stop previous if any
+  cancelTTS();
   if (card.hanzi) speakMandarin(card.hanzi);
 
   await _loadKosWordExamples(card.hanzi);
