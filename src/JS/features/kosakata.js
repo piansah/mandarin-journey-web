@@ -1741,7 +1741,7 @@ export function _openKwdRelated(hanzi) {
     openKosWord(hskWord);
   } else {
     showToast(
-      `"${hanzi}" adalah kata natural yang ditemukan di contoh kalimat.`,
+      `"${hanzi}" adalah kata natural`,
       "info",
     );
   }
