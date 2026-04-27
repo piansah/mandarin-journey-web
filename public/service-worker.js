@@ -1,5 +1,5 @@
 /* © 2026 Piansah — Mandarin Journey Service Worker v5 */
-const CACHE_NAME = "mandarin-journey-v13";
+const CACHE_NAME = "mandarin-journey-v14";
 
 const STATIC_ASSETS = [
   "/",
@@ -131,25 +131,13 @@ self.addEventListener("fetch", (e) => {
   // Jangan intercept request eksternal (Supabase, CDN, dll)
   if (url.origin !== self.location.origin) return;
 
-  // Navigasi (refresh/buka app) — network-first, fallback ke cache
+  // Navigasi (refresh/buka app) — NETWORK ONLY untuk cegah blank di In-App Browser
   if (request.mode === "navigate") {
-    if (STATIC_PAGES.includes(url.pathname)) {
-      e.respondWith(fetch(request));
-      return;
-    }
     e.respondWith(
-      fetch(request)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-          }
-          return res;
-        })
-        .catch(() => {
-          // Fallback ke cache index.html jika offline/gagal
-          return caches.match("/index.html") || caches.match("/");
-        }),
+      fetch(request).catch(() => {
+        // Hanya jika benar-benar offline, ambil dari cache
+        return caches.match("/index.html") || caches.match("/");
+      }),
     );
     return;
   }

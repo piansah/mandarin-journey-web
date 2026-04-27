@@ -8,6 +8,16 @@
         visibility: hidden;
       }
     </style>
+    <script>
+      /* Failsafe: Paksa aplikasi muncul setelah 4 detik jika init gagal */
+      setTimeout(function() {
+        if (!document.body.classList.contains('app-ready')) {
+          document.body.classList.add('app-ready');
+          document.body.style.visibility = 'visible';
+          console.warn('Failsafe: App forced visible');
+        }
+      }, 4000);
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mandarin Journey · Program Intensif Mandarin</title>
