@@ -163,27 +163,29 @@ function _obUpdateDotIndicator(n) {
 }
 
 export async function checkOnboarding() {
-  const {
-    data: { user },
-  } = await supa.auth.getUser();
+  // 1. Cek instan via localStorage untuk kecepatan UI
+  const localDone = localStorage.getItem(LS_ONBOARDING);
+  if (localDone === "1") return false;
 
-  if (!user) {
-    _showOnboarding();
-    return true;
-  }
-
-  const { data: profileData } = await supa
-    .from("user_profile")
-    .select("has_seen_onboarding")
-    .eq("user_id", user.id)
-    .single();
-
-  if (profileData?.has_seen_onboarding === true) {
-    localStorage.setItem(LS_ONBOARDING, "1");
-    return false;
-  }
-
+  // 2. Jika tidak ada di local, langsung tampilkan overlay biar tidak lag/flicker
   _showOnboarding();
+
+  // 3. Sync ke DB di background (opsional, untuk jaga-jaringan)
+  const { data: { user } } = await supa.auth.getUser();
+  if (user) {
+    supa.from("user_profile")
+      .select("has_seen_onboarding")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.has_seen_onboarding) {
+          localStorage.setItem(LS_ONBOARDING, "1");
+          // Jika ternyata sudah pernah di HP lain, tutup otomatis
+          _finishOnboarding(); 
+        }
+      });
+  }
+
   return true;
 }
 
