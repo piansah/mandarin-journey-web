@@ -248,7 +248,7 @@ export function renderCeritaBody() {
       if (!currentCeritaKey) return;
       const pi = parseInt(btn.dataset.para);
       const rawText = currentCeritaData.paragraphs[pi];
-      if (rawText) speakMandarin(rawText, 0.8);
+      if (rawText) speakMandarin(rawText);
     });
   });
 
@@ -267,7 +267,7 @@ export function renderCeritaBody() {
       e.stopPropagation();
       if (!currentCeritaKey) return;
       const word = btn.dataset.word || "";
-      if (word) speakMandarin(word, 0.8);
+      if (word) speakMandarin(word);
     });
   });
 

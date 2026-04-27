@@ -250,7 +250,7 @@ function _startQuiz() {
       if (nextBtn) nextBtn.disabled = false;
 
       // ← TTS: ucapkan kata lengkap (bukan per-karakter)
-      speakMandarin(card.hanzi, null, false);
+      speakMandarin(card.hanzi);
     },
   });
 }

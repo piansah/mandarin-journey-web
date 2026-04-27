@@ -206,12 +206,12 @@ export function advanceH(i) {
   const hzEl = card?.querySelector(".h-hz");
 
   if (hState[i] >= 2) {
-    if (hzEl) speakMandarin(hzEl.textContent, 0.75);
+    if (hzEl) speakMandarin(hzEl.textContent);
     return;
   }
 
   hState[i]++;
-  if (hState[i] === 1 && hzEl) speakMandarin(hzEl.textContent, 0.75);
+  if (hState[i] === 1 && hzEl) speakMandarin(hzEl.textContent);
 
   if (card) card.className = "h-card" + (hState[i] === 1 ? " step1" : " step2");
 
@@ -605,7 +605,7 @@ function _spkMatch(spoken, targetCard) {
 export function _spkListenHanzi() {
   const card = _spkGetHanziCard();
   if (!card) return;
-  speakMandarin(card.hz, null, true);
+  speakMandarin(card.hz, true);
   const iconEl = document.getElementById("hsp-listen-icon");
   const txtEl = document.getElementById("hsp-listen-txt");
   const stepIdx =

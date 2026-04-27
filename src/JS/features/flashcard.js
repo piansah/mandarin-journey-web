@@ -23,7 +23,6 @@ import {
   lsRemove,
   shuffle,
 } from "../utilities/helpers.js";
-import { speakMandarin, cancelTTS } from "../utilities/tts.js";
 import { colorPy, _stripTones } from "../utilities/pinyin.js";
 import { showDoneScreen } from "../core/done-screen.js";
 import { calcXPFCSession, XP } from "../utilities/xp.js";

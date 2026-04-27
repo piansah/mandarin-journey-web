@@ -720,7 +720,7 @@ export function renderQuestion() {
 // TTS HELPER
 // ============================================================
 export function _lessonSpeak(text) {
-  if (text) speakMandarin(text, null, true);
+  if (text) speakMandarin(text, true);
 }
 
 function _lessonGetCurrentHanzi() {

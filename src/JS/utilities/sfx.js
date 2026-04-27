@@ -78,8 +78,11 @@ export function playHaptic(type) {
   else navigator.vibrate([40, 60, 40]);
 }
 
-export function playBurst() {
+export function playBurst(originX, originY) {
   const colors = ["#e8c96d","#f97316","#4c8fff","#a78bfa","#34d399","#f472b6"];
+  const ox = originX ?? window.innerWidth / 2;
+  const oy = originY ?? window.innerHeight * 0.42;
+
   for (let i = 0; i < 42; i++) {
     const dot   = document.createElement("div");
     const size  = Math.random() * 9 + 5;
@@ -90,7 +93,7 @@ export function playBurst() {
     const isCircle = Math.random() > 0.4;
 
     dot.style.cssText = `
-      position:fixed; left:50%; top:42%;
+      position:fixed; left:${ox}px; top:${oy}px;
       width:${size}px; height:${size}px;
       border-radius:${isCircle ? "50%" : "3px"};
       background:${color};

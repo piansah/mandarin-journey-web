@@ -65,7 +65,7 @@ function _ttsShowSpeedBadge(label, rate) {
   }, 1600);
 }
 
-export function speakMandarin(text, _ignoredRate, silent = false) {
+export function speakMandarin(text, silent = false) {
   if (!window.speechSynthesis || !text) return;
 
   // Pastikan voices sudah ter-load

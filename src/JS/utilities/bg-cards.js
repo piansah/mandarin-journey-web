@@ -92,7 +92,29 @@ export function _injectBgCards(container) {
     });
   });
 
-  if (!nodeList.length) return;
+  if (!nodeList.length) {
+    // Fallback: scatter acak di seluruh screen (untuk screen tanpa snake path)
+    const screenW = window.innerWidth || 390;
+    const screenH = window.innerHeight || 844;
+    const HANZI_FLAT = ["你","好","我","的","是","不","他","她","学","习",
+      "语","汉","字","说","听","读","写","人","大","小","中","国","来","去","有","爱"];
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < 24; i++) {
+      const size = [30, 36, 44][Math.floor(rand() * 3)];
+      const el = document.createElement("div");
+      el.className = "pet-bg-card";
+      el.textContent = HANZI_FLAT[Math.floor(rand() * HANZI_FLAT.length)];
+      const x = margin + rand() * (screenW - size - margin * 2);
+      const y = rand() * (screenH - size);
+      const rot = (rand() - 0.5) * 48;
+      const dur = 3.5 + rand() * 2.5;
+      const del = rand() * 5;
+      el.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${size}px;height:${size}px;font-size:${(size*0.45).toFixed(0)}px;transform:rotate(${rot.toFixed(1)}deg);animation-duration:${dur.toFixed(2)}s;animation-delay:-${del.toFixed(2)}s;pointer-events:none;position:absolute;z-index:0;`;
+      frag.appendChild(el);
+    }
+    container.insertBefore(frag, container.firstChild);
+    return;
+  }
 
   const frag = document.createDocumentFragment();
 

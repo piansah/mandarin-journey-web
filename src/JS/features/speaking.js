@@ -41,7 +41,7 @@ export function _spkListen() {
   const card = window.fcCards[window.fcIdx];
   if (!card?.hz) return;
 
-  speakMandarin(card.hz, null, true);
+  speakMandarin(card.hz, true);
 }
 
 /* ════════════════════ COBA UCAPKAN ════════════════════ */

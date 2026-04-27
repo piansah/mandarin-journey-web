@@ -28,6 +28,7 @@ import {
   _stripTones,
   _getPinyinRegex,
 } from "../utilities/pinyin.js";
+import { _injectBgCards } from "../utilities/bg-cards.js";
 import { startFC } from "./flashcard.js";
 import {
   resolveVocabLock,
@@ -36,6 +37,75 @@ import {
   loadUnlockedTiers,
   loadTierStartDecks,
 } from "../utilities/tier-unlock.js";
+
+/**
+ * Attach long-press TTS + tap handler ke element.
+ * @param {HTMLElement} el
+ * @param {string} hanzi - teks yang diucapkan saat long-press
+ * @param {Function} onTap - callback saat tap biasa
+ */
+function _attachLongPressTTS(el, hanzi, onTap) {
+  let pressTimer = null,
+    didLongPress = false,
+    didMove = false;
+  let startX = 0,
+    startY = 0;
+
+  const _triggerLongPress = () => {
+    didLongPress = true;
+    if (hanzi) speakMandarin(hanzi);
+    el.style.opacity = "0.6";
+    setTimeout(() => {
+      el.style.opacity = "";
+    }, 300);
+  };
+
+  el.addEventListener(
+    "touchstart",
+    (e) => {
+      didLongPress = false;
+      didMove = false;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      pressTimer = setTimeout(() => {
+        if (!didMove) _triggerLongPress();
+      }, 500);
+    },
+    { passive: true },
+  );
+
+  el.addEventListener(
+    "touchmove",
+    (e) => {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      if (dx > 8 || dy > 8) {
+        didMove = true;
+        clearTimeout(pressTimer);
+      }
+    },
+    { passive: true },
+  );
+
+  el.addEventListener("touchend", () => {
+    clearTimeout(pressTimer);
+    if (!didLongPress && !didMove && onTap) onTap();
+  });
+
+  el.addEventListener("mousedown", () => {
+    didLongPress = false;
+    didMove = false;
+    pressTimer = setTimeout(_triggerLongPress, 500);
+  });
+
+  el.addEventListener("mouseup", () => {
+    clearTimeout(pressTimer);
+    if (!didLongPress && onTap) onTap();
+  });
+
+  el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
 
 const FC_CARD_COLS =
   "id, set_id, hanzi, pinyin, arti, catatan, added_by, created_at, word_class";
@@ -168,57 +238,6 @@ export async function onKosGlobalSearch() {
   _globalSearchTimer = setTimeout(() => _runKosGlobalSearch(), 200);
 }
 
-function _injectSearchBgCards() {
-  const container = document.getElementById("search-screen");
-  if (!container || container.querySelector(".pet-bg-card")) return;
-  const HANZI = [
-    "你",
-    "好",
-    "我",
-    "的",
-    "是",
-    "不",
-    "他",
-    "她",
-    "学",
-    "习",
-    "语",
-    "汉",
-    "字",
-    "说",
-    "听",
-    "读",
-    "写",
-    "人",
-    "大",
-    "小",
-    "中",
-    "国",
-    "来",
-    "去",
-    "有",
-    "爱",
-    "朋",
-    "友",
-    "老",
-    "师",
-  ];
-  const screenW = window.innerWidth || 390;
-  const screenH = window.innerHeight || 844;
-  const frag = document.createDocumentFragment();
-  // Tambah jumlah kartu agar lebih "unlimited" feel-nya
-  for (let i = 0; i < 24; i++) {
-    const size = [30, 36, 44][Math.floor(Math.random() * 3)];
-    const el = document.createElement("div");
-    el.className = "pet-bg-card";
-    el.textContent = HANZI[Math.floor(Math.random() * HANZI.length)];
-    el.style.cssText = `left:${Math.random() * (screenW - size)}px;top:${Math.random() * (screenH - size)}px;width:${size}px;height:${size}px;font-size:${(size * 0.45).toFixed(0)}px;transform:rotate(${((Math.random() - 0.5) * 48).toFixed(1)}deg);animation-duration:${(3.5 + Math.random() * 2.5).toFixed(2)}s;animation-delay:-${(Math.random() * 5).toFixed(2)}s;pointer-events:none;position:absolute;z-index:0;`;
-    frag.appendChild(el);
-  }
-  // Prepend agar di belakang .search-results
-  container.insertBefore(frag, container.firstChild);
-}
-
 async function _runKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
   const resultsEl = document.getElementById("kos-global-results");
@@ -346,63 +365,7 @@ async function _runKosGlobalSearch() {
     item.style.cursor = "pointer";
     item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${badgeHtml}</div>`;
 
-    const hanzi = c.hanzi || "";
-    let pressTimer = null,
-      didLongPress = false,
-      startX = 0,
-      startY = 0,
-      didMove = false;
-
-    item.addEventListener(
-      "touchstart",
-      (e) => {
-        didLongPress = false;
-        didMove = false;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        pressTimer = setTimeout(() => {
-          if (didMove) return;
-          didLongPress = true;
-          if (hanzi) speakMandarin(hanzi, 0.7);
-          item.style.opacity = "0.6";
-          setTimeout(() => {
-            item.style.opacity = "";
-          }, 300);
-        }, 500);
-      },
-      { passive: true },
-    );
-
-    item.addEventListener(
-      "touchmove",
-      (e) => {
-        const dx = Math.abs(e.touches[0].clientX - startX);
-        const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 8 || dy > 8) {
-          didMove = true;
-          clearTimeout(pressTimer);
-        }
-      },
-      { passive: true },
-    );
-
-    item.addEventListener("touchend", () => {
-      clearTimeout(pressTimer);
-      if (!didLongPress && !didMove) openKosWordFromGlobal(idx);
-    });
-
-    item.addEventListener("mousedown", () => {
-      didLongPress = false;
-      pressTimer = setTimeout(() => {
-        didLongPress = true;
-        if (hanzi) speakMandarin(hanzi, 0.7);
-      }, 500);
-    });
-
-    item.addEventListener("mouseup", () => {
-      clearTimeout(pressTimer);
-      if (!didLongPress) openKosWordFromGlobal(idx);
-    });
+    _attachLongPressTTS(item, c.hanzi, () => openKosWordFromGlobal(idx));
 
     frag.appendChild(item);
   });
@@ -808,81 +771,10 @@ export function renderKosItems() {
     item.appendChild(infoEl);
     item.appendChild(metaEl);
 
-    const hanzi = c.hanzi || "";
-    let pressTimer = null,
-      didLongPress = false,
-      startX = 0,
-      startY = 0,
-      didMove = false,
-      _handled = false;
-
-    item.addEventListener(
-      "touchstart",
-      (e) => {
-        didLongPress = false;
-        didMove = false;
-        _handled = false;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        pressTimer = setTimeout(() => {
-          if (didMove) return;
-          didLongPress = true;
-          if (hanzi) speakMandarin(hanzi, 0.7);
-          item.style.opacity = "0.6";
-          setTimeout(() => {
-            item.style.opacity = "";
-          }, 300);
-        }, 500);
-      },
-      { passive: true },
+    _attachLongPressTTS(item, c.hanzi, () =>
+      openKosWord(window._kosFilteredData[idx]),
     );
 
-    item.addEventListener(
-      "touchmove",
-      (e) => {
-        const dx = Math.abs(e.touches[0].clientX - startX);
-        const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 8 || dy > 8) {
-          didMove = true;
-          clearTimeout(pressTimer);
-        }
-      },
-      { passive: true },
-    );
-
-    item.addEventListener("touchend", () => {
-      clearTimeout(pressTimer);
-      if (!didLongPress && !didMove) {
-        _handled = true;
-        openKosWord(window._kosFilteredData[idx]);
-      }
-    });
-
-    item.addEventListener("mousedown", () => {
-      didLongPress = false;
-      didMove = false;
-      pressTimer = setTimeout(() => {
-        if (didMove) return;
-        didLongPress = true;
-        if (hanzi) speakMandarin(hanzi, 0.7);
-        item.style.opacity = "0.6";
-        setTimeout(() => {
-          item.style.opacity = "";
-        }, 300);
-      }, 500);
-    });
-
-    item.addEventListener("mouseup", () => {
-      clearTimeout(pressTimer);
-      if (_handled) {
-        _handled = false;
-        return;
-      }
-      if (!didLongPress) openKosWord(window._kosFilteredData[idx]);
-    });
-
-    item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-    item.addEventListener("contextmenu", (e) => e.preventDefault());
     frag.appendChild(item);
   });
 
@@ -890,19 +782,23 @@ export function renderKosItems() {
   listEl.appendChild(frag);
 }
 
+/** Helper: cek lock. Return true = locked (sudah show toast). */
+function _checkKosLock() {
+  const mulaiBtn = document.getElementById("kos-mulai-btn");
+  if (mulaiBtn?.dataset.locked !== "1") return false;
+  const reason = mulaiBtn.dataset.lockReason;
+  const sorted = (kosSetsCache ?? []).slice().sort((a, b) => a.id - b.id);
+  const idx = sorted.findIndex((s) => s.id === kosCurrentSetId);
+  const prevTitle = idx > 0 ? sorted[idx - 1].description : "";
+  showToast(lockMessage(reason, { prevTitle }), "err");
+  return true;
+}
+
 /* ── Latihan Actions ── */
 export async function openKosFlashcard() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-  const mulaiBtn = document.getElementById("kos-mulai-btn");
-  if (mulaiBtn?.dataset.locked === "1") {
-    const reason = mulaiBtn.dataset.lockReason;
-    const sorted = (kosSetsCache ?? []).slice().sort((a, b) => a.id - b.id);
-    const idx = sorted.findIndex((s) => s.id === kosCurrentSetId);
-    const prevTitle = idx > 0 ? sorted[idx - 1].description : "";
-    showToast(lockMessage(reason, { prevTitle }), "err");
-    return;
-  }
+  if (_checkKosLock()) return;
   document
     .querySelectorAll(".layer")
     .forEach((l) => l.classList.remove("active"));
@@ -912,15 +808,7 @@ export async function openKosFlashcard() {
 export function openKosNada() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-  const mulaiBtn = document.getElementById("kos-mulai-btn");
-  if (mulaiBtn?.dataset.locked === "1") {
-    const reason = mulaiBtn.dataset.lockReason;
-    const sorted = (kosSetsCache ?? []).slice().sort((a, b) => a.id - b.id);
-    const idx = sorted.findIndex((s) => s.id === kosCurrentSetId);
-    const prevTitle = idx > 0 ? sorted[idx - 1].description : "";
-    showToast(lockMessage(reason, { prevTitle }), "err");
-    return;
-  }
+  if (_checkKosLock()) return;
   if (typeof window.startNadaLatihan === "function") {
     window.startNadaLatihan(kosAllData, kosCurrentTitle);
   }
@@ -929,15 +817,7 @@ export function openKosNada() {
 export function openKosTulis() {
   closeKosTooltip();
   if (!kosCurrentSetId) return;
-  const mulaiBtn = document.getElementById("kos-mulai-btn");
-  if (mulaiBtn?.dataset.locked === "1") {
-    const reason = mulaiBtn.dataset.lockReason;
-    const sorted = (kosSetsCache ?? []).slice().sort((a, b) => a.id - b.id);
-    const idx = sorted.findIndex((s) => s.id === kosCurrentSetId);
-    const prevTitle = idx > 0 ? sorted[idx - 1].description : "";
-    showToast(lockMessage(reason, { prevTitle }), "err");
-    return;
-  }
+  if (_checkKosLock()) return;
   window.startTulisHanzi(kosAllData, kosCurrentTitle, "layer-kos-deck");
 }
 
@@ -1070,7 +950,7 @@ function _renderHero() {
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
 
   container.innerHTML = `
-    <div class="kwd-hero" style="position:relative; cursor:pointer;" onclick="window.speakMandarin('${card.hanzi}', 0.7)">
+    <div class="kwd-hero" style="position:relative; cursor:pointer;" onclick="window.speakMandarin('${card.hanzi}')">
       <div class="kwd-hz">${card.hanzi || ""}</div>
       <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
       <div class="kwd-arti">${card.arti || ""}</div>
@@ -1496,73 +1376,10 @@ async function _renderWordTab() {
         <span class="kos-no">#${idx + 1}</span>
       </div>`;
 
-    let pressTimer = null,
-      didLongPress = false,
-      didMove = false,
-      startX = 0,
-      startY = 0;
-
-    item.addEventListener(
-      "touchstart",
-      (e) => {
-        didLongPress = false;
-        didMove = false;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        pressTimer = setTimeout(() => {
-          if (didMove) return;
-          didLongPress = true;
-          speakMandarin(w.hanzi, 0.7);
-          item.style.opacity = "0.6";
-          setTimeout(() => (item.style.opacity = ""), 300);
-        }, 500);
-      },
-      { passive: true },
-    );
-
-    item.addEventListener(
-      "touchmove",
-      (e) => {
-        const dx = Math.abs(e.touches[0].clientX - startX);
-        const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 8 || dy > 8) {
-          didMove = true;
-          clearTimeout(pressTimer);
-        }
-      },
-      { passive: true },
-    );
-
-    item.addEventListener("touchend", () => {
-      clearTimeout(pressTimer);
-      if (!didLongPress && !didMove) {
-        speakMandarin(w.hanzi, 0.7);
-        _openWordCompound(w);
-      }
+    _attachLongPressTTS(item, w.hanzi, () => {
+      speakMandarin(w.hanzi);
+      _openWordCompound(w);
     });
-
-    item.addEventListener("mousedown", () => {
-      didLongPress = false;
-      didMove = false;
-      pressTimer = setTimeout(() => {
-        if (didMove) return;
-        didLongPress = true;
-        speakMandarin(w.hanzi, 0.7);
-        item.style.opacity = "0.6";
-        setTimeout(() => (item.style.opacity = ""), 300);
-      }, 500);
-    });
-
-    item.addEventListener("mouseup", () => {
-      clearTimeout(pressTimer);
-      if (!didLongPress) {
-        speakMandarin(w.hanzi, 0.7);
-        _openWordCompound(w);
-      }
-    });
-
-    item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-    item.addEventListener("contextmenu", (e) => e.preventDefault());
 
     frag.appendChild(item);
   });
@@ -1669,7 +1486,7 @@ async function _renderCharTab() {
     // Header karakter utama
     html += `
       <div class="kwd-char-main">
-        <div class="kwd-char-hz" onclick="window.speakMandarin('${char}',0.7)" style="cursor:pointer">${char}</div>
+        <div class="kwd-char-hz" onclick="window.speakMandarin('${char}')" style="cursor:pointer">${char}</div>
         <div class="kwd-char-main-info">
           ${charInfo.pinyin ? `<div class="kwd-char-main-py">${colorPy(charInfo.pinyin)}</div>` : ""}
           ${charInfo.arti ? `<div class="kwd-char-main-def">${charInfo.arti}</div>` : ""}
@@ -1868,13 +1685,13 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
         if (didMove) return;
         const idx = parseInt(card.dataset.speakIdx);
         const text = allItems[idx];
-        if (text) speakMandarin(text, 0.8);
+        if (text) speakMandarin(text);
       });
 
       card.addEventListener("mouseup", () => {
         const idx = parseInt(card.dataset.speakIdx);
         const text = allItems[idx];
-        if (text) speakMandarin(text, 0.8);
+        if (text) speakMandarin(text);
       });
     });
 }
@@ -2043,7 +1860,12 @@ export async function deleteContoh(id) {
 document.addEventListener("DOMContentLoaded", () => {
   const observer = new MutationObserver(() => {
     const screen = document.getElementById("search-screen");
-    if (screen?.classList.contains("active")) _injectSearchBgCards();
+    if (screen?.classList.contains("active")) {
+      const container = document.getElementById("search-screen");
+      if (container && !container.querySelector(".pet-bg-card")) {
+        _injectBgCards(container);
+      }
+    }
   });
   const searchScreen = document.getElementById("search-screen");
   if (searchScreen)
@@ -2082,7 +1904,6 @@ window.initGlobalSearchCache = initGlobalSearchCache;
 window.toggleKosTooltip = toggleKosTooltip;
 window.closeKosTooltip = closeKosTooltip;
 window.openKosTulis = openKosTulis;
-window._injectSearchBgCards = _injectSearchBgCards;
 window._switchTab = _switchTab;
 window._openKwdRelated = _openKwdRelated;
 window._currentKosWord = null;

@@ -17,7 +17,6 @@ import {
   shuffle,
 } from "../utilities/helpers.js";
 import { colorPy } from "../utilities/pinyin.js";
-import { speakMandarin } from "../utilities/tts.js";
 import { calcXPFromPct } from "../utilities/xp.js";
 import {
   resolveCumulativeLock,

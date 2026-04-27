@@ -542,7 +542,7 @@ export function gramAddWord(idx, word, pinyin, el) {
   gramChipUsed[idx] = true;
   gramAnswer.push({ idx, word, pinyin: pinyin || "" });
   el.classList.add("used");
-  speakMandarin(word, null, true);
+  speakMandarin(word, true);
   renderGramAnswerZone();
 
   const resultEl = document.getElementById("gram-result");
@@ -565,7 +565,7 @@ export function gramRemoveWord(ansIdx) {
   if (!item) return;
 
   // Selalu putar suara untuk validasi
-  speakMandarin(item.word, null, true);
+  speakMandarin(item.word, true);
 
   if (gramChecked) return;
   gramChipUsed[item.idx] = false;
@@ -617,7 +617,7 @@ export function gramCheck() {
           <span>✓ Benar! ${q.correct_order.join("")} — ${q.translation}</span>
         </div>${_explanationHtml}`;
     }
-    setTimeout(() => speakMandarin(q.correct_order.join(""), null, true), 300);
+    setTimeout(() => speakMandarin(q.correct_order.join(""), true), 300);
   } else {
     gramWrong++;
     if (!gramWrongQuestions.find((wq) => wq.id === q.id)) {
@@ -896,7 +896,7 @@ window.gramPrev = gramPrev;
 window.gramNext = gramNext;
 window.gramPlayCurrent = () => {
   const q = gramQuestions[gramIdx];
-  if (q) speakMandarin(q.correct_order.join(""), null, true);
+  if (q) speakMandarin(q.correct_order.join(""), true);
 };
 window.showGramDone = showGramDone;
 window.confirmGramRestart = confirmGramRestart;
