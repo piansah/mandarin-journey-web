@@ -8,7 +8,11 @@ import { unlockTier, loadUnlockedTiers } from "../utilities/tier-unlock.js";
 import { supa } from "../core/config.js";
 
 const LS_ONBOARDING = "hsk_onboarding_done";
-const OB_TOTAL = 11; // 7 slide onboarding + 3 placement + 1 result
+const OB_ONBOARDING_SLIDES = 7; // slide onboarding murni (0–6)
+const OB_PLACEMENT_SLIDES = 3; // slide placement (7–9)
+const OB_RESULT_SLIDES = 1; // slide result (10)
+const OB_TOTAL = OB_ONBOARDING_SLIDES + OB_PLACEMENT_SLIDES + OB_RESULT_SLIDES; // = 11
+
 let _obCur = 0;
 let _obReadTimer = null;
 let _obReadStep = 0;
@@ -26,9 +30,6 @@ const _PL_TIERS = [
   { key: "fasih", name: "Fasih", hsk: "HSK 6", hz: "精" },
 ];
 
-// Pertanyaan 1 (index 0) menentukan berapa tier yang dibuka
-// val 0 = hanya pemula, val 1 = pemula, val 2 = + menengah,
-// val 3 = + lanjut + master, val 4 = semua
 function _plGetUnlockCount(levelVal) {
   return Math.min((levelVal ?? 0) + 1, 5);
 }
@@ -36,7 +37,6 @@ function _plGetUnlockCount(levelVal) {
 export function _plSelect(question, val) {
   _plAnswers[question] = val;
 
-  // Update visual selected
   document
     .querySelectorAll(`#pl-opts-${question} .ob-pl-opt`)
     .forEach((o) => o.classList.remove("selected"));
@@ -45,13 +45,10 @@ export function _plSelect(question, val) {
   );
   if (sel) sel.classList.add("selected");
 
-  // Auto lanjut ke slide berikutnya setelah delay singkat
   setTimeout(() => {
-    if (question === 0)
-      _obGoTo(8); // Q1 → Q2
-    else if (question === 1)
-      _obGoTo(9); // Q2 → Q3
-    else if (question === 2) _plShowResult(); // Q3 → result
+    if (question === 0) _obGoTo(8);
+    else if (question === 1) _obGoTo(9);
+    else if (question === 2) _plShowResult();
   }, 280);
 }
 
@@ -92,7 +89,7 @@ function _plShowResult() {
       .join("");
   }
 
-  _obGoTo(10); // slide result
+  _obGoTo(OB_ONBOARDING_SLIDES + OB_PLACEMENT_SLIDES); // slide 10 = result
 }
 
 export async function _plFinish() {
@@ -107,7 +104,6 @@ export async function _plFinish() {
     btn.textContent = "Menyimpan...";
   }
 
-  // Fix: slice dari 0, bukan 1 — supaya pemula ikut masuk
   const tierKeys = _PL_TIERS.slice(0, unlockCount).map((t) => t.key);
   for (const key of tierKeys) await unlockTier(key);
 
@@ -116,7 +112,11 @@ export async function _plFinish() {
     JSON.stringify({ level, hanzi_mode, goal }),
   );
 
-  const { data: { user } } = await supa.auth.getUser();
+  const {
+    data: { user },
+  } = await supa.auth.getUser();
+
+  // Simpan placement
   const { error } = await supa.from("user_placement").upsert(
     {
       user_id: user?.id ?? null,
@@ -129,12 +129,16 @@ export async function _plFinish() {
     { onConflict: "user_id" },
   );
 
+  // FIX BUG 1: Satu kali upsert saja untuk user_profile
+  // has_seen_onboarding + unlocked_tiers disimpan di sini,
+  // _finishOnboarding tidak perlu update lagi
   if (user?.id) {
     await supa.from("user_profile").upsert(
       {
         user_id: user.id,
         has_seen_onboarding: true,
         unlocked_tiers: tierKeys,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
     );
@@ -142,20 +146,18 @@ export async function _plFinish() {
 
   if (error) console.warn("[placement] Gagal simpan ke DB:", error.message);
 
-  _finishOnboarding();
+  _finishOnboarding(true); // flag: sudah simpan DB, skip update lagi
 }
 
 /* ══════════════════════════════════════════
-   ONBOARDING CORE (tidak berubah)
+   ONBOARDING CORE
 ══════════════════════════════════════════ */
 function _obUpdateDotIndicator(n) {
-  // Dots hanya untuk slide onboarding (0-6), placement tidak pakai dots
   const DOT_SIZE = 6,
     DOT_GAP = 6,
     INDICATOR_W = 14,
     PADDING_L = 4;
-  const OB_SLIDES = 7;
-  const dotN = Math.min(n, OB_SLIDES - 1);
+  const dotN = Math.min(n, OB_ONBOARDING_SLIDES - 1);
   const dotCenter = PADDING_L + dotN * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2;
   const offset = dotCenter - INDICATOR_W / 2;
   const indicator = document.getElementById("ob-dot-indicator");
@@ -163,40 +165,50 @@ function _obUpdateDotIndicator(n) {
 }
 
 export async function checkOnboarding() {
-  // 1. Cek instan via localStorage untuk kecepatan UI
-  const localDone = localStorage.getItem(LS_ONBOARDING);
-  if (localDone === "1") return false;
+  const {
+    data: { user },
+  } = await supa.auth.getUser();
 
-  // 2. Jika tidak ada di local, langsung tampilkan overlay biar tidak lag/flicker
-  _showOnboarding();
-
-  // 3. Sync ke DB di background (opsional, untuk jaga-jaringan)
-  const { data: { user } } = await supa.auth.getUser();
-  if (user) {
-    supa.from("user_profile")
-      .select("has_seen_onboarding")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.has_seen_onboarding) {
-          localStorage.setItem(LS_ONBOARDING, "1");
-          // Jika ternyata sudah pernah di HP lain, tutup otomatis
-          _finishOnboarding(); 
-        }
-      });
+  if (!user) {
+    _showOnboarding();
+    return true;
   }
 
-  return true;
+  try {
+    const [profRes, placeRes] = await Promise.all([
+      supa
+        .from("user_profile")
+        .select("has_seen_onboarding")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supa
+        .from("user_placement")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
+
+    const hasSeen = profRes.data?.has_seen_onboarding;
+    const hasPlacement = !!placeRes.data;
+
+    if (!hasSeen || !hasPlacement) {
+      _showOnboarding();
+      return true;
+    }
+  } catch (err) {
+    console.error("Gagal verifikasi status onboarding:", err);
+    _showOnboarding();
+    return true;
+  }
+
+  return false;
 }
 
 function _showOnboarding() {
   const el = document.getElementById("onboarding-overlay");
   if (!el) return;
   document.body.classList.add("ob-open");
-  
-  // Paksa app-ready agar tidak stuck di skeleton utama
   document.body.classList.add("app-ready");
-  
   _obRenderDots();
   el.style.display = "flex";
   _obCur = 0;
@@ -210,8 +222,7 @@ function _obRenderDots() {
   const wrapper = document.createElement("div");
   wrapper.style.cssText =
     "position:relative; display:flex; gap:6px; align-items:center; padding:0 4px;";
-  // Dots hanya untuk 7 slide onboarding
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < OB_ONBOARDING_SLIDES; i++) {
     const d = document.createElement("div");
     d.className = "ob-dot";
     d.onclick = () => _obGoTo(i);
@@ -225,23 +236,26 @@ function _obRenderDots() {
   _obUpdateDotIndicator(0);
 }
 
-async function _finishOnboarding() {
+// FIX BUG 1: Tambah param skipDBUpdate agar tidak double-write
+async function _finishOnboarding(skipDBUpdate = false) {
   console.log("🏁 Onboarding selesai");
 
   localStorage.setItem(LS_ONBOARDING, "1");
 
-  // Update user_profile kalau user login
-  const {
-    data: { user },
-  } = await supa.auth.getUser();
-  if (user) {
-    const { error } = await supa
-      .from("user_profile")
-      .update({ has_seen_onboarding: true })
-      .eq("user_id", user.id);
+  // Hanya update DB jika belum dilakukan oleh _plFinish
+  if (!skipDBUpdate) {
+    const {
+      data: { user },
+    } = await supa.auth.getUser();
+    if (user) {
+      const { error } = await supa
+        .from("user_profile")
+        .update({ has_seen_onboarding: true })
+        .eq("user_id", user.id);
 
-    if (error) console.warn("Gagal update onboarding status:", error);
-    else console.log("✅ Onboarding status tersimpan di DB");
+      if (error) console.warn("Gagal update onboarding status:", error);
+      else console.log("✅ Onboarding status tersimpan di DB");
+    }
   }
 
   document.body.classList.remove("ob-open");
@@ -273,10 +287,9 @@ export function _obGoTo(n) {
   if (track) track.style.transform = `translateX(${-n * (100 / OB_TOTAL)}%)`;
   _obUpdateDotIndicator(n);
 
-  // Dots & skip hanya tampil di slide onboarding (0-6)
-  const isOnboarding = n <= 6;
-  const isLastOnboarding = n === 6;
-  const isPlacement = n >= 7;
+  const isOnboarding = n < OB_ONBOARDING_SLIDES;
+  const isLastOnboarding = n === OB_ONBOARDING_SLIDES - 1;
+  const isPlacement = n >= OB_ONBOARDING_SLIDES;
 
   const skip = document.getElementById("ob-skip");
   if (skip)
@@ -290,17 +303,13 @@ export function _obGoTo(n) {
   const dotsFixed = document.getElementById("ob-dots-fixed");
   if (dotsFixed) dotsFixed.style.opacity = isPlacement ? "0" : "1";
 
-  // Tombol "Mulai Belajar" hanya muncul di slide 6 (terakhir onboarding)
-  // dan fungsinya sekarang melanjutkan ke placement
   const bar = document.getElementById("ob-finish-bar");
   if (bar) {
     bar.classList.toggle("visible", isLastOnboarding);
-    // Update label tombol
     const btn = document.getElementById("ob-btn");
     if (btn) btn.textContent = "Mulai Belajar";
   }
 
-  // Slide animations
   if (n === 1) _obStartFlashcard();
   else _obStopFlashcard();
   if (n === 2) _obStartQuiz();
@@ -313,13 +322,11 @@ export function _obGoTo(n) {
   else _obStopPath();
 }
 
-// _finishOnboarding sekarang mengarah ke placement (slide 7)
-// bukan langsung ke app — override tombol ob-btn
 export function _obStartPlacement() {
-  _obGoTo(7);
+  _obGoTo(OB_ONBOARDING_SLIDES); // → slide 7
 }
 
-/* ── Slide animations — sama persis dengan original ── */
+/* ── Slide animations ── */
 let _obFcTimer = null;
 function _obStopFlashcard() {
   if (_obFcTimer) {
@@ -607,10 +614,9 @@ function _obStartPath() {
     const dx = e.changedTouches[0].clientX - _sx,
       dy = e.changedTouches[0].clientY - _sy,
       dt = Date.now() - _sTime;
-    // Swipe hanya aktif di slide onboarding (0-6), bukan di placement
-    if (_obCur >= 7) return;
+    if (_obCur >= OB_ONBOARDING_SLIDES) return;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44 && dt < 400) {
-      if (dx < 0 && _obCur < 6) _obGoTo(_obCur + 1);
+      if (dx < 0 && _obCur < OB_ONBOARDING_SLIDES - 1) _obGoTo(_obCur + 1);
       else if (dx > 0 && _obCur > 0) _obGoTo(_obCur - 1);
     }
   }
@@ -621,8 +627,9 @@ function _obStartPath() {
     overlay.addEventListener("touchend", _obTouchEnd, { passive: true });
     document.addEventListener("keydown", (e) => {
       if (!overlay || overlay.style.display === "none") return;
-      if (_obCur >= 7) return; // disable arrow keys di placement
-      if (e.key === "ArrowRight" && _obCur < 6) _obGoTo(_obCur + 1);
+      if (_obCur >= OB_ONBOARDING_SLIDES) return;
+      if (e.key === "ArrowRight" && _obCur < OB_ONBOARDING_SLIDES - 1)
+        _obGoTo(_obCur + 1);
       if (e.key === "ArrowLeft" && _obCur > 0) _obGoTo(_obCur - 1);
     });
   });

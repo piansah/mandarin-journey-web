@@ -28,7 +28,13 @@ let _authListener = null;
 let _lastBackgroundLoad = 0;
 let _pendingSignedIn = false;
 
-/* ── currentUser — getter/setter agar reactive ── */
+// FIX BUG 2: Guard agar checkOnboarding tidak dipanggil paralel/berulang
+let _onboardingCheckPromise = null;
+
+// FIX BUG 6: Cache _ensureUserProfile agar tidak query DB berkali-kali
+const _ensuredProfiles = new Set();
+
+/* ── currentUser — getter/setter ── */
 let _currentUser = null;
 export function getCurrentUser() {
   return _currentUser;
@@ -37,12 +43,14 @@ export function setCurrentUser(u) {
   _currentUser = u;
 }
 
+// FIX BUG 6: _ensureUserProfile hanya insert sekali per session per user_id
 async function _ensureUserProfile(user) {
   if (!user) return;
+  if (_ensuredProfiles.has(user.id)) return;
 
-  const { data, error } = await supa
+  const { data } = await supa
     .from("user_profile")
-    .select("user_id, has_seen_onboarding, unlocked_tiers")
+    .select("user_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -56,12 +64,27 @@ async function _ensureUserProfile(user) {
     await supa.from("user_profile").insert({
       user_id: user.id,
       display_name: displayName,
-      has_seen_onboarding: false, // ← default false
+      has_seen_onboarding: false,
       unlocked_tiers: ["pemula"],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
   }
+
+  _ensuredProfiles.add(user.id);
+}
+
+// FIX BUG 2: Wrapper agar checkOnboarding hanya jalan satu instance sekaligus
+async function _checkOnboardingOnce() {
+  if (_onboardingCheckPromise) return _onboardingCheckPromise;
+  _onboardingCheckPromise = (async () => {
+    try {
+      return await window.checkOnboarding?.();
+    } finally {
+      _onboardingCheckPromise = null;
+    }
+  })();
+  return _onboardingCheckPromise;
 }
 
 function _loadGrammarCountsIfNeeded() {
@@ -75,6 +98,17 @@ function _loadGrammarCountsIfNeeded() {
   }
   if (typeof window.loadGrammarCounts === "function")
     window.loadGrammarCounts();
+}
+
+function _backgroundLoad() {
+  const now = Date.now();
+  if (now - _lastBackgroundLoad < 5_000) return;
+  _lastBackgroundLoad = now;
+  window.loadKosvok?.();
+  window.loadScores?.();
+  window.loadDashboardCounts?.();
+  _loadGrammarCountsIfNeeded();
+  window.updateHanziDashboard?.();
 }
 
 export async function initAuth() {
@@ -95,8 +129,8 @@ export async function initAuth() {
         await loadUnlockedTiers();
         closeAuthModal();
 
-        // Cek onboarding
-        const obShown = await window.checkOnboarding?.();
+        // FIX BUG 2: gunakan wrapper, bukan langsung checkOnboarding
+        const obShown = await _checkOnboardingOnce();
 
         const onLoginScreen = document
           .getElementById("login-screen")
@@ -108,19 +142,12 @@ export async function initAuth() {
           window.checkTour?.();
         }
 
-        // DEFER LOADING: Jika sedang onboarding, jangan load data berat dulu
         if (obShown) return;
-
-        const now = Date.now();
-        if (now - _lastBackgroundLoad < 5_000) return;
-        _lastBackgroundLoad = now;
-        window.loadKosvok?.();
-        window.loadScores?.();
-        window.loadDashboardCounts?.();
-        _loadGrammarCountsIfNeeded();
-        window.updateHanziDashboard?.();
+        _backgroundLoad();
       } else if (event === "SIGNED_OUT") {
         closeAuthModal();
+        // Reset profile cache saat logout
+        _ensuredProfiles.clear();
         const content = document.getElementById("auth-content");
         if (content) content.innerHTML = "";
         lsRemoveScoped(LS_ACTIVE_QUIZ);
@@ -145,7 +172,6 @@ export async function initAuth() {
         window.renderStats?.();
         window.updateCeritaDashboard?.();
       } else if (event === "TOKEN_REFRESHED") {
-        // Token berhasil di-refresh — lanjutkan background load seperti biasa
         if (_currentUser && _authInitDone) {
           const now = Date.now();
           if (now - _lastBackgroundLoad > 30_000) {
@@ -177,7 +203,6 @@ export async function initAuth() {
     error: sessionError,
   } = await supa.auth.getSession();
 
-  // Refresh token invalid/expired → bersihkan session lama agar tidak loop error
   if (
     sessionError?.message?.includes("Refresh Token") ||
     sessionError?.message?.includes("refresh_token")
@@ -190,6 +215,11 @@ export async function initAuth() {
 
   if (_currentUser) {
     _lastBackgroundLoad = Date.now();
+
+    // FIX BUG 2: Satu kali cek onboarding di awal, tidak diulang lagi di bawah
+    const obShown = await _checkOnboardingOnce();
+    if (obShown) return;
+
     if (typeof window.initAvatarSystem === "function")
       await window.initAvatarSystem();
     await _ensureUserProfile(_currentUser);
@@ -229,13 +259,9 @@ export async function initAuth() {
       await window.startKalimat?.(rawKalKey);
     } else {
       if (_currentUser) {
-        await _ensureUserProfile(_currentUser);
-        const obShown = await window.checkOnboarding?.();
-        // Perbaikan: hanya pindah screen jika onboarding TIDAK ditampilkan
-        if (!obShown) {
-          showScreen("petualangan-screen");
-          window.checkTour?.();
-        }
+        // FIX BUG 2: tidak perlu checkOnboarding lagi, sudah dilakukan di atas
+        showScreen("petualangan-screen");
+        window.checkTour?.();
       } else {
         showScreen("login-screen");
       }
@@ -245,8 +271,7 @@ export async function initAuth() {
     lsRemoveScoped(LS_ACTIVE_QUIZ);
     lsRemoveScoped(LS_ACTIVE_KAL);
     if (_currentUser) {
-      const obShown = await window.checkOnboarding?.();
-      if (!obShown) showScreen("petualangan-screen");
+      showScreen("petualangan-screen");
     } else {
       showScreen("login-screen");
     }
@@ -254,31 +279,26 @@ export async function initAuth() {
     _authInitDone = true;
     document.body.classList.add("app-ready");
 
-    // Perbaikan: handle pending signed in dengan cek onboarding
     if (_pendingSignedIn && _currentUser) {
-      await _ensureUserProfile(_currentUser);
       _pendingSignedIn = false;
+      await _ensureUserProfile(_currentUser);
       window.resetTiersCache?.();
       await loadUnlockedTiers();
+
       const onLoginScreen = document
         .getElementById("login-screen")
         ?.classList.contains("active");
       const anyScreenActive = !!document.querySelector(".screen.active");
 
-      // Cek onboarding sebelum pindah screen
-      const obShown = await window.checkOnboarding?.();
+      // FIX BUG 2: gunakan wrapper, bukan checkOnboarding langsung
+      const obShown = await _checkOnboardingOnce();
 
       if ((onLoginScreen || !anyScreenActive) && !obShown) {
         showScreen("petualangan-screen");
         window.checkTour?.();
       }
 
-      _lastBackgroundLoad = Date.now();
-      window.loadKosvok?.();
-      window.loadScores?.();
-      window.loadDashboardCounts?.();
-      _loadGrammarCountsIfNeeded();
-      window.updateHanziDashboard?.();
+      if (!obShown) _backgroundLoad();
     }
   }
 }
@@ -294,12 +314,10 @@ export function updateAuthUI() {
 
 export function validateDisplayName(name) {
   const normalized = String(name || "").trim();
-  if (!normalized) {
+  if (!normalized)
     return { ok: false, value: "", message: "Nama tidak boleh kosong" };
-  }
-  if (normalized.length > 30) {
+  if (normalized.length > 30)
     return { ok: false, value: normalized, message: "Maksimal 30 karakter" };
-  }
   return { ok: true, value: normalized, message: "" };
 }
 
@@ -329,7 +347,7 @@ export function closeAuthModal() {
   window.scrollTo(0, scrollY);
 }
 
-window.addEventListener("popstate", (e) => {
+window.addEventListener("popstate", () => {
   const overlay = document.getElementById("auth-modal");
   if (overlay?.classList.contains("active")) closeAuthModal();
 });
@@ -423,14 +441,16 @@ export async function saveDisplayName() {
     saveBtn.textContent = "Menyimpan...";
   }
   try {
-    const { error } = await supa.from("user_profile").upsert(
-      {
-        user_id: _currentUser.id,
-        display_name: newName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    );
+    const { error } = await supa
+      .from("user_profile")
+      .upsert(
+        {
+          user_id: _currentUser.id,
+          display_name: newName,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
     if (error) throw error;
     if (window._profileCache) window._profileCache.display_name = newName;
     const nameDisplay = document.getElementById("upv2-name-display");
@@ -515,7 +535,7 @@ export async function doLogout() {
   await supa.auth.signOut();
 }
 
-/* ── Expose ke window (dipanggil dari HTML onclick) ── */
+/* ── Expose ke window ── */
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 window.showGoogleLogin = showGoogleLogin;
