@@ -521,16 +521,15 @@ export function renderFCCard() {
   }
 
   const uniqueTotal = _fcUniqueTotal;
-  const uniqueDone = Math.min(_fcHafal + _fcLupa, uniqueTotal);
   const progEl = document.getElementById("fc-prog");
   if (progEl)
     progEl.style.width =
-      uniqueTotal > 0 ? (uniqueDone / uniqueTotal) * 100 + "%" : "0%";
+      uniqueTotal > 0 ? (_fcHafal / uniqueTotal) * 100 + "%" : "0%";
 
   const numEl = document.getElementById("fc-count-num");
   const denomEl = document.getElementById("fc-count-denom");
-  if (numEl) numEl.textContent = fcIdx + 1;
-  if (denomEl) denomEl.textContent = fcCards.length;
+  if (numEl) numEl.textContent = _fcHafal;
+  if (denomEl) denomEl.textContent = _fcBaseLength;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -593,23 +592,22 @@ export function flipFC() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   NAVIGASI — HAFAL
+   NAVIGASI — HAFAL & LUPA
 ══════════════════════════════════════════════════════════════ */
-export function fcNavLupa() {
+export function fcNavHafal() {
   if (!fcCards.length || fcIdx >= fcCards.length) return;
-
   const card = fcCards[fcIdx];
   if (!card) return;
 
   if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
-    _fcLupaIds.add(card._id);
-    _fcLupa++;
-    _fcRepeatQueue.push({ ...card, _isRepeat: true });
+    _fcHafal++;
+  } else if (card._isRepeat) {
+    _fcHafal++;
+    _fcLupa--;
+    _fcLupaIds.delete(card._id);
   }
-  // kartu _isRepeat yang lupa lagi → dibiarkan lewat, tidak ditambah ke queue lagi
 
   fcIdx++;
-
   if (fcIdx >= fcCards.length) {
     if (_fcRepeatQueue.length > 0) {
       fcCards = [..._fcRepeatQueue];
@@ -622,21 +620,14 @@ export function fcNavLupa() {
       return;
     }
   }
-
   renderFCCard();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   NAVIGASI — LUPA (DENGAN BATAS DUPLIKASI)
-══════════════════════════════════════════════════════════════ */
 export function fcNavLupa() {
   if (!fcCards.length || fcIdx >= fcCards.length) return;
-
   const card = fcCards[fcIdx];
   if (!card) return;
 
-  // HANYA masukkan ke repeat queue jika kartu berasal dari set asli (bukan duplikat)
-  // dan belum pernah dilupakan sebelumnya
   if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
     _fcLupaIds.add(card._id);
     _fcLupa++;
@@ -644,10 +635,7 @@ export function fcNavLupa() {
   }
 
   fcIdx++;
-
-  // Cek apakah sudah sampai akhir deck
   if (fcIdx >= fcCards.length) {
-    // Masih ada kartu di queue lupa?
     if (_fcRepeatQueue.length > 0) {
       fcCards = [..._fcRepeatQueue];
       _fcRepeatQueue = [];
@@ -659,7 +647,6 @@ export function fcNavLupa() {
       return;
     }
   }
-
   renderFCCard();
 }
 
