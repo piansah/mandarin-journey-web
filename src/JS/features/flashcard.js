@@ -595,20 +595,22 @@ export function flipFC() {
 /* ══════════════════════════════════════════════════════════════
    NAVIGASI — HAFAL
 ══════════════════════════════════════════════════════════════ */
-export function fcNavHafal() {
+export function fcNavLupa() {
   if (!fcCards.length || fcIdx >= fcCards.length) return;
 
   const card = fcCards[fcIdx];
   if (!card) return;
 
   if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
-    _fcHafal++;
+    _fcLupaIds.add(card._id);
+    _fcLupa++;
+    _fcRepeatQueue.push({ ...card, _isRepeat: true });
   }
+  // kartu _isRepeat yang lupa lagi → dibiarkan lewat, tidak ditambah ke queue lagi
+
   fcIdx++;
 
-  // Cek apakah sudah sampai akhir deck
   if (fcIdx >= fcCards.length) {
-    // Masih ada kartu di queue lupa?
     if (_fcRepeatQueue.length > 0) {
       fcCards = [..._fcRepeatQueue];
       _fcRepeatQueue = [];
