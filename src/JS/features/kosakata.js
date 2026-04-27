@@ -1001,13 +1001,18 @@ function _renderHero() {
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
 
   container.innerHTML = `
-    <div class="kwd-hero" style="position:relative; cursor:pointer;" onclick="window.speakMandarin('${card.hanzi}')">
+    <div class="kwd-hero" id="kwd-hero-main" style="position:relative; cursor:pointer;">
       <div class="kwd-hz">${card.hanzi || ""}</div>
       <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
       <div class="kwd-arti">${card.arti || ""}</div>
       ${wcLabel ? `<div class="kwd-word-class">${wcLabel}</div>` : ""}
       ${card.catatan ? `<div class="kwd-catatan">📝 ${card.catatan}</div>` : ""}
     </div>`;
+
+  const heroEl = document.getElementById("kwd-hero-main");
+  if (heroEl) {
+    _attachLongPressTTS(heroEl, card.hanzi, () => speakMandarin(card.hanzi));
+  }
 }
 
 export function _switchTab(tabName, force = false) {
@@ -1428,7 +1433,6 @@ async function _renderWordTab() {
       </div>`;
 
     _attachLongPressTTS(item, w.hanzi, () => {
-      speakMandarin(w.hanzi);
       _openWordCompound(w);
     });
 
@@ -1705,46 +1709,11 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
 
   listEl.innerHTML = html;
 
-  listEl
-    .querySelectorAll(".kwd-example-card[data-speak-idx]")
-    .forEach((card) => {
-      let startX = 0,
-        startY = 0,
-        didMove = false;
-
-      card.addEventListener(
-        "touchstart",
-        (e) => {
-          didMove = false;
-          startX = e.touches[0].clientX;
-          startY = e.touches[0].clientY;
-        },
-        { passive: true },
-      );
-
-      card.addEventListener(
-        "touchmove",
-        (e) => {
-          const dx = Math.abs(e.touches[0].clientX - startX);
-          const dy = Math.abs(e.touches[0].clientY - startY);
-          if (dx > 8 || dy > 8) didMove = true;
-        },
-        { passive: true },
-      );
-
-      card.addEventListener("touchend", () => {
-        if (didMove) return;
-        const idx = parseInt(card.dataset.speakIdx);
-        const text = allItems[idx];
-        if (text) speakMandarin(text);
-      });
-
-      card.addEventListener("click", () => {
-        const idx = parseInt(card.dataset.speakIdx);
-        const text = allItems[idx];
-        if (text) speakMandarin(text);
-      });
-    });
+  listEl.querySelectorAll(".kwd-example-card[data-speak-idx]").forEach((card) => {
+    const idx = parseInt(card.dataset.speakIdx);
+    const text = allItems[idx];
+    _attachLongPressTTS(card, text, () => speakMandarin(text));
+  });
 }
 
 export function closeKosWord() {
