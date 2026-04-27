@@ -27,6 +27,12 @@ const _appReadyFallback = setTimeout(() => {
 }, 3000);
 
 async function _initAppWrapped() {
+  // Safety fallback: Jika dalam 6 detik masih belum ready, paksa munculkan
+  const forceReady = setTimeout(() => {
+    document.body.classList.add("app-ready");
+    console.warn("App forced ready due to init timeout");
+  }, 6000);
+
   try {
     // Bersihkan sisa resume state dari sesi sebelumnya
     window.clearLessonStateFromStorage?.();
@@ -37,8 +43,11 @@ async function _initAppWrapped() {
     
     // Background cache initialization
     window.warmUpGlobalSearchCache?.();
+  } catch (err) {
+    console.error("Critical Init Error:", err);
   } finally {
     clearTimeout(_appReadyFallback);
+    clearTimeout(forceReady);
     document.body.classList.add("app-ready");
   }
 }

@@ -1,5 +1,5 @@
 /* © 2026 Piansah — Mandarin Journey Service Worker v5 */
-const CACHE_NAME = "mandarin-journey-v12";
+const CACHE_NAME = "mandarin-journey-v13";
 
 const STATIC_ASSETS = [
   "/",
@@ -146,7 +146,10 @@ self.addEventListener("fetch", (e) => {
           }
           return res;
         })
-        .catch(() => caches.match("/index.html")),
+        .catch(() => {
+          // Fallback ke cache index.html jika offline/gagal
+          return caches.match("/index.html") || caches.match("/");
+        }),
     );
     return;
   }
