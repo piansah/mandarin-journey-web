@@ -312,7 +312,7 @@ export function renderQuiz() {
         })
         .join("");
 
-      card.innerHTML = `<div class="q-top"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
+      card.innerHTML = `<div class="q-top" onclick="window.playQuizTTS(${q.gi})" style="cursor:pointer"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
       secDiv.appendChild(card);
     });
 
@@ -378,17 +378,10 @@ export function selectAns(gi, sel, cor) {
 
   // TTS Logic
   const q = allQ[gi];
-  if (q.si === 1) {
+  if (q.si === 2) {
     updateLive();
   } else {
-    let speechText = q.q;
-    speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
-    speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
-    if (q.si === 3) {
-      const corAns = q.opts[q.ans];
-      speechText = speechText.replace(/_{2,}/g, corAns);
-    }
-    speakMandarin(speechText);
+    playQuizTTS(gi);
     updateLive();
   }
 
@@ -410,6 +403,23 @@ export function selectAns(gi, sel, cor) {
       }
     }
   }, 1000);
+}
+
+export function playQuizTTS(gi) {
+  const q = allQ[gi];
+  if (!q) return;
+
+  let speechText = q.q;
+  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+
+  if (q.si === 3) {
+    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
+    const corAns = q.opts[q.ans];
+    speechText = speechText.replace(/_{2,}/g, corAns);
+  }
+
+  speakMandarin(speechText);
 }
 
 /* ── Update Live Score ── */

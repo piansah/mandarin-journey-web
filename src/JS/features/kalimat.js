@@ -396,17 +396,10 @@ export function selectKal(gi, sel, cor) {
 
   // TTS Logic
   const q = kalQ[gi];
-  if (q.si === 1) {
+  if (q.si === 2) {
     updateKalLive();
   } else {
-    let speechText = q.q;
-    speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
-    speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
-    if (q.filter === "kalimat-hz") {
-      const corAns = q.opts[q.ans];
-      speechText = speechText.replace(/_{2,}/g, corAns);
-    }
-    speakMandarin(speechText);
+    playKalTTS(gi);
     updateKalLive();
   }
 
@@ -425,6 +418,23 @@ export function selectKal(gi, sel, cor) {
       }
     }
   }, 1000);
+}
+
+export function playKalTTS(gi) {
+  const q = kalQ[gi];
+  if (!q) return;
+
+  let speechText = q.q;
+  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+
+  if (q.filter === "kalimat-hz") {
+    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
+    const corAns = q.opts[q.ans];
+    speechText = speechText.replace(/_{2,}/g, corAns);
+  }
+
+  speakMandarin(speechText);
 }
 
 /* ── Update Live Score ── */
@@ -711,6 +721,7 @@ window.filterKalTab = filterKalTab;
 window.setFilter = setFilter;
 window.renderKalimat = renderKalimat;
 window.selectKal = selectKal;
+window.playKalTTS = playKalTTS;
 window.updateKalLive = updateKalLive;
 window.submitKalimat = submitKalimat;
 window.confirmRetryKalimat = confirmRetryKalimat;
