@@ -959,11 +959,13 @@ export async function openKosWord(card) {
   _currentKosWord = card;
   _activeKwdTab = "kalimat";
 
+  const listEl = document.getElementById("kwd-examples-list");
+  if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim);"><span class="spinner"></span></div>';
+
   const titleEl = document.getElementById("kos-word-title");
   const subEl = document.getElementById("kos-word-sub");
   if (titleEl) titleEl.textContent = "Detail Kata";
-  const deckDesc =
-    kosSetsCache?.find((s) => s.id === card.set_id)?.description || "";
+  const deckDesc = kosSetsCache?.find((s) => s.id === card.set_id)?.description || "";
   if (subEl) subEl.textContent = deckDesc;
 
   if (typeof window.openLayer === "function")
@@ -1639,9 +1641,14 @@ function _navTab(dir) {
   if (idx >= 0 && idx < tabNames.length) _switchTab(tabNames[idx]);
 }
 
+let _kosWordLoadId = 0;
+
 async function _loadKosWordExamples(hanzi) {
   const listEl = document.getElementById("kwd-examples-list");
   if (!listEl) return;
+
+  const myId = ++_kosWordLoadId;
+  listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim);"><span class="spinner"></span></div>';
 
   try {
     const { data: hData } = await supa
@@ -1654,11 +1661,16 @@ async function _loadKosWordExamples(hanzi) {
       .select("id, hanzi, pinyin, arti, added_by")
       .ilike("hanzi", `%${hanzi}%`)
       .order("id", { ascending: true });
+
+    if (myId !== _kosWordLoadId) return;
+
     _renderKosWordExamples(listEl, hData || [], uData || []);
   } catch (e) {
+    if (myId !== _kosWordLoadId) return;
     listEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--dim);font-size:12px;">Gagal memuat contoh.</div>`;
   }
 }
+
 
 function _renderKosWordExamples(listEl, hanziItems, userExamples) {
   let html = "";
