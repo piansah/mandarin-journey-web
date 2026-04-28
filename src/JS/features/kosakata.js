@@ -1453,21 +1453,10 @@ async function _loadDictMap() {
 
   _dictLoading = (async () => {
     try {
-      const res = await fetch(
-        "https://cdn.jsdelivr.net/gh/skishore/makemeahanzi@master/dictionary.txt",
-      );
+      const res = await fetch("/data/dictionary.json");
       if (!res.ok) throw new Error("fetch failed");
-      const text = await res.text();
-      const map = {};
-      text.split("\n").forEach((line) => {
-        if (!line.trim()) return;
-        try {
-          const obj = JSON.parse(line);
-          if (obj.character) map[obj.character] = obj;
-        } catch {}
-      });
-      _dictMap = map;
-      return map;
+      _dictMap = await res.json();
+      return _dictMap;
     } catch (e) {
       console.error("[Char] gagal load dictionary:", e);
       _dictMap = {};
