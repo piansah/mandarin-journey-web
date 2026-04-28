@@ -331,6 +331,8 @@ export function renderKalimat(filter) {
     const card = document.createElement("div");
     card.className = "qcard";
     card.id = `kc-${q.gi}`;
+    card.style.cursor = "pointer";
+    card.onclick = () => window.playKalTTS(q.gi);
     if (kalAnswered[q.gi] !== undefined)
       card.classList.add(kalAnswered[q.gi] ? "ok" : "bad");
 
@@ -346,11 +348,11 @@ export function renderKalimat(filter) {
           else if (i === kalQ[q.gi].selectedIdx && !kalAnswered[q.gi])
             cls += " wrng";
         }
-        return `<button class="${cls}" id="ko-${q.gi}-${i}" onclick="window.selectKal(${q.gi},${i},${q.ans})" ${isAnswered ? "disabled" : ""}><span class="opt2-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
+        return `<button class="${cls}" id="ko-${q.gi}-${i}" onclick="event.stopPropagation(); window.selectKal(${q.gi},${i},${q.ans})" ${isAnswered ? "disabled" : ""}><span class="opt2-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
       })
       .join("");
 
-    card.innerHTML = `<div class="qtop" onclick="window.playKalTTS(${q.gi})" style="cursor:pointer"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
+    card.innerHTML = `<div class="qtop"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
 
     if (isAnswered) {
       const fb = card.querySelector(`#kfb-${q.gi}`);

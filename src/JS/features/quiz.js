@@ -302,17 +302,19 @@ export function renderQuiz() {
       const card = document.createElement("div");
       card.className = "q-card";
       card.id = `card-${q.gi}`;
+      card.style.cursor = "pointer";
+      card.onclick = () => window.playQuizTTS(q.gi);
 
       const opts = q.opts
         .map((o, i) => {
           const labs = ["A", "B", "C", "D"];
           const optLabel = q.si === 2 ? colorPy(o) : o;
           const optClass = q.si === 3 ? "opt opt-hz" : "opt";
-          return `<button class="${optClass}" id="opt-${q.gi}-${i}" onclick="window.selectAns(${q.gi},${i},${q.ans})" data-c="${i === q.ans}"><span class="opt-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
+          return `<button class="${optClass}" id="opt-${q.gi}-${i}" onclick="event.stopPropagation(); window.selectAns(${q.gi},${i},${q.ans})" data-c="${i === q.ans}"><span class="opt-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
         })
         .join("");
 
-      card.innerHTML = `<div class="q-top" onclick="window.playQuizTTS(${q.gi})" style="cursor:pointer"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
+      card.innerHTML = `<div class="q-top"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
       secDiv.appendChild(card);
     });
 
