@@ -338,7 +338,7 @@ export function renderKalimat(filter) {
     const opts = q.opts
       .map((o, i) => {
         const labs = ["A", "B", "C", "D"];
-        const optLabel = renderKalOptLabel(q.filter, o);
+        const optLabel = q.si === 2 ? colorPy(o) : o;
         let cls = "opt2";
         if (q.filter === "kalimat-hz") cls += " opt-hz";
         if (isAnswered) {
@@ -350,7 +350,7 @@ export function renderKalimat(filter) {
       })
       .join("");
 
-    card.innerHTML = `<div class="qtop"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
+    card.innerHTML = `<div class="qtop" onclick="window.playKalTTS(${q.gi})" style="cursor:pointer"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
 
     if (isAnswered) {
       const fb = card.querySelector(`#kfb-${q.gi}`);
@@ -396,16 +396,31 @@ export function selectKal(gi, sel, cor) {
 
   // TTS Logic
   const q = kalQ[gi];
+  if (q.si !== 1) {
+    playKalTTS(gi);
+  }
+  updateKalLive();
+  }
+
+  export function playKalTTS(gi) {
+  // Hanya bunyi jika soal sudah terjawab
+  if (kalAnswered[gi] === undefined) return;
+
+  const q = kalQ[gi];
+  if (!q) return;
+
   let speechText = q.q;
   speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
   speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+
   if (q.filter === "kalimat-hz") {
+    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
     const corAns = q.opts[q.ans];
     speechText = speechText.replace(/_{2,}/g, corAns);
   }
-  speakMandarin(speechText);
 
-  updateKalLive();
+  speakMandarin(speechText);
+  }
 
   const saved = lsGetScoped("hsk_kal_state", {});
   saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };
@@ -696,6 +711,7 @@ window.filterKalTab = filterKalTab;
 window.setFilter = setFilter;
 window.renderKalimat = renderKalimat;
 window.selectKal = selectKal;
+window.playKalTTS = playKalTTS;
 window.updateKalLive = updateKalLive;
 window.submitKalimat = submitKalimat;
 window.confirmRetryKalimat = confirmRetryKalimat;

@@ -717,5 +717,6 @@ window.closeRetryConfirm = closeRetryConfirm;
 window.retryQuiz = retryQuiz;
 window.closeQuiz = closeQuiz;
 window.renderQuizList = renderQuizList;
+window.playQuizTTS = playQuizTTS;
 window._quizLockedToast = _quizLockedToast;
 window._ensureQuizSetsCache = _ensureQuizSetsCache;
