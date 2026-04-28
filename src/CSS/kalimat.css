@@ -225,9 +225,10 @@
   font-size: 18px;
 }
 .opt2:hover:not(:disabled) {
-  border-color: var(--gold);
-  color: var(--gold);
+  border-color: var(--dim2);
+  color: var(--dim2);
 }
+
 .opt2-lbl {
   width: 20px;
   height: 20px;
@@ -260,7 +261,7 @@
 }
 .opt2.show-c {
   border-color: var(--gold);
-  background: rgba(26, 122, 74, 0.07);
+  background: rgba(232, 201, 109, 0.15);
   color: var(--gold);
 }
 .opt2.show-c .opt2-lbl {

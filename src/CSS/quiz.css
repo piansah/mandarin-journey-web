@@ -253,8 +253,8 @@
   font-size: 18px;
 }
 .opt:hover:not(:disabled) {
-  border-color: var(--gold);
-  color: var(--gold);
+  border-color: var(--dim2);
+  color: var(--dim2);
 }
 .opt-lbl {
   width: 20px;
