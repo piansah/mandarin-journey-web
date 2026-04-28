@@ -312,7 +312,7 @@ export function renderQuiz() {
         })
         .join("");
 
-      card.innerHTML = `<div class="q-top"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
+      card.innerHTML = `<div class="q-top" onclick="window.playQuizTTS(${q.gi})" style="cursor:pointer"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
       secDiv.appendChild(card);
     });
 
@@ -378,24 +378,38 @@ export function selectAns(gi, sel, cor) {
 
   // TTS Logic
   const q = allQ[gi];
+  if (q.si !== 1) {
+    playQuizTTS(gi);
+  }
+  updateLive();
+}
+
+export function playQuizTTS(gi) {
+  // Hanya bunyi jika soal sudah terjawab
+  if (answered[gi] === undefined) return;
+
+  const q = allQ[gi];
+  if (!q) return;
+
   let speechText = q.q;
   speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
   speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+
   if (q.si === 3) {
+    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
     const corAns = q.opts[q.ans];
     speechText = speechText.replace(/_{2,}/g, corAns);
   }
+
   speakMandarin(speechText);
-
-  updateLive();
-
-  const saved = lsGetScoped("hsk_quiz_state", {});
-  saved[currentQuizKey] = { allQ, answered, submitted: false };
-  lsSetScoped("hsk_quiz_state", saved);
-
-  if (!_isRestoringFromRefresh && currentQuizKey)
-    lsSetScoped("hsk_active_quiz", currentQuizKey);
 }
+
+const saved = lsGetScoped("hsk_quiz_state", {});
+saved[currentQuizKey] = { allQ, answered, submitted: false };
+lsSetScoped("hsk_quiz_state", saved);
+
+if (!_isRestoringFromRefresh && currentQuizKey)
+  lsSetScoped("hsk_active_quiz", currentQuizKey);
 
 /* ── Update Live Score ── */
 export function updateLive() {
