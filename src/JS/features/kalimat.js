@@ -396,16 +396,19 @@ export function selectKal(gi, sel, cor) {
 
   // TTS Logic
   const q = kalQ[gi];
-  let speechText = q.q;
-  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
-  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
-  if (q.filter === "kalimat-hz") {
-    const corAns = q.opts[q.ans];
-    speechText = speechText.replace(/_{2,}/g, corAns);
+  if (q.si === 1 || q.si === 2) {
+    updateKalLive();
+  } else {
+    let speechText = q.q;
+    speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+    speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+    if (q.filter === "kalimat-hz") {
+      const corAns = q.opts[q.ans];
+      speechText = speechText.replace(/_{2,}/g, corAns);
+    }
+    speakMandarin(speechText);
+    updateKalLive();
   }
-  speakMandarin(speechText);
-
-  updateKalLive();
 
   const saved = lsGetScoped("hsk_kal_state", {});
   saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };

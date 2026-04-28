@@ -378,16 +378,19 @@ export function selectAns(gi, sel, cor) {
 
   // TTS Logic
   const q = allQ[gi];
-  let speechText = q.q;
-  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
-  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
-  if (q.si === 3) {
-    const corAns = q.opts[q.ans];
-    speechText = speechText.replace(/_{2,}/g, corAns);
+  if (q.si === 1 || q.si === 2) {
+    updateLive();
+  } else {
+    let speechText = q.q;
+    speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+    speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+    if (q.si === 3) {
+      const corAns = q.opts[q.ans];
+      speechText = speechText.replace(/_{2,}/g, corAns);
+    }
+    speakMandarin(speechText);
+    updateLive();
   }
-  speakMandarin(speechText);
-
-  updateLive();
 
   const saved = lsGetScoped("hsk_quiz_state", {});
   saved[currentQuizKey] = { allQ, answered, submitted: false };
