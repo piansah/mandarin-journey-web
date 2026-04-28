@@ -40,14 +40,14 @@ let _quizScoresPatchScheduled = false;
 
 /* ── Render helpers ── */
 function renderQText(q) {
-  switch (q.si) {
-    case 0:
+  switch (q.type) {
+    case 'A':
       return `<div class="q-text q-hanzi"><span class="hz">${q.q}</span></div>`;
-    case 1:
+    case 'B':
       return `<div class="q-text q-pinyin">${colorPy(q.q)}</div>`;
-    case 2:
+    case 'C':
       return `<div class="q-text q-hanzi"><span class="hz">${q.q}</span></div>`;
-    case 3:
+    case 'D':
       return `<div class="q-text q-rumpang">${renderRumpang(q.q)}</div>`;
     default:
       return `<div class="q-text">${q.q}</div>`;
@@ -96,12 +96,15 @@ export async function loadQuizFromDB(key) {
     C: [],
     D: [],
   };
-  for (const row of questRes.data)
-    result[row.section].push({
-      q: row.question,
-      opts: row.options,
-      ans: row.answer_index,
-    });
+  for (const row of questRes.data) {
+    if (result[row.section]) {
+      result[row.section].push({
+        q: row.question,
+        opts: row.options,
+        ans: row.answer_index,
+      });
+    }
+  }
   _quizCache[key] = result;
   return result;
 }
@@ -204,27 +207,16 @@ export async function startQuiz(key) {
 /* ── Filter Quiz Tab ── */
 export function filterQuizTab(tab, doScroll) {
   activeQuizTab = tab;
-  ["all", 0, 1, 2, 3].forEach((t) => {
+  const tabIds = ["all", "A", "B", "C", "D"];
+  tabIds.forEach((t) => {
     const el = document.getElementById("qtab-" + t);
     if (el) el.classList.toggle("active", t === tab);
   });
+
   const sections = document.querySelectorAll("#quiz-main .section");
-  const labels = ["1", "2", "3", "4"];
-  sections.forEach((sec, idx) => {
-    const visible = tab === "all" || tab === idx;
+  sections.forEach((sec) => {
+    const visible = tab === "all" || tab === sec.dataset.type;
     sec.style.display = visible ? "" : "none";
-    if (visible) {
-      const secNum = sec.querySelector(".sec-num");
-      const secCnt = sec.querySelector(".sec-cnt");
-      if (secNum) secNum.textContent = labels[idx];
-      if (secCnt)
-        secCnt.textContent =
-          tab === "all" ? `${idx * 25 + 1}–${idx * 25 + 25}` : `1–25`;
-      sec.querySelectorAll(".q-card").forEach((card, ci) => {
-        const qNum = card.querySelector(".q-num");
-        if (qNum) qNum.textContent = tab === "all" ? idx * 25 + ci + 1 : ci + 1;
-      });
-    }
   });
   if (doScroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -235,38 +227,37 @@ export function buildQuiz() {
   let gi = 0;
   const secs = [
     {
-      label: "1",
+      type: 'A',
       title: "Hanzi → Arti Indonesia",
       sub: "Hanzi → pilih arti Indonesia",
       raw: currentQuizData.A,
     },
     {
-      label: "2",
+      type: 'B',
       title: "Pinyin → Arti Indonesia",
       sub: "Pinyin berwarna → pilih arti",
       raw: currentQuizData.B,
     },
     {
-      label: "3",
+      type: 'C',
       title: "Hanzi → Pilih Pinyin",
       sub: "Hanzi → Pilih Pinyin yang tepat",
       raw: currentQuizData.C,
     },
     {
-      label: "4",
+      type: 'D',
       title: "Lengkapi Kalimat Rumpang",
       sub: "Pilih kata yang tepat untuk melengkapi",
       raw: currentQuizData.D,
     },
   ];
-  secs.forEach((sec, si) => {
+  secs.forEach((sec) => {
     const shuffled = [...shuffle(sec.raw.slice(0, 20)), ...sec.raw.slice(20)];
     shuffled.forEach((q) => {
       const idx = [0, 1, 2, 3].slice(0, q.opts.length);
       const si2 = shuffle(idx);
       allQ.push({
-        si,
-        label: sec.label,
+        type: sec.type,
         title: sec.title,
         sub: sec.sub,
         q: q.q,
@@ -288,15 +279,17 @@ export function renderQuiz() {
   if (!main) return;
   main.innerHTML = "";
 
-  ["1", "2", "3", "4"].forEach((lbl, si) => {
-    const sq = allQ.filter((q) => q.si === si);
+  const types = ['A', 'B', 'C', 'D'];
+  types.forEach((type, idx) => {
+    const sq = allQ.filter((q) => q.type === type);
     if (!sq.length) return;
 
     const secDiv = document.createElement("div");
     secDiv.className = "section";
-    const start = si * 25 + 1,
-      end = si * 25 + 25;
-    secDiv.innerHTML = `<div class="sec-hd"><div class="sec-num">${lbl}</div><div><div class="sec-title-txt">${sq[0].title}</div><div class="sec-sub-txt">${sq[0].sub}</div></div><div class="sec-cnt">Soal ${start}–${end}</div></div>`;
+    secDiv.dataset.type = type;
+    const start = idx * 25 + 1,
+      end = idx * 25 + 25;
+    secDiv.innerHTML = `<div class="sec-hd"><div class="sec-num">${idx + 1}</div><div><div class="sec-title-txt">${sq[0].title}</div><div class="sec-sub-txt">${sq[0].sub}</div></div><div class="sec-cnt">Soal ${start}–${end}</div></div>`;
 
     sq.forEach((q, li) => {
       const card = document.createElement("div");
@@ -306,13 +299,13 @@ export function renderQuiz() {
       const opts = q.opts
         .map((o, i) => {
           const labs = ["A", "B", "C", "D"];
-          const optLabel = q.si === 2 ? colorPy(o) : o;
-          const optClass = q.si === 3 ? "opt opt-hz" : "opt";
+          const optLabel = q.type === 'C' ? colorPy(o) : o;
+          const optClass = q.type === 'D' ? "opt opt-hz" : "opt";
           return `<button class="${optClass}" id="opt-${q.gi}-${i}" onclick="window.selectAns(${q.gi},${i},${q.ans})" data-c="${i === q.ans}"><span class="opt-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
         })
         .join("");
 
-      card.innerHTML = `<div class="q-top" onclick="window.playQuizTTS(${q.gi})" style="cursor:pointer"><span class="q-num">${si * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
+      card.innerHTML = `<div class="q-top" onclick="window.playQuizTTS(${q.gi})" style="cursor:pointer"><span class="q-num">${idx * 25 + li + 1}</span>${renderQText(q)}</div><div class="options">${opts}</div><div class="fb" id="fb-${q.gi}"></div>`;
       secDiv.appendChild(card);
     });
 
@@ -376,14 +369,12 @@ export function selectAns(gi, sel, cor) {
       : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][cor]}`;
   }
 
-  // TTS Logic
+  // TTS Logic - Hanya bunyi otomatis jika tipenya A, B, atau D
   const q = allQ[gi];
-  if (q.si === 2) {
-    updateLive();
-  } else {
+  if (q.type !== 'C') {
     playQuizTTS(gi);
-    updateLive();
   }
+  updateLive();
 
   const saved = lsGetScoped("hsk_quiz_state", {});
   saved[currentQuizKey] = { allQ, answered, submitted: false };
@@ -392,7 +383,7 @@ export function selectAns(gi, sel, cor) {
   if (!_isRestoringFromRefresh && currentQuizKey)
     lsSetScoped("hsk_active_quiz", currentQuizKey);
 
-  // Auto-scroll to next question
+  // Auto-scroll
   setTimeout(() => {
     const nextCard = document.getElementById(`card-${gi + 1}`);
     if (nextCard) {
@@ -406,6 +397,9 @@ export function selectAns(gi, sel, cor) {
 }
 
 export function playQuizTTS(gi) {
+  // Hanya bunyi jika soal sudah terjawab
+  if (answered[gi] === undefined) return;
+
   const q = allQ[gi];
   if (!q) return;
 
@@ -413,8 +407,7 @@ export function playQuizTTS(gi) {
   speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
   speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
 
-  if (q.si === 3) {
-    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
+  if (q.type === 'D') {
     const corAns = q.opts[q.ans];
     speechText = speechText.replace(/_{2,}/g, corAns);
   }
@@ -523,19 +516,7 @@ export function submitQuiz(silent = false) {
 
 /* ── Confirm Retry ── */
 export function confirmRetryQuiz() {
-  const descEl = document.getElementById("retry-confirm-desc");
-  const btnEl = document.getElementById("retry-confirm-btn");
   const modalEl = document.getElementById("retry-confirm-modal");
-  if (descEl)
-    descEl.textContent =
-      "Soal akan diacak ulang dan skor quiz ini akan direset.";
-  if (btnEl) {
-    btnEl.onclick = () => {
-      if (typeof window.closeRetryConfirm === "function")
-        window.closeRetryConfirm();
-      retryQuiz();
-    };
-  }
   if (modalEl) modalEl.classList.add("active");
 }
 
@@ -593,9 +574,7 @@ let _quizSetsCache = null;
 let _quizListFetchPromise = null;
 
 export function _ensureQuizSetsCache() {
-  // Kalau cache sudah ada, return resolved promise agar caller bisa await dengan aman
   if (_quizSetsCache) return Promise.resolve();
-  // Kalau fetch sedang berjalan, kembalikan promise yang sama
   if (_quizListFetchPromise) return _quizListFetchPromise;
 
   _quizListFetchPromise = supa
@@ -628,7 +607,6 @@ function _renderQuizGrid() {
       const scoreVal = window.quizScores?.[s.key];
       const prevKey = i > 0 ? _quizSetsCache[i - 1].key : null;
 
-      // MENGGUNAKAN resolveQuizLock
       const { isLocked, reason } = resolveQuizLock({
         hskLevel: s.hsk_level,
         deckIndex: i,
@@ -654,20 +632,8 @@ function _renderQuizGrid() {
     </div>`;
     })
     .join("");
-
-  const activePill = document.querySelector(
-    "#hsk-filter-quiz .hsk-pill.active",
-  );
-  if (activePill && typeof window.filterHSK === "function") {
-    const level = activePill.textContent
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "");
-    window.filterHSK("quiz", level === "semua" ? "all" : level, activePill);
-  }
 }
 
-/* ── Render Quiz List (layer) ── */
 export async function renderQuizList() {
   const grid = document.getElementById("quiz-list-grid");
   if (!grid) return;
@@ -676,42 +642,20 @@ export async function renderQuizList() {
   await loadTierStartDecks("quiz_sets");
 
   if (!_quizSetsCache) {
-    grid.innerHTML =
-      '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
-    try {
-      await _ensureQuizSetsCache();
-    } catch {
-      /* handled inside _ensureQuizSetsCache */
-    }
-    if (!_quizSetsCache) {
-      grid.innerHTML =
-        '<div style="text-align:center;padding:40px;color:var(--dim);">Gagal memuat — cek koneksi</div>';
-      return;
-    }
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span>Memuat...</div>';
+    await _ensureQuizSetsCache();
   }
 
-  // Tunggu scores dulu sebelum render, supaya lock status akurat
   if (getCurrentUser()) {
     const scoresPromise = window.scoresLoaded;
-    if (
-      scoresPromise &&
-      typeof scoresPromise.then === "function" &&
-      !window._scoresHaveLoaded
-    ) {
-      await Promise.race([
-        scoresPromise,
-        new Promise((r) => setTimeout(r, 8000)),
-      ]);
+    if (scoresPromise && !window._scoresHaveLoaded) {
+      await Promise.race([scoresPromise, new Promise((r) => setTimeout(r, 8000))]);
     }
   }
 
   _renderQuizGrid();
-
-  if (typeof window._prefetchNextQuiz === "function")
-    window._prefetchNextQuiz();
 }
 
-/* ── Expose ke window untuk dipanggil dari HTML ── */
 window.isQuizActive = function () {
   return document.getElementById("quiz-screen")?.style.display !== "none";
 };

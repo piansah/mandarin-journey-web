@@ -40,49 +40,45 @@ const _kalCache = {};
 /* ── Section definitions ── */
 const KAL_SECTIONS = [
   {
-    section_index: 1,
+    type: 'A',
     badge: "1",
     title: "Hanzi → Pilih Arti",
-    filter: "hz-id-arti",
   },
   {
-    section_index: 2,
+    type: 'B',
     badge: "2",
     title: "Pinyin → Pilih Arti",
-    filter: "pinyin-id",
   },
   {
-    section_index: 3,
+    type: 'C',
     badge: "3",
     title: "Hanzi → Pilih Pinyin",
-    filter: "hz-pinyin",
   },
   {
-    section_index: 4,
+    type: 'D',
     badge: "4",
     title: "Lengkapi Kalimat Hanzi",
-    filter: "kalimat-hz",
   },
 ];
 
 /* ── Render helpers ── */
 function renderKalQText(q) {
-  switch (q.filter) {
-    case "hz-id-arti":
+  switch (q.type) {
+    case 'A':
       return `<div class="qtext q-hanzi">${q.q}</div>`;
-    case "pinyin-id":
+    case 'B':
       return `<div class="qtext q-pinyin">${colorPy(q.q)}</div>`;
-    case "hz-pinyin":
+    case 'C':
       return `<div class="qtext q-hanzi">${q.q}</div>`;
-    case "kalimat-hz":
+    case 'D':
       return `<div class="qtext q-rumpang">${renderKalRumpang(q.q)}</div>`;
     default:
       return `<div class="qtext">${q.q}</div>`;
   }
 }
 
-function renderKalOptLabel(filter, o) {
-  return filter === "hz-pinyin" ? colorPy(o) : o;
+function renderKalOptLabel(type, o) {
+  return type === 'C' ? colorPy(o) : o;
 }
 
 function renderKalRumpang(text) {
@@ -105,10 +101,10 @@ export async function loadKalimatFromDB(key) {
     supa
       .from("kalimat_questions")
       .select(
-        "section_index, sort_order, question, question_type, options, answer_index",
+        "section, sort_order, question, question_type, options, answer_index",
       )
       .eq("kal_key", key)
-      .order("section_index")
+      .order("section")
       .order("sort_order"),
   ]);
 
@@ -124,24 +120,23 @@ export async function loadKalimatFromDB(key) {
   const sections = KAL_SECTIONS.map((sec) => ({
     badge: sec.badge,
     title: sec.title,
-    filter: sec.filter,
-    count: 0,
+    type: sec.type,
     items: [],
-    _sectionIndex: sec.section_index,
   }));
-  const secIdxMap = {};
-  sections.forEach((sec, arrayIdx) => {
-    secIdxMap[sec._sectionIndex] = arrayIdx;
+  
+  const typeMap = {};
+  sections.forEach((sec, idx) => {
+    typeMap[sec.type] = idx;
   });
 
   for (const row of questRes.data) {
-    const arrayIdx = secIdxMap[row.section_index];
-    if (arrayIdx === undefined) continue;
+    const idx = typeMap[row.section];
+    if (idx === undefined) continue;
     const q =
       row.question_type === "hanzi"
         ? `<span class="hz">${row.question}</span>`
         : row.question;
-    sections[arrayIdx].items.push({
+    sections[idx].items.push({
       q,
       opts: row.options,
       ans: row.answer_index,
@@ -190,48 +185,19 @@ export async function startKalimat(key) {
   if (subEl) subEl.textContent = "60 Soal · kalimat kumulatif";
 
   const saved = lsGetScoped("hsk_kal_state", {});
-  const VALID_FILTERS = new Set([
-    "hz-id-arti",
-    "pinyin-id",
-    "hz-pinyin",
-    "kalimat-hz",
-  ]);
   const savedState = saved[key];
-  const isValidSave =
-    savedState &&
-    savedState.kalQ &&
-    savedState.kalQ.length === 100 &&
-    savedState.kalQ.every((q) => VALID_FILTERS.has(q.filter));
+  const isValidSave = savedState && savedState.kalQ && savedState.kalQ.length === 60;
 
   if (isValidSave) {
     kalQ = savedState.kalQ;
     kalAnswered = savedState.kalAnswered || {};
     kalCorrect = Object.values(kalAnswered).filter((v) => v === true).length;
     kalAnsweredN = Object.keys(kalAnswered).length;
-    renderKalimatTabs();
     renderKalimat("all");
     updateKalLive();
     if (savedState.submitted) submitKalimat(true);
-  } else if (getCurrentUser() && window.kalMeta?.[key]?.kalQ?.length === 100) {
-    const remote = window.kalMeta[key];
-    kalQ = remote.kalQ;
-    kalAnswered = remote.kalAnswered || {};
-    kalCorrect = Object.values(kalAnswered).filter((v) => v === true).length;
-    kalAnsweredN = Object.keys(kalAnswered).length;
-    const ls = lsGetScoped("hsk_kal_state", {});
-    ls[key] = { kalQ, kalAnswered, submitted: true };
-    lsSetScoped("hsk_kal_state", ls);
-    renderKalimatTabs();
-    renderKalimat("all");
-    updateKalLive();
-    submitKalimat(true);
   } else {
-    if (savedState) {
-      delete saved[key];
-      lsSetScoped("hsk_kal_state", saved);
-    }
     buildKalimat();
-    renderKalimatTabs();
     renderKalimat("all");
     updateKalLive();
   }
@@ -241,13 +207,12 @@ export async function startKalimat(key) {
 export function buildKalimat() {
   kalQ = [];
   let gi = 0;
-  currentKalData.sections.forEach((sec, si) => {
+  currentKalData.sections.forEach((sec) => {
     shuffle(sec.items).forEach((q) => {
       const idx = [0, 1, 2, 3].slice(0, q.opts.length);
       const si2 = shuffle(idx);
       kalQ.push({
-        si,
-        filter: sec.filter,
+        type: sec.type,
         badge: sec.badge,
         title: sec.title,
         q: q.q,
@@ -262,42 +227,16 @@ export function buildKalimat() {
   kalAnsweredN = 0;
 }
 
-/* ── Render Kalimat Tabs ── */
-export function renderKalimatTabs() {
-  const tabs = document.getElementById("kal-tabs");
-  if (tabs) tabs.style.display = "none";
-  activeKalTab = "all";
-  ["all", 0, 1, 2, 3].forEach((t) => {
-    const el = document.getElementById("ktab-" + t);
-    if (el) el.classList.toggle("active", t === "all");
-  });
-}
-
+/* ── Filter Kalimat Tab ── */
 export function filterKalTab(tab, doScroll) {
   activeKalTab = tab;
-  ["all", 0, 1, 2, 3].forEach((t) => {
+  const tabIds = ["all", "A", "B", "C", "D"];
+  tabIds.forEach((t) => {
     const el = document.getElementById("ktab-" + t);
     if (el) el.classList.toggle("active", t === tab);
   });
-  const filterMap = {
-    0: "hz-id-arti",
-    1: "pinyin-id",
-    2: "hz-pinyin",
-    3: "kalimat-hz",
-  };
-  const f = tab === "all" ? "all" : (filterMap[tab] ?? "all");
-  activeFilter = f;
-  renderKalimat(f);
+  renderKalimat(tab);
   if (doScroll) window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-export function setFilter(f, el) {
-  activeFilter = f;
-  document
-    .querySelectorAll("#kal-tabs .tab")
-    .forEach((t) => t.classList.remove("active"));
-  if (el) el.classList.add("active");
-  renderKalimat(f);
 }
 
 /* ── Render Kalimat Questions ── */
@@ -305,27 +244,13 @@ export function renderKalimat(filter) {
   const main = document.getElementById("kal-main");
   if (!main) return;
   main.innerHTML = "";
-  const filtered =
-    filter === "all" ? kalQ : kalQ.filter((q) => q.filter === filter);
+  const filtered = filter === "all" ? kalQ : kalQ.filter((q) => q.type === filter);
 
-  const secRanges = {};
-  filtered.forEach((q, li) => {
-    if (!secRanges[q.si]) secRanges[q.si] = { start: li + 1, end: li + 1 };
-    else secRanges[q.si].end = li + 1;
-  });
-
-  let lastSi = -1;
-
-  filtered.forEach((q, li) => {
-    if (q.si !== lastSi) {
-      lastSi = q.si;
-      const sec = currentKalData.sections[q.si];
-      const range = secRanges[q.si];
-      const rangeTxt =
-        range.start === range.end
-          ? `${range.start}`
-          : `${range.start}–${range.end}`;
-      main.innerHTML += `<div class="kal-sec-hd"><div class="kal-sec-badge">${sec.badge}</div><div class="kal-sec-title">${sec.title}</div><div class="kal-sec-cnt">${rangeTxt}</div></div>`;
+  let lastType = "";
+  filtered.forEach((q) => {
+    if (q.type !== lastType) {
+      lastType = q.type;
+      main.innerHTML += `<div class="kal-sec-hd"><div class="kal-sec-badge">${q.badge}</div><div class="kal-sec-title">${q.title}</div></div>`;
     }
 
     const card = document.createElement("div");
@@ -338,9 +263,9 @@ export function renderKalimat(filter) {
     const opts = q.opts
       .map((o, i) => {
         const labs = ["A", "B", "C", "D"];
-        const optLabel = renderKalOptLabel(q.filter, o);
+        const optLabel = renderKalOptLabel(q.type, o);
         let cls = "opt2";
-        if (q.filter === "kalimat-hz") cls += " opt-hz";
+        if (q.type === 'D') cls += " opt-hz";
         if (isAnswered) {
           if (i === q.ans) cls += " corr";
           else if (i === kalQ[q.gi].selectedIdx && !kalAnswered[q.gi])
@@ -361,7 +286,6 @@ export function renderKalimat(filter) {
           : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][q.ans]}`;
       }
     }
-
     main.appendChild(card);
   });
 }
@@ -394,20 +318,18 @@ export function selectKal(gi, sel, cor) {
       : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][cor]}`;
   }
 
-  // TTS Logic
+  // TTS Logic - Otomatis jika A, B, atau D
   const q = kalQ[gi];
-  if (q.si === 2) {
-    updateKalLive();
-  } else {
+  if (q.type !== 'C') {
     playKalTTS(gi);
-    updateKalLive();
   }
+  updateKalLive();
 
   const saved = lsGetScoped("hsk_kal_state", {});
   saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };
   lsSetScoped("hsk_kal_state", saved);
 
-  // Auto-scroll to next question
+  // Auto-scroll
   setTimeout(() => {
     const nextCard = document.getElementById(`kc-${gi + 1}`);
     if (nextCard) {
@@ -421,19 +343,20 @@ export function selectKal(gi, sel, cor) {
 }
 
 export function playKalTTS(gi) {
+  // Hanya jika sudah dijawab
+  if (kalAnswered[gi] === undefined) return;
+
   const q = kalQ[gi];
   if (!q) return;
 
   let speechText = q.q;
-  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
-  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, "");
+  speechText = speechText.replace(/\([^)]+\)/g, "");
 
-  if (q.filter === "kalimat-hz") {
-    // Untuk soal rumpang, gunakan jawaban benar jika sudah terjawab
+  if (q.type === 'D') {
     const corAns = q.opts[q.ans];
     speechText = speechText.replace(/_{2,}/g, corAns);
   }
-
   speakMandarin(speechText);
 }
 
@@ -483,36 +406,10 @@ export function submitKalimat(silent = false) {
   if (skipEl) skipEl.textContent = skip;
   if (pctEl) pctEl.textContent = pct + "%";
 
-  let grade, msg;
-  if (pct >= 90) {
-    grade = `⭐ Luar Biasa! ${currentKalData.title} dikuasai!`;
-    msg = "Penguasaan kalimat sangat baik. Siap lanjut ke level berikutnya!";
-  } else if (pct >= 80) {
-    grade = "✅ Bagus! Pemahaman kalimat kuat.";
-    msg = "Hampir sempurna! Review kalimat yang salah lalu lanjut.";
-  } else if (pct >= 70) {
-    grade = "📘 Cukup Baik — Perlu Sedikit Review";
-    msg = "Review Flashcard Kumulatif untuk set ini dulu, lalu coba lagi.";
-  } else {
-    grade = "🔄 Review Lebih Banyak Dulu";
-    msg =
-      "Kembali ke Quiz dan Flashcard Kumulatif, lalu coba lagi. Pasti bisa!";
-  }
-
-  const gradeEl = document.getElementById("kr-grade");
-  const msgEl = document.getElementById("kr-msg");
-  if (gradeEl) gradeEl.textContent = grade;
-  if (msgEl) msgEl.textContent = msg;
-
   const res = document.getElementById("kal-res");
-  if (res) {
-    res.classList.add("show");
-    const progEl = document.getElementById("kal-prog");
-    if (progEl) progEl.style.width = "100%";
-  }
+  if (res) res.classList.add("show");
 
-  if (!silent && res)
-    res.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (!silent && res) res.scrollIntoView({ behavior: "smooth", block: "center" });
 
   if (currentKalKey && !silent) {
     if (typeof window.saveKalScore === "function")
@@ -522,68 +419,28 @@ export function submitKalimat(silent = false) {
       savedSt[currentKalKey].submitted = true;
       lsSetScoped("hsk_kal_state", savedSt);
     }
-    if (!getCurrentUser()) {
-      const xp = calcXPFromPct(pct);
-      showXPToast(xp, "Kalimat selesai");
-    }
-    if (!getCurrentUser() && typeof window.invalidateStatsCache === "function")
-      window.invalidateStatsCache();
-  }
-
-  const kb = document.getElementById("ks-" + currentKalKey);
-  if (kb) {
-    kb.textContent = `${kalCorrect}/${total}`;
-    kb.className = "status " + (kalCorrect >= 80 ? "done" : "new");
   }
 }
 
 /* ── Confirm Retry ── */
 export function confirmRetryKalimat() {
-  const descEl = document.getElementById("retry-confirm-desc");
-  const btnEl = document.getElementById("retry-confirm-btn");
   const modalEl = document.getElementById("retry-confirm-modal");
-  if (descEl)
-    descEl.textContent =
-      "Soal akan diacak ulang dan skor latihan ini akan direset.";
-  if (btnEl) {
-    btnEl.onclick = () => {
-      if (typeof window.closeRetryConfirm === "function")
-        window.closeRetryConfirm();
-      retryKalimat();
-    };
-  }
   if (modalEl) modalEl.classList.add("active");
 }
 
 /* ── Retry Kalimat ── */
 export function retryKalimat() {
   const resEl = document.getElementById("kal-res");
-  const warnEl = document.getElementById("kal-warn");
   if (resEl) resEl.classList.remove("show");
-  if (warnEl) {
-    warnEl.style.display = "none";
-    warnEl.classList.remove("show");
-  }
 
   const saved = lsGetScoped("hsk_kal_state", {});
   delete saved[currentKalKey];
   lsSetScoped("hsk_kal_state", saved);
-  if (typeof window.kalScores !== "undefined")
-    delete window.kalScores[currentKalKey];
-  if (typeof window.deleteScore === "function")
-    window.deleteScore("kal", currentKalKey);
-
-  const kb = document.getElementById("ks-" + currentKalKey);
-  if (kb) {
-    kb.textContent = "Belum";
-    kb.className = "status new";
-  }
-
+  
   buildKalimat();
   renderKalimat(activeFilter);
   updateKalLive();
-  if (currentKalKey) lsSetScoped("hsk_active_kal", currentKalKey);
-  setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+  window.scrollTo(0, 0);
 }
 
 export function closeKalimat() {
@@ -592,68 +449,8 @@ export function closeKalimat() {
     window.backToLayer("layer-kalimat");
 }
 
-function _quizDoneCountByHSK(hskLevel) {
-  if (!window._quizSetsCache) return 0;
-  return window._quizSetsCache.filter(
-    (q) => q.hsk_level === hskLevel && window.quizScores?.[q.key] !== undefined,
-  ).length;
-}
-
 let _kalSetsCache = null;
-let _kalListFetchPromise = null;
 
-function _renderKalGrid() {
-  const grid = document.getElementById("kal-list-grid");
-  if (!grid || !_kalSetsCache) return;
-  grid.innerHTML = _kalSetsCache
-    .map((s, i) => {
-      const hsk = `hsk${s.hsk_level}`;
-      const scoreVal = window.kalScores?.[s.key];
-      const quizDone = _quizDoneCountByHSK(s.hsk_level);
-
-      // MENGGUNAKAN resolveCumulativeLock
-      const { isLocked, reason } = resolveCumulativeLock({
-        hskLevel: s.hsk_level,
-        deckIndex: i,
-        completedQuizCount: quizDone,
-        unlockAfter: s.unlock_after,
-        tableName: "kalimat_sets",
-      });
-
-      const lockedOnclick = `window.showToast('${lockMessage(reason, { unlockAfter: s.unlock_after })}', 'warn')`;
-
-      const statusTxt = scoreVal !== undefined ? `${scoreVal}/100` : "Belum";
-      const statusCls =
-        scoreVal !== undefined ? (scoreVal >= 80 ? "done" : "new") : "new";
-
-      return `<div class="item-card${isLocked ? " locked" : ""}" data-hsk="${hsk}" onclick="${isLocked ? lockedOnclick : `window.startKalimat('${s.key}')`}">
-      <div class="item-card-top"><span class="day-badge">HSK ${s.hsk_level}</span>${!isLocked ? `<span class="status ${statusCls}" id="ks-${s.key}">${statusTxt}</span>` : ""}</div>
-      <div class="item-title">${s.title}</div><div class="item-desc">${s.sub}</div>
-      <div class="item-meta"><span class="item-date">60 soal · 4 tipe</span><button class="btn-open" onclick="event.stopPropagation();${isLocked ? lockedOnclick : `window.startKalimat('${s.key}')`}">${isLocked ? "🔒" : "Mulai"}</button></div>
-    </div>`;
-    })
-    .join("");
-
-  const activeItem = document.querySelector(
-    "#hsk-filter-kalimat .hsk-dropdown-item.active",
-  );
-  if (activeItem && typeof window.filterHSK === "function") {
-    window.filterHSK("kalimat", activeItem.dataset.level || "all", null);
-  } else {
-    const activePill = document.querySelector(
-      "#hsk-filter-kalimat .hsk-pill.active",
-    );
-    if (activePill && typeof window.filterHSK === "function") {
-      const txt = activePill.textContent
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "");
-      window.filterHSK("kalimat", txt === "semua" ? "all" : txt, activePill);
-    }
-  }
-}
-
-/* ── Render Kalimat List (layer) ── */
 export async function renderKalList() {
   const grid = document.getElementById("kal-list-grid");
   if (!grid) return;
@@ -662,63 +459,26 @@ export async function renderKalList() {
   await loadTierStartDecks("kalimat_sets");
 
   if (!_kalSetsCache) {
-    grid.innerHTML =
-      '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
-    try {
-      _kalListFetchPromise = supa
-        .from("kalimat_sets")
-        .select("key, title, sub, hsk_level, unlock_after")
-        .order("hsk_level", { ascending: true })
-        .order("sort_order", { ascending: true })
-        .then(({ data, error }) => {
-          if (error || !data) throw error ?? new Error("no data");
-          _kalSetsCache = data;
-        });
-      await _kalListFetchPromise;
-    } catch {
-      grid.innerHTML =
-        '<div style="text-align:center;padding:40px;color:var(--dim);">Gagal memuat — cek koneksi</div>';
-      _kalListFetchPromise = null;
-      return;
-    } finally {
-      _kalListFetchPromise = null;
-    }
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span>Memuat...</div>';
+    const { data, error } = await supa.from("kalimat_sets").select("key, title, sub, hsk_level, unlock_after").order("hsk_level").order("sort_order");
+    if (!error) _kalSetsCache = data;
   }
-
-  if (!window._quizSetsCache) {
-    const { data: qData } = await supa
-      .from("quiz_sets")
-      .select("key, hsk_level")
-      .order("hsk_level", { ascending: true })
-      .order("sort_order", { ascending: true });
-    if (qData) window._quizSetsCache = qData;
+  
+  if (_kalSetsCache) {
+    grid.innerHTML = _kalSetsCache.map((s, i) => {
+      const { isLocked, reason } = resolveCumulativeLock({ hskLevel: s.hsk_level, deckIndex: i, unlockAfter: s.unlock_after, tableName: "kalimat_sets" });
+      const statusTxt = window.kalScores?.[s.key] !== undefined ? `${window.kalScores[s.key]}/100` : "Belum";
+      return `<div class="item-card${isLocked ? " locked" : ""}" onclick="${isLocked ? "" : `window.startKalimat('${s.key}')`}">
+        <div class="item-card-top"><span class="day-badge">HSK ${s.hsk_level}</span><span class="status">${statusTxt}</span></div>
+        <div class="item-title">${s.title}</div><div class="item-desc">${s.sub}</div>
+      </div>`;
+    }).join("");
   }
-
-  // Tunggu scores dulu sebelum render, supaya lock status akurat
-  if (getCurrentUser()) {
-    const scoresPromise = window.scoresLoaded;
-    if (
-      scoresPromise &&
-      typeof scoresPromise.then === "function" &&
-      !window._scoresHaveLoaded
-    ) {
-      await Promise.race([
-        scoresPromise,
-        new Promise((r) => setTimeout(r, 8000)),
-      ]);
-    }
-  }
-
-  _renderKalGrid();
 }
 
-/* ── Expose ke window untuk dipanggil dari HTML ── */
 window.loadKalimatFromDB = loadKalimatFromDB;
 window.startKalimat = startKalimat;
-window.buildKalimat = buildKalimat;
-window.renderKalimatTabs = renderKalimatTabs;
 window.filterKalTab = filterKalTab;
-window.setFilter = setFilter;
 window.renderKalimat = renderKalimat;
 window.selectKal = selectKal;
 window.playKalTTS = playKalTTS;
