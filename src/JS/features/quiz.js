@@ -18,6 +18,7 @@ import {
   shuffle,
 } from "../utilities/helpers.js";
 import { colorPy } from "../utilities/pinyin.js";
+import { speakMandarin } from "../utilities/tts.js";
 import {
   resolveQuizLock,
   lockMessage,
@@ -375,6 +376,17 @@ export function selectAns(gi, sel, cor) {
       : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][cor]}`;
   }
 
+  // TTS Logic
+  const q = allQ[gi];
+  let speechText = q.q;
+  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+  if (q.si === 3) {
+    const corAns = q.opts[q.ans];
+    speechText = speechText.replace(/_{2,}/g, corAns);
+  }
+  speakMandarin(speechText);
+
   updateLive();
 
   const saved = lsGetScoped("hsk_quiz_state", {});
@@ -639,12 +651,10 @@ export async function renderQuizList() {
   await loadTierStartDecks("quiz_sets");
 
   if (!_quizSetsCache) {
-    // _ensureQuizSetsCache() sekarang selalu return Promise (tidak null)
-    const p = _ensureQuizSetsCache();
     grid.innerHTML =
       '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
     try {
-      await p;
+      await _ensureQuizSetsCache();
     } catch {
       /* handled inside _ensureQuizSetsCache */
     }
@@ -655,33 +665,25 @@ export async function renderQuizList() {
     }
   }
 
-  _renderQuizGrid();
-
-  if (
-    getCurrentUser() &&
-    !window._scoresHaveLoaded &&
-    !_quizScoresPatchScheduled
-  ) {
-    _quizScoresPatchScheduled = true;
-    // window.scoresLoaded sekarang selalu ada karena di-init di dashboard.js
+  // Tunggu scores dulu sebelum render, supaya lock status akurat
+  if (getCurrentUser()) {
     const scoresPromise = window.scoresLoaded;
-    if (scoresPromise && typeof scoresPromise.then === "function") {
-      // Bug #3 fix: race dengan timeout 8 detik agar tidak hang selamanya
-      // jika dashboard.js gagal load atau loadScores() tidak dipanggil
-      Promise.race([
+    if (
+      scoresPromise &&
+      typeof scoresPromise.then === "function" &&
+      !window._scoresHaveLoaded
+    ) {
+      await Promise.race([
         scoresPromise,
         new Promise((r) => setTimeout(r, 8000)),
-      ]).then(() => {
-        _quizScoresPatchScheduled = false;
-        _renderQuizGrid();
-        if (typeof window._prefetchNextQuiz === "function")
-          window._prefetchNextQuiz();
-      });
+      ]);
     }
-  } else if (window._scoresHaveLoaded) {
-    if (typeof window._prefetchNextQuiz === "function")
-      window._prefetchNextQuiz();
   }
+
+  _renderQuizGrid();
+
+  if (typeof window._prefetchNextQuiz === "function")
+    window._prefetchNextQuiz();
 }
 
 /* ── Expose ke window untuk dipanggil dari HTML ── */

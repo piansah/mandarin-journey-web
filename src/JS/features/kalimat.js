@@ -17,6 +17,7 @@ import {
   shuffle,
 } from "../utilities/helpers.js";
 import { colorPy } from "../utilities/pinyin.js";
+import { speakMandarin } from "../utilities/tts.js";
 import { calcXPFromPct } from "../utilities/xp.js";
 import {
   resolveCumulativeLock,
@@ -393,6 +394,17 @@ export function selectKal(gi, sel, cor) {
       : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][cor]}`;
   }
 
+  // TTS Logic
+  const q = kalQ[gi];
+  let speechText = q.q;
+  speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
+  speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
+  if (q.filter === "kalimat-hz") {
+    const corAns = q.opts[q.ans];
+    speechText = speechText.replace(/_{2,}/g, corAns);
+  }
+  speakMandarin(speechText);
+
   updateKalLive();
 
   const saved = lsGetScoped("hsk_kal_state", {});
@@ -625,27 +637,23 @@ export async function renderKalList() {
   await loadTierStartDecks("kalimat_sets");
 
   if (!_kalSetsCache) {
-    if (!_kalListFetchPromise) {
-      grid.innerHTML =
-        '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
+    grid.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
+    try {
       _kalListFetchPromise = supa
         .from("kalimat_sets")
         .select("key, title, sub, hsk_level, unlock_after")
         .order("hsk_level", { ascending: true })
         .order("sort_order", { ascending: true })
         .then(({ data, error }) => {
-          if (error || !data) {
-            grid.innerHTML =
-              '<div style="text-align:center;padding:40px;color:var(--dim);">Gagal memuat — cek koneksi</div>';
-            throw error ?? new Error("no data");
-          }
+          if (error || !data) throw error ?? new Error("no data");
           _kalSetsCache = data;
         });
-    }
-    try {
       await _kalListFetchPromise;
     } catch {
-      _kalListFetchPromise = null; // Bug #4 fix: reset di sini agar bisa retry saat layer dibuka kembali
+      grid.innerHTML =
+        '<div style="text-align:center;padding:40px;color:var(--dim);">Gagal memuat — cek koneksi</div>';
+      _kalListFetchPromise = null;
       return;
     } finally {
       _kalListFetchPromise = null;
@@ -661,26 +669,22 @@ export async function renderKalList() {
     if (qData) window._quizSetsCache = qData;
   }
 
-  _renderKalGrid();
-
-  if (
-    getCurrentUser() &&
-    typeof window._scoresHaveLoaded !== "undefined" &&
-    !window._scoresHaveLoaded &&
-    !window._kalScoresPatchScheduled
-  ) {
-    window._kalScoresPatchScheduled = true;
-    if (typeof window.scoresLoaded !== "undefined") {
-      // Bug #3 fix: race dengan timeout 8 detik agar tidak hang selamanya
-      Promise.race([
-        window.scoresLoaded,
+  // Tunggu scores dulu sebelum render, supaya lock status akurat
+  if (getCurrentUser()) {
+    const scoresPromise = window.scoresLoaded;
+    if (
+      scoresPromise &&
+      typeof scoresPromise.then === "function" &&
+      !window._scoresHaveLoaded
+    ) {
+      await Promise.race([
+        scoresPromise,
         new Promise((r) => setTimeout(r, 8000)),
-      ]).then(() => {
-        window._kalScoresPatchScheduled = false;
-        _renderKalGrid();
-      });
+      ]);
     }
   }
+
+  _renderKalGrid();
 }
 
 /* ── Expose ke window untuk dipanggil dari HTML ── */
