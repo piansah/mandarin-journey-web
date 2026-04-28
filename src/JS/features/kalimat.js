@@ -350,7 +350,7 @@ export function renderKalimat(filter) {
       })
       .join("");
 
-    card.innerHTML = `<div class="qtop"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
+    card.innerHTML = `<div class="qtop" onclick="window.playKalTTS(${q.gi})" style="cursor:pointer"><span class="qno">${q.gi + 1}</span><div class="qbody">${renderKalQText(q)}</div></div><div class="opts2">${opts}</div><div class="fb2" id="kfb-${q.gi}"></div>`;
 
     if (isAnswered) {
       const fb = card.querySelector(`#kfb-${q.gi}`);
@@ -396,7 +396,7 @@ export function selectKal(gi, sel, cor) {
 
   // TTS Logic
   const q = kalQ[gi];
-  if (q.si === 1 || q.si === 2) {
+  if (q.si === 1) {
     updateKalLive();
   } else {
     let speechText = q.q;
@@ -413,6 +413,18 @@ export function selectKal(gi, sel, cor) {
   const saved = lsGetScoped("hsk_kal_state", {});
   saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };
   lsSetScoped("hsk_kal_state", saved);
+
+  // Auto-scroll to next question
+  setTimeout(() => {
+    const nextCard = document.getElementById(`kc-${gi + 1}`);
+    if (nextCard) {
+      const rect = nextCard.getBoundingClientRect();
+      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (!isVisible) {
+        nextCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, 1000);
 }
 
 /* ── Update Live Score ── */

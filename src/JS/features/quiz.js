@@ -378,7 +378,7 @@ export function selectAns(gi, sel, cor) {
 
   // TTS Logic
   const q = allQ[gi];
-  if (q.si === 1 || q.si === 2) {
+  if (q.si === 1) {
     updateLive();
   } else {
     let speechText = q.q;
@@ -398,6 +398,18 @@ export function selectAns(gi, sel, cor) {
 
   if (!_isRestoringFromRefresh && currentQuizKey)
     lsSetScoped("hsk_active_quiz", currentQuizKey);
+
+  // Auto-scroll to next question
+  setTimeout(() => {
+    const nextCard = document.getElementById(`card-${gi + 1}`);
+    if (nextCard) {
+      const rect = nextCard.getBoundingClientRect();
+      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (!isVisible) {
+        nextCard.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, 1000);
 }
 
 /* ── Update Live Score ── */
@@ -699,6 +711,7 @@ window.filterQuizTab = filterQuizTab;
 window.buildQuiz = buildQuiz;
 window.renderQuiz = renderQuiz;
 window.selectAns = selectAns;
+window.playQuizTTS = playQuizTTS;
 window.updateLive = updateLive;
 window.submitQuiz = submitQuiz;
 window.confirmRetryQuiz = confirmRetryQuiz;
