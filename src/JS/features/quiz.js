@@ -97,8 +97,9 @@ export async function loadQuizFromDB(key) {
     D: [],
   };
   for (const row of questRes.data) {
-    if (result[row.section]) {
-      result[row.section].push({
+    const secKey = (row.section || "").toString().trim().toUpperCase();
+    if (result[secKey]) {
+      result[secKey].push({
         q: row.question,
         opts: row.options,
         ans: row.answer_index,

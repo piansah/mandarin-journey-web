@@ -101,10 +101,10 @@ export async function loadKalimatFromDB(key) {
     supa
       .from("kalimat_questions")
       .select(
-        "section, sort_order, question, question_type, options, answer_index",
+        "section_index, sort_order, question, question_type, options, answer_index",
       )
       .eq("kal_key", key)
-      .order("section")
+      .order("section_index")
       .order("sort_order"),
   ]);
 
@@ -124,14 +124,11 @@ export async function loadKalimatFromDB(key) {
     items: [],
   }));
   
-  const typeMap = {};
-  sections.forEach((sec, idx) => {
-    typeMap[sec.type] = idx;
-  });
-
+  // Mapping angka dari DB ke index array (1 -> 0, 2 -> 1, dst)
   for (const row of questRes.data) {
-    const idx = typeMap[row.section];
-    if (idx === undefined) continue;
+    const idx = row.section_index - 1; 
+    if (sections[idx] === undefined) continue;
+
     const q =
       row.question_type === "hanzi"
         ? `<span class="hz">${row.question}</span>`
