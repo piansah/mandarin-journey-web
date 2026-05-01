@@ -378,11 +378,19 @@ export function selectAns(gi, sel, cor) {
       : `✗ Salah. Jawaban: ${["A", "B", "C", "D"][cor]}`;
   }
 
-  // TTS Logic
-  const q = allQ[gi];
-  if (q.si !== 1) {
-    playQuizTTS(gi);
+  // Simpan state ke localStorage setiap kali jawab
+  if (currentQuizKey) {
+    const saved = lsGetScoped("hsk_quiz_state", {});
+    saved[currentQuizKey] = { allQ, answered, submitted: false };
+    lsSetScoped("hsk_quiz_state", saved);
+    if (!_isRestoringFromRefresh)
+      lsSetScoped("hsk_active_quiz", currentQuizKey);
   }
+
+  // TTS
+  const q = allQ[gi];
+  if (q.si !== 1) playQuizTTS(gi);
+
   updateLive();
 }
 
