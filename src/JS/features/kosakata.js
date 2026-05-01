@@ -1128,8 +1128,8 @@ export async function openKosWord(card) {
   _renderHero();
   _initKwdGestures();
 
-  cancelTTS();
-  if (card.hanzi) speakMandarin(card.hanzi);
+//   cancelTTS();
+//   if (card.hanzi) speakMandarin(card.hanzi);
 
   await _loadKosWordExamples(card.hanzi);
 }
