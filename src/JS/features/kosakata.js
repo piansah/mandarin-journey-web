@@ -945,7 +945,6 @@ export function renderKosItems() {
 
     metaEl.innerHTML = `
       ${delBtnHtml}
-      ${dueHtml}
       <span class="kos-no">#${idx + 1}</span>
     `;
 
