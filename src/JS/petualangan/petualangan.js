@@ -87,6 +87,7 @@ async function fetchPetualanganData() {
   }
 
   const sectionIds = sections.map((s) => s.id);
+  if (sectionIds.length === 0) return [];
 
   const { data: units, error: errU } = await supa
     .from("adv_units")
@@ -109,16 +110,18 @@ async function fetchPetualanganData() {
   if (currentUser) {
     // ✅ Hanya ambil progress untuk unit yang relevan
     const unitIds = units.map((u) => u.id);
-    const { data: progressRows, error: errP } = await supa
+    if (unitIds.length > 0) {
+      const { data: progressRows, error: errP } = await supa
       .from("user_lesson_progress")
       .select("unit_id, completed_lesson_order")
       .eq("user_id", currentUser.id)
       .in("unit_id", unitIds);
 
-    if (!errP) {
-      (progressRows || []).forEach(({ unit_id, completed_lesson_order }) => {
-        progressMap[unit_id] = completed_lesson_order;
-      });
+      if (!errP) {
+        (progressRows || []).forEach(({ unit_id, completed_lesson_order }) => {
+          progressMap[unit_id] = completed_lesson_order;
+        });
+      }
     }
 
     await loadUnlockedTiers();

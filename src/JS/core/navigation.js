@@ -15,6 +15,7 @@ let _appHistory = [];
 let _appHistIdx = -1;
 let _isRestoringNav = false;
 const _screenScrollPos = {};
+const _layerRenderState = new Map();
 
 // Flag: history sudah diinit atau belum
 let _historyReady = false;
@@ -149,12 +150,38 @@ function _triggerLayerRender(id) {
   };
   const fnName = renderMap[id];
   if (!fnName) return;
-  if (typeof window[fnName] === "function") {
-    window[fnName]();
-  } else {
-    // Retry sekali setelah 300ms kalau modul belum siap
+
+  const run = () => {
+    const fn = window[fnName];
+    if (typeof fn !== "function") return false;
+
+    const current = _layerRenderState.get(id);
+    if (current?.running) {
+      current.pending = true;
+      return true;
+    }
+
+    const state = { running: true, pending: false };
+    _layerRenderState.set(id, state);
+
+    Promise.resolve()
+      .then(() => fn())
+      .catch((err) => console.error(`[navigation] ${fnName} failed:`, err))
+      .finally(() => {
+        state.running = false;
+        if (state.pending) {
+          state.pending = false;
+          setTimeout(run, 0);
+        } else if (_layerRenderState.get(id) === state) {
+          _layerRenderState.delete(id);
+        }
+      });
+    return true;
+  };
+
+  if (!run()) {
     setTimeout(() => {
-      if (typeof window[fnName] === "function") window[fnName]();
+      run();
     }, 300);
   }
 }

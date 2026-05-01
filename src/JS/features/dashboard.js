@@ -78,6 +78,18 @@ let _scoresLoadedResolve = null;
 window.scoresLoaded = new Promise((res) => {
   _scoresLoadedResolve = res;
 });
+window._scoresHaveLoaded = false;
+
+function _resolveScoresLoaded() {
+  _scoresHaveLoaded = true;
+  window._scoresHaveLoaded = true;
+  if (typeof _scoresLoadedResolve === "function") {
+    _scoresLoadedResolve();
+    _scoresLoadedResolve = null;
+  }
+  if (typeof window.signalScoresLoaded === "function")
+    window.signalScoresLoaded();
+}
 
 /* ══════════════════════════════════════════════════════════════
    LOCALSTORAGE HELPERS (wrapper)
@@ -510,140 +522,137 @@ async function _renderLevel() {
 ══════════════════════════════════════════════════════════════ */
 export async function loadScores() {
   const currentUser = getCurrentUser();
-  if (!currentUser) return;
+  try {
+    if (!currentUser) {
+      renderStats();
+      updateDailyProgress();
+      return;
+    }
 
-  await initKeys();
+    await initKeys();
 
-  _lastBackgroundLoad = Date.now();
+    _lastBackgroundLoad = Date.now();
 
-  const [scoresRes] = await Promise.all([
-    supa
-      .from("user_scores")
-      .select("key, score, type, meta")
-      .eq("user_id", currentUser.id),
-    !_quizSetsCache
-      ? typeof window._ensureQuizSetsCache === "function"
-        ? window._ensureQuizSetsCache()
-        : supa
-            .from("quiz_sets")
-            .select("key, title, sub, badge, hsk_level")
+    const [scoresRes] = await Promise.all([
+      supa
+        .from("user_scores")
+        .select("key, score, type, meta")
+        .eq("user_id", currentUser.id),
+      !_quizSetsCache
+        ? typeof window._ensureQuizSetsCache === "function"
+          ? window._ensureQuizSetsCache()
+          : supa
+              .from("quiz_sets")
+              .select("key, title, sub, badge, hsk_level")
+              .order("sort_order", { ascending: true })
+              .then(({ data, error }) => {
+                if (!error && data) _quizSetsCache = data;
+              })
+        : Promise.resolve(),
+      !_kalSetsCache
+        ? supa
+            .from("kalimat_sets")
+            .select("key, title, sub, hsk_level, unlock_after")
+            .order("hsk_level", { ascending: true })
             .order("sort_order", { ascending: true })
             .then(({ data, error }) => {
-              if (!error && data) _quizSetsCache = data;
+              if (!error && data) _kalSetsCache = data;
             })
-      : Promise.resolve(),
-    !_kalSetsCache
-      ? supa
-          .from("kalimat_sets")
-          .select("key, title, sub, hsk_level, unlock_after")
-          .order("hsk_level", { ascending: true })
-          .order("sort_order", { ascending: true })
-          .then(({ data, error }) => {
-            if (!error && data) _kalSetsCache = data;
-          })
-      : Promise.resolve(),
-    !_hanziSetsCache
-      ? supa
-          .from("hanzi_sets")
-          .select(
-            "key, title, sub, description, badge, hsk_level, sort_order, unlock_after",
-          )
-          .order("hsk_level", { ascending: true })
-          .order("sort_order", { ascending: true })
-          .then(({ data, error }) => {
-            if (!error && data) _hanziSetsCache = data;
-          })
-      : Promise.resolve(),
-  ]);
+        : Promise.resolve(),
+      !_hanziSetsCache
+        ? supa
+            .from("hanzi_sets")
+            .select(
+              "key, title, sub, description, badge, hsk_level, sort_order, unlock_after",
+            )
+            .order("hsk_level", { ascending: true })
+            .order("sort_order", { ascending: true })
+            .then(({ data, error }) => {
+              if (!error && data) _hanziSetsCache = data;
+            })
+        : Promise.resolve(),
+    ]);
 
-  if (scoresRes.error) {
-    console.error("loadScores error:", scoresRes.error);
-    return;
-  }
-  const data = scoresRes.data;
-
-  Object.keys(quizScoresGlobal).forEach((k) => delete quizScoresGlobal[k]);
-  Object.keys(kalScoresGlobal).forEach((k) => delete kalScoresGlobal[k]);
-  Object.keys(quizMetaGlobal).forEach((k) => delete quizMetaGlobal[k]);
-  Object.keys(kalMetaGlobal).forEach((k) => delete kalMetaGlobal[k]);
-  Object.keys(gramScores).forEach((k) => delete gramScores[k]);
-  Object.keys(ceritaScores).forEach((k) => delete ceritaScores[k]);
-  Object.keys(hanziScoresGlobal).forEach((k) => delete hanziScoresGlobal[k]);
-  Object.keys(fcScoresGlobal).forEach((k) => delete fcScoresGlobal[k]);
-  Object.keys(nadaScoresGlobal).forEach((k) => delete nadaScoresGlobal[k]);
-  Object.keys(tulisScoresGlobal).forEach((k) => delete tulisScoresGlobal[k]);
-  Object.keys(speakingScoresGlobal).forEach(
-    (k) => delete speakingScoresGlobal[k],
-  );
-  Object.keys(ceritaQuizScoresGlobal).forEach(
-    (k) => delete ceritaQuizScoresGlobal[k],
-  );
-
-  data.forEach((row) => {
-    if (row.type === "quiz") {
-      quizScoresGlobal[row.key] = row.score;
-      if (row.meta) quizMetaGlobal[row.key] = row.meta;
+    if (scoresRes.error) {
+      console.error("loadScores error:", scoresRes.error);
+      return;
     }
-    if (row.type === "kal") {
-      kalScoresGlobal[row.key] = row.score;
-      if (row.meta) kalMetaGlobal[row.key] = row.meta;
-    }
-    if (row.type === "grammar") gramScores[row.key] = row.score;
-    if (row.type === "cerita") ceritaScores[row.key] = row.score;
-    if (row.type === "hanzi") hanziScoresGlobal[row.key] = row.score;
-    if (row.type === "fc_session") fcScoresGlobal[row.key] = row.score;
-    if (row.type === "speaking_session")
-      speakingScoresGlobal[row.key] = row.score;
-    if (row.type === "nada_session") nadaScoresGlobal[row.key] = row.score;
-    if (row.type === "tulis_session") tulisScoresGlobal[row.key] = row.score;
-    if (row.type === "cerita_quiz") ceritaQuizScoresGlobal[row.key] = row.score;
-  });
+    const data = scoresRes.data || [];
 
-  renderStats();
-  updateDailyProgress();
-  updateGrammarDashboard();
-  updateHanziDashboard();
-  updateCeritaDashboard();
+    Object.keys(quizScoresGlobal).forEach((k) => delete quizScoresGlobal[k]);
+    Object.keys(kalScoresGlobal).forEach((k) => delete kalScoresGlobal[k]);
+    Object.keys(quizMetaGlobal).forEach((k) => delete quizMetaGlobal[k]);
+    Object.keys(kalMetaGlobal).forEach((k) => delete kalMetaGlobal[k]);
+    Object.keys(gramScores).forEach((k) => delete gramScores[k]);
+    Object.keys(ceritaScores).forEach((k) => delete ceritaScores[k]);
+    Object.keys(hanziScoresGlobal).forEach((k) => delete hanziScoresGlobal[k]);
+    Object.keys(fcScoresGlobal).forEach((k) => delete fcScoresGlobal[k]);
+    Object.keys(nadaScoresGlobal).forEach((k) => delete nadaScoresGlobal[k]);
+    Object.keys(tulisScoresGlobal).forEach((k) => delete tulisScoresGlobal[k]);
+    Object.keys(speakingScoresGlobal).forEach(
+      (k) => delete speakingScoresGlobal[k],
+    );
+    Object.keys(ceritaQuizScoresGlobal).forEach(
+      (k) => delete ceritaQuizScoresGlobal[k],
+    );
 
-  // Bug #5 fix: sync window caches setelah diisi — assignment sekali waktu di bawah
-  // tidak cukup karena JS primitive reference sudah terputus saat module load
-  window._quizSetsCache = _quizSetsCache;
-  window._kalSetsCache = _kalSetsCache;
-  window._hanziSetsCache = _hanziSetsCache;
-  window._gramSetsCache = _gramSetsCache;
-  window._ceritaSetsCache = _ceritaSetsCache;
+    data.forEach((row) => {
+      if (row.type === "quiz") {
+        quizScoresGlobal[row.key] = row.score;
+        if (row.meta) quizMetaGlobal[row.key] = row.meta;
+      }
+      if (row.type === "kal") {
+        kalScoresGlobal[row.key] = row.score;
+        if (row.meta) kalMetaGlobal[row.key] = row.meta;
+      }
+      if (row.type === "grammar") gramScores[row.key] = row.score;
+      if (row.type === "cerita") ceritaScores[row.key] = row.score;
+      if (row.type === "hanzi") hanziScoresGlobal[row.key] = row.score;
+      if (row.type === "fc_session") fcScoresGlobal[row.key] = row.score;
+      if (row.type === "speaking_session")
+        speakingScoresGlobal[row.key] = row.score;
+      if (row.type === "nada_session") nadaScoresGlobal[row.key] = row.score;
+      if (row.type === "tulis_session") tulisScoresGlobal[row.key] = row.score;
+      if (row.type === "cerita_quiz")
+        ceritaQuizScoresGlobal[row.key] = row.score;
+    });
 
-  if (_quizSetsCache) renderQuizList();
-  if (_kalSetsCache) renderKalList();
-  if (_gramSetsCache) renderGrammarList();
-  if (typeof refreshKosDashboardProgress === "function")
-    refreshKosDashboardProgress().catch(console.error);
+    renderStats();
+    updateDailyProgress();
+    updateGrammarDashboard();
+    updateHanziDashboard();
+    updateCeritaDashboard();
 
-  // PATCH: resolve window.scoresLoaded promise agar quiz.js bisa re-render
-  _scoresHaveLoaded = true;
-  window._scoresHaveLoaded = true;
-  if (typeof _scoresLoadedResolve === "function") {
-    _scoresLoadedResolve();
-    _scoresLoadedResolve = null; // resolve sekali saja
+    window._quizSetsCache = _quizSetsCache;
+    window._kalSetsCache = _kalSetsCache;
+    window._hanziSetsCache = _hanziSetsCache;
+    window._gramSetsCache = _gramSetsCache;
+    window._ceritaSetsCache = _ceritaSetsCache;
+
+    if (_quizSetsCache) renderQuizList();
+    if (_kalSetsCache) renderKalList();
+    if (_gramSetsCache) renderGrammarList();
+    if (typeof refreshKosDashboardProgress === "function")
+      refreshKosDashboardProgress().catch(console.error);
+
+    _resolveScoresLoaded();
+    _prefetchNextQuiz();
+
+    await Promise.allSettled([
+      loadStreak(),
+      renderActList(),
+      typeof loadGrammarCounts === "function"
+        ? loadGrammarCounts()
+        : Promise.resolve(),
+      typeof window.updateSrsDashboard === "function"
+        ? window.updateSrsDashboard()
+        : Promise.resolve(),
+    ]);
+
+    checkUnlockAndNotify().catch(console.error);
+  } finally {
+    _resolveScoresLoaded();
   }
-  // Tetap panggil signalScoresLoaded jika ada (backward compat)
-  if (typeof window.signalScoresLoaded === "function")
-    window.signalScoresLoaded();
-
-  _prefetchNextQuiz();
-
-  await Promise.all([
-    loadStreak(),
-    renderActList(),
-    typeof loadGrammarCounts === "function"
-      ? loadGrammarCounts()
-      : Promise.resolve(),
-    typeof window.updateSrsDashboard === "function"
-      ? window.updateSrsDashboard()
-      : Promise.resolve(),
-  ]);
-
-  checkUnlockAndNotify().catch(console.error);
 }
 
 /* ══════════════════════════════════════════════════════════════

@@ -19,6 +19,7 @@ import {
   lsSet,
   lsRemove,
   shuffle,
+  withTimeout,
 } from "../utilities/helpers.js";
 import { speakMandarin } from "../utilities/tts.js";
 import { showDoneScreen } from "../core/done-screen.js";
@@ -136,8 +137,8 @@ export async function renderGrammarList() {
   const grid = document.getElementById("grammar-list-grid");
   if (!grid) return;
 
-  await loadUnlockedTiers();
-  await loadTierStartDecks("grammar_patterns");
+  await withTimeout(loadUnlockedTiers(), 2500);
+  await withTimeout(loadTierStartDecks("grammar_patterns"), 2500);
 
   if (_gramSetsCache) {
     _renderGrammarGrid();

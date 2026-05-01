@@ -6,7 +6,13 @@
 import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
 import { showScreen, backToLayer, backToDash } from "../core/navigation.js";
-import { showToast, lsGet, lsSet, showXPToast } from "../utilities/helpers.js";
+import {
+  showToast,
+  lsGet,
+  lsSet,
+  showXPToast,
+  withTimeout,
+} from "../utilities/helpers.js";
 import { speakMandarin, cancelTTS } from "../utilities/tts.js";
 import { colorPy, _stripTones } from "../utilities/pinyin.js";
 import { showDoneScreen } from "../core/done-screen.js";
@@ -773,8 +779,8 @@ export async function renderHanziList() {
   const grid = document.getElementById("hanzi-list-grid");
   if (!grid) return;
 
-  await loadUnlockedTiers();
-  await loadTierStartDecks("hanzi_sets");
+  await withTimeout(loadUnlockedTiers(), 2500);
+  await withTimeout(loadTierStartDecks("hanzi_sets"), 2500);
 
   const cacheComplete =
     window._hanziSetsCache &&

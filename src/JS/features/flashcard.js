@@ -44,6 +44,7 @@ let _fcDoneShown = false;
 let _fcBaseLength = 0; // panjang awal fcCards (tanpa duplikat)
 let _fcRepeatQueue = []; // queue untuk kartu yang dilupakan
 let _fcCardMeta = new Map(); // simpan metadata kartu asli lintas repeat queue
+let _fcFlushPromise = null;
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
@@ -69,7 +70,7 @@ async function _getUser() {
 /* ══════════════════════════════════════════════════════════════
    RESET STATE (BARU)
 ══════════════════════════════════════════════════════════════ */
-export function resetFCState() {
+export function resetFCState({ clearPending = false } = {}) {
   fcCards = [];
   fcIdx = 0;
   fcFlipState = 0;
@@ -77,7 +78,7 @@ export function resetFCState() {
   _fcHafal = 0;
   _fcLupa = 0;
   _fcLupaIds.clear();
-  _fcPendingReviews.clear();
+  if (clearPending) _fcPendingReviews.clear();
   _fcPrevSessionXP = 0;
   _fcScoresFresh = false;
   _fcDoneShown = false;
@@ -657,21 +658,34 @@ async function _doFlushPendingReviews() {
   if (_fcPendingReviews.size === 0) return;
 
   const entries = Array.from(_fcPendingReviews.entries());
-  _fcPendingReviews = new Map();
 
   // Gunakan _fcPrevSessionXP yang sudah dihitung saat showFCDone
   await _grantSessionXP(_fcPrevSessionXP);
 
-  await Promise.all(
-    entries.map(([cardId, quality]) =>
-      srsSaveReview(cardId, quality).catch(console.error),
-    ),
+  const results = await Promise.allSettled(
+    entries.map(([cardId, quality]) => srsSaveReview(cardId, quality)),
   );
+
+  results.forEach((result, idx) => {
+    const [cardId, quality] = entries[idx];
+    if (result.status === "fulfilled") {
+      if (_fcPendingReviews.get(cardId) === quality) {
+        _fcPendingReviews.delete(cardId);
+      }
+    } else {
+      console.error("srsSaveReview failed:", result.reason);
+    }
+  });
 }
 
 async function _flushPendingReviews() {
   if (_fcPendingReviews.size === 0) return;
-  await _doFlushPendingReviews();
+  if (!_fcFlushPromise) {
+    _fcFlushPromise = _doFlushPendingReviews().finally(() => {
+      _fcFlushPromise = null;
+    });
+  }
+  await _fcFlushPromise;
 }
 
 async function _grantSessionXP(xpNow) {

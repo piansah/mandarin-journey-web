@@ -57,6 +57,13 @@ export function lsRemoveScoped(key) {
   lsSet(key, all);
 }
 
+export function withTimeout(promise, ms, fallback = null) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 let _toastTimer = null;
 
 export function showToast(msg, type = "info") {

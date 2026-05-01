@@ -15,6 +15,7 @@ import {
   lsSetScoped,
   lsRemoveScoped,
   shuffle,
+  withTimeout,
 } from "../utilities/helpers.js";
 import { colorPy } from "../utilities/pinyin.js";
 import { speakMandarin } from "../utilities/tts.js";
@@ -660,8 +661,8 @@ export async function renderKalList() {
   const grid = document.getElementById("kal-list-grid");
   if (!grid) return;
 
-  await loadUnlockedTiers();
-  await loadTierStartDecks("kalimat_sets");
+  await withTimeout(loadUnlockedTiers(), 2500);
+  await withTimeout(loadTierStartDecks("kalimat_sets"), 2500);
 
   if (!_kalSetsCache) {
     grid.innerHTML =

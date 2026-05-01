@@ -438,6 +438,15 @@ function _updateKosProgress(sets) {
   fillEl.style.width = pct + "%";
 }
 
+function _escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function _kosTodayStr() {
   return new Date().toLocaleDateString("en-CA");
 }
@@ -583,10 +592,6 @@ function buildKosDeckGrid(sets, dueMap = new Map()) {
     const wordCount = s.flashcard_cards?.[0]?.count ?? 20;
     const badge = s.badge || `HSK ${hskNum}`;
     const dueCount = dueMap.get(s.id) ?? 0;
-    const dueTag =
-      dueCount > 0
-        ? `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,201,109,0.12);border:1px solid rgba(232,201,109,0.25);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--gold);font-weight:600;">${dueCount} due</span>`
-        : "";
     
     // Hanya Flashcard yang menentukan status "Selesai" di grid
     const fcDone = fcScores[`fc${s.id}`] !== undefined;
@@ -596,6 +601,7 @@ function buildKosDeckGrid(sets, dueMap = new Map()) {
     const card = document.createElement("div");
     card.className = "item-card";
     card.dataset.hsk = hskLevel;
+    card.dataset.dueCount = String(dueCount);
     card.innerHTML = `
       <div class="item-card-top">
         <span class="day-badge">${badge}</span>
@@ -605,7 +611,6 @@ function buildKosDeckGrid(sets, dueMap = new Map()) {
       <div class="item-desc">${desc}</div>
       <div class="item-meta">
         <span class="item-date">${wordCount} Kosakata ⬩ HSK 3.0</span>
-        ${dueTag}
         <button class="btn-open">Buka</button>
       </div>`;
 
@@ -1821,9 +1826,10 @@ async function _loadKosWordExamples(hanzi) {
 }
 
 
-function _renderKosWordExamples(listEl, hanziItems, userExamples) {
+function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
   let html = "";
   const allItems = [];
+  window._kosExampleEditRows = [];
 
   hanziItems.forEach((h, idx) => {
     allItems.push(h.hanzi || "");
@@ -1838,6 +1844,8 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
   const currentUser = getCurrentUser();
   userExamples.forEach((u, idx) => {
     const isOwner = currentUser && u.added_by === currentUser.id;
+    const editIdx = window._kosExampleEditRows.length;
+    window._kosExampleEditRows.push(u);
     allItems.push(u.hanzi || "");
     const actions = isOwner
       ? `<div class="kwd-ex-actions">
@@ -1864,6 +1872,62 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     const text = allItems[idx];
     _attachLongPressTTS(card, text, () => speakMandarin(text));
   });
+}
+
+function _renderKosWordExamples(listEl, hanziItems, userExamples) {
+  let html = "";
+  const allItems = [];
+  window._kosExampleEditRows = [];
+
+  hanziItems.forEach((h, idx) => {
+    allItems.push(h.hanzi || "");
+    html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
+      <div class="kwd-ex-hz">${_escapeHtml(h.hanzi)}</div>
+      <div class="kwd-ex-py">${colorPy(_escapeHtml(h.pinyin))}</div>
+      <div class="kwd-ex-id">${_escapeHtml(h.arti)}</div>
+    </div>`;
+  });
+
+  const baseIdx = allItems.length;
+  const currentUser = getCurrentUser();
+  userExamples.forEach((u, idx) => {
+    const isOwner = currentUser && u.added_by === currentUser.id;
+    const editIdx = window._kosExampleEditRows.length;
+    window._kosExampleEditRows.push(u);
+    allItems.push(u.hanzi || "");
+
+    const actions = isOwner
+      ? `<div class="kwd-ex-actions">
+          <button class="kwd-ex-btn" onclick="event.stopPropagation();window.openRenderedContohEdit(${editIdx})">Edit</button>
+          <button class="kwd-ex-btn del" onclick="event.stopPropagation();window.deleteContoh(${u.id})">x</button>
+        </div>`
+      : "";
+
+    html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
+      ${u.hanzi ? `<div class="kwd-ex-hz">${_escapeHtml(u.hanzi)}</div>` : ""}
+      ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(_escapeHtml(u.pinyin))}</div>` : ""}
+      ${u.arti ? `<div class="kwd-ex-id">${_escapeHtml(u.arti)}</div>` : ""}
+      ${actions}
+    </div>`;
+  });
+
+  if (!html) {
+    html = `<div class="kwd-empty">Belum ada contoh kalimat.<br>Klik <strong>+ Tambah</strong> untuk menambahkan.</div>`;
+  }
+
+  listEl.innerHTML = html;
+
+  listEl.querySelectorAll(".kwd-example-card[data-speak-idx]").forEach((card) => {
+    const idx = parseInt(card.dataset.speakIdx);
+    const text = allItems[idx];
+    _attachLongPressTTS(card, text, () => speakMandarin(text));
+  });
+}
+
+export function openRenderedContohEdit(idx) {
+  const row = window._kosExampleEditRows?.[idx];
+  if (!row) return;
+  openContohEdit(row.id, row.hanzi || "", row.pinyin || "", row.arti || "");
 }
 
 export function closeKosWord() {
@@ -2066,6 +2130,7 @@ window.openKosWord = openKosWord;
 window.closeKosWord = closeKosWord;
 window.openKosContohForm = openKosContohForm;
 window.openContohEdit = openContohEdit;
+window.openRenderedContohEdit = openRenderedContohEdit;
 window.closeContohForm = closeContohForm;
 window.saveContoh = saveContoh;
 window._renderCharTab = _renderCharTab;
