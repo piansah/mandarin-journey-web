@@ -471,7 +471,7 @@ async function _loadKosSrsProgress(cardIds) {
   if (!currentUser || !cardIds.length) return new Map();
 
   const progressMap = new Map();
-  const chunks = _chunkArray(cardIds, 100);
+  const chunks = _chunkArray(cardIds, 500); // Increased chunk size
   for (const chunk of chunks) {
     const { data } = await supa
       .from("user_card_progress")
@@ -499,13 +499,18 @@ async function _loadKosDueMap(sets) {
   const setIds = sets.map((s) => s.id).filter(Boolean);
   if (!setIds.length) return new Map();
 
-  const allCards = [];
-  for (const chunk of _chunkArray(setIds, 100)) {
-    const { data } = await supa
-      .from("flashcard_cards")
-      .select("id, set_id")
-      .in("set_id", chunk);
-    if (data) allCards.push(...data);
+  let allCards = [];
+  if (_globalSearchCache) {
+    const setIdsSet = new Set(setIds);
+    allCards = _globalSearchCache.filter((c) => setIdsSet.has(c.set_id));
+  } else {
+    for (const chunk of _chunkArray(setIds, 100)) {
+      const { data } = await supa
+        .from("flashcard_cards")
+        .select("id, set_id")
+        .in("set_id", chunk);
+      if (data) allCards.push(...data);
+    }
   }
 
   _kosSrsProgressMap = await _loadKosSrsProgress(allCards.map((c) => c.id));
@@ -784,6 +789,17 @@ export function closeKosTooltip() {
 export async function loadKosDeckData(setId) {
   const listEl = document.getElementById("kos-list");
   if (!listEl) return;
+
+  // 1. Coba ambil dari cache global dulu (instan)
+  if (_globalSearchCache) {
+    const cached = _globalSearchCache.filter((c) => c.set_id === setId);
+    if (cached.length > 0) {
+      _processKosDeckData(cached, setId);
+      return;
+    }
+  }
+
+  // 2. Jika tidak ada di cache, baru fetch dari Supabase
   listEl.innerHTML =
     '<div class="kos-empty"><span class="spinner"></span></div>';
 
@@ -799,11 +815,23 @@ export async function loadKosDeckData(setId) {
     return;
   }
 
-  const deckProgressMap = await _loadKosSrsProgress(data.map((c) => c.id));
-  deckProgressMap.forEach((value, key) => _kosSrsProgressMap.set(key, value));
+  await _processKosDeckData(data, setId);
+}
+
+async function _processKosDeckData(data, setId) {
+  // Cek kartu mana yang belum ada data SRS-nya di memory
+  const missingSrsIds = data
+    .filter((c) => !_kosSrsProgressMap.has(c.id))
+    .map((c) => c.id);
+
+  if (missingSrsIds.length > 0) {
+    const newSrsMap = await _loadKosSrsProgress(missingSrsIds);
+    newSrsMap.forEach((val, key) => _kosSrsProgressMap.set(key, val));
+  }
+
   const withSrs = data.map((card) => ({
     ...card,
-    _srs: deckProgressMap.get(card.id) ?? null,
+    _srs: _kosSrsProgressMap.get(card.id) ?? null,
     _isDue: _isKosCardDue(card),
   }));
 
@@ -818,7 +846,6 @@ export async function loadKosDeckData(setId) {
     );
     kosAllData = [...withSrs.filter((c) => !c.added_by), ...personal];
   } else {
-    // Deck personal: ambil semua kartu apa adanya
     kosAllData = withSrs;
   }
 
@@ -1128,8 +1155,8 @@ export async function openKosWord(card) {
   _renderHero();
   _initKwdGestures();
 
-//   cancelTTS();
-//   if (card.hanzi) speakMandarin(card.hanzi);
+  cancelTTS();
+  // if (card.hanzi) speakMandarin(card.hanzi);
 
   await _loadKosWordExamples(card.hanzi);
 }
