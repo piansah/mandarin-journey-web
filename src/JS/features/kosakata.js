@@ -92,12 +92,13 @@ function _attachLongPressTTS(el, hanzi, onTap) {
     { passive: true },
   );
 
-  el.addEventListener("touchend", () => {
+  el.addEventListener("touchend", (e) => {
     clearTimeout(pressTimer);
     _wasTouched = true;
     setTimeout(() => {
       _wasTouched = false;
     }, 500);
+    if (!didMove) e.preventDefault();
     if (!didLongPress && !didMove && onTap) onTap();
   });
 
@@ -1124,6 +1125,7 @@ let _kosWordCache = {};
 let _currentKosWord = null;
 let _activeKwdTab = "kalimat";
 let _strokeWriters = [];
+let _kwdHeroTapReadyAt = 0;
 
 // ── Stroke state ──
 let _strokeChars = [];
@@ -1152,6 +1154,7 @@ export async function openKosWord(card) {
     window.openLayer("layer-kos-word");
 
   _switchTab("kalimat", true);
+  _kwdHeroTapReadyAt = performance.now() + 650;
   _renderHero();
   _initKwdGestures();
 
@@ -1193,7 +1196,10 @@ function _renderHero() {
 
   const heroEl = document.getElementById("kwd-hero-main");
   if (heroEl) {
-    _attachLongPressTTS(heroEl, card.hanzi, () => speakMandarin(card.hanzi));
+    _attachLongPressTTS(heroEl, card.hanzi, () => {
+      if (performance.now() < _kwdHeroTapReadyAt) return;
+      speakMandarin(card.hanzi);
+    });
   }
 }
 
