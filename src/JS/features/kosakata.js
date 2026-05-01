@@ -442,6 +442,13 @@ function _kosTodayStr() {
   return new Date().toLocaleDateString("en-CA");
 }
 
+function _withKosTimeout(promise, ms, fallback = null) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 function _chunkArray(arr, size) {
   const chunks = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -505,7 +512,9 @@ async function _loadKosDueMap(sets) {
 }
 
 export async function refreshKosDashboardProgress() {
-  if (window.scoresLoaded) await window.scoresLoaded;
+  if (window.scoresLoaded && !window._scoresHaveLoaded) {
+    await _withKosTimeout(window.scoresLoaded, 2500);
+  }
 
   if (!kosSetsCache || kosSetsCache.length === 0) {
     const { data: sets, error } = await supa
@@ -530,11 +539,15 @@ export async function renderKosDeckGrid() {
   const grid = document.getElementById("kos-deck-grid");
   if (!grid) return;
 
-  await loadUnlockedTiers();
-  await loadTierStartDecks("flashcard_sets");
+  await _withKosTimeout(loadUnlockedTiers(), 2500);
+  await _withKosTimeout(loadTierStartDecks("flashcard_sets"), 2500);
 
   if (kosSetsCache && kosSetsCache.length > 0) {
-    const dueMap = await _loadKosDueMap(kosSetsCache);
+    const dueMap = await _withKosTimeout(
+      _loadKosDueMap(kosSetsCache),
+      3500,
+      new Map(),
+    );
     buildKosDeckGrid(kosSetsCache, dueMap);
     _updateKosProgress(kosSetsCache);
     return;
@@ -544,7 +557,11 @@ export async function renderKosDeckGrid() {
     '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
   await refreshKosDashboardProgress();
   if (kosSetsCache) {
-    const dueMap = await _loadKosDueMap(kosSetsCache);
+    const dueMap = await _withKosTimeout(
+      _loadKosDueMap(kosSetsCache),
+      3500,
+      new Map(),
+    );
     buildKosDeckGrid(kosSetsCache, dueMap);
   }
 }
