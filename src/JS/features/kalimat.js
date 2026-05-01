@@ -423,6 +423,9 @@ export function playKalTTS(gi) {
   const q = kalQ[gi];
   if (!q) return;
 
+  // Jangan bunyikan TTS untuk tipe Pinyin -> Arti (1)
+  if (q.si === 1) return;
+
   let speechText = q.q;
   speechText = speechText.replace(/<\/?[^>]+(>|$)/g, ""); // Strip HTML
   speechText = speechText.replace(/\([^)]+\)/g, ""); // Remove translations in ()
