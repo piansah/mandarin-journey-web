@@ -189,26 +189,26 @@
 }
 .q-text {
   font-family: var(--font-hanzi);
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.5;
   flex: 1;
 }
 .q-text .hz {
   font-family: var(--font-hanzi);
-  font-size: 20px;
+  font-size: 18px;
 }
 .q-text.q-pinyin {
   font-family: var(--font-ui);
-  font-size: 18px;
+  font-size: 16px;
 }
 .q-text.q-rumpang {
   font-family: var(--font-hanzi);
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.5;
 }
 .q-text.q-rumpang .hz {
   font-family: var(--font-hanzi);
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .q-text.q-rumpang .lat {
