@@ -6,6 +6,9 @@ import HanziWriter from "hanzi-writer";
 import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
 import {
+  SVG_CHECK_DUOLINGO_LARGE,
+} from "../../assets/icon.js";
+import {
   showScreen,
   backToLayer,
   _navStack,
@@ -418,14 +421,19 @@ function _updateKosProgress(sets) {
   const fillEl = document.getElementById("mc-kos-fill");
   if (!valEl || !fillEl) return;
   const defaultSets = sets.filter((s) => s.is_default);
-  const total = defaultSets.length;
+  const total = defaultSets.length; // Hanya hitung total deck (1 latihan per deck)
   if (total === 0) return;
+  
   const fcScores = window.fcScores || {};
-  const done = defaultSets.filter(
-    (s) => fcScores[`fc${s.id}`] !== undefined,
-  ).length;
-  const pct = Math.round((done / total) * 100);
-  valEl.textContent = `${done} / ${total}`;
+
+  let doneCount = 0;
+  defaultSets.forEach(s => {
+    // Hanya hitung flashcard sebagai progress dashboard
+    if (fcScores[`fc${s.id}`] !== undefined) doneCount++;
+  });
+
+  const pct = Math.round((doneCount / total) * 100);
+  valEl.textContent = `${doneCount} / ${total}`;
   fillEl.style.width = pct + "%";
 }
 
@@ -475,6 +483,9 @@ function buildKosDeckGrid(sets) {
   if (!grid) return;
 
   const fcScores = window.fcScores || {};
+  const nadaScores = window.nadaScores || {};
+  const tulisScores = window.tulisScores || {};
+
   const frag = document.createDocumentFragment();
   sets.forEach((s) => {
     const desc = s.description || "";
@@ -483,9 +494,11 @@ function buildKosDeckGrid(sets) {
     const hskLevel = `hsk${hskNum}`;
     const wordCount = s.flashcard_cards?.[0]?.count ?? 20;
     const badge = s.badge || `HSK ${hskNum}`;
-    const isDone = fcScores[`fc${s.id}`] !== undefined;
-    const statusTxt = isDone ? `${wordCount}/${wordCount}` : "Belum";
-    const statusCls = isDone ? "done" : "new";
+    
+    // Hanya Flashcard yang menentukan status "Selesai" di grid
+    const fcDone = fcScores[`fc${s.id}`] !== undefined;
+    const statusTxt = fcDone ? "Selesai" : "Belum";
+    const statusCls = fcDone ? "done" : "new";
 
     const card = document.createElement("div");
     card.className = "item-card";
@@ -598,6 +611,17 @@ function _openKosTooltip() {
   const tooltip = document.getElementById("kos-latihan-tooltip");
   if (!tooltip) return;
 
+  const fcScores = window.fcScores || {};
+  const nadaScores = window.nadaScores || {};
+  const tulisScores = window.tulisScores || {};
+  const keyBase = kosCurrentTitle.replace(/\s+/g, "_").slice(0, 60);
+
+  const doneMap = {
+    "kos-tt-fc": fcScores[`fc${kosCurrentSetId}`] !== undefined,
+    "kos-tt-nada": nadaScores[keyBase] !== undefined,
+    "kos-tt-tulis": tulisScores[keyBase] !== undefined,
+  };
+
   const mulaiBtn = document.getElementById("kos-mulai-btn");
   const locked = mulaiBtn?.dataset.locked === "1";
   const reason = mulaiBtn?.dataset.lockReason || "";
@@ -617,6 +641,20 @@ function _openKosTooltip() {
     const btn = document.getElementById(id);
     if (!btn) return;
     btn.disabled = false;
+
+    // Tambahkan/Hapus tanda ceklis
+    let checkEl = btn.querySelector(".kos-tt-check");
+    if (doneMap[id]) {
+      if (!checkEl) {
+        checkEl = document.createElement("div");
+        checkEl.className = "kos-tt-check";
+        checkEl.innerHTML = SVG_CHECK_DUOLINGO_LARGE;
+        btn.appendChild(checkEl);
+      }
+    } else if (checkEl) {
+      checkEl.remove();
+    }
+
     if (locked) {
       btn.classList.add("locked");
       btn.onclick = (e) => {

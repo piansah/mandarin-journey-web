@@ -37,7 +37,7 @@ let activeKalTab = "all";
 
 const _kalCache = {};
 
-/* ── Section definitions ── */
+/* == Section definitions == */
 const KAL_SECTIONS = [
   {
     section_index: 1,
@@ -65,7 +65,7 @@ const KAL_SECTIONS = [
   },
 ];
 
-/* ── Render helpers ── */
+/* == Render helpers == */
 function renderKalQText(q) {
   switch (q.filter) {
     case "hz-id-arti":
@@ -96,7 +96,7 @@ function renderKalRumpang(text) {
   return out;
 }
 
-/* ── Load Kalimat from Supabase ── */
+/* == Load Kalimat from Supabase == */
 export async function loadKalimatFromDB(key) {
   if (_kalCache[key]) return _kalCache[key];
 
@@ -153,7 +153,7 @@ export async function loadKalimatFromDB(key) {
   return result;
 }
 
-/* ── Start Kalimat ── */
+/* == Start Kalimat == */
 export async function startKalimat(key) {
   currentKalKey = key;
   if (typeof window.closeLayer === "function")
@@ -237,7 +237,7 @@ export async function startKalimat(key) {
   }
 }
 
-/* ── Build Kalimat ── */
+/* == Build Kalimat == */
 export function buildKalimat() {
   kalQ = [];
   let gi = 0;
@@ -262,7 +262,7 @@ export function buildKalimat() {
   kalAnsweredN = 0;
 }
 
-/* ── Render Kalimat Tabs ── */
+/* == Render Kalimat Tabs == */
 export function renderKalimatTabs() {
   const tabs = document.getElementById("kal-tabs");
   if (tabs) tabs.style.display = "none";
@@ -300,7 +300,7 @@ export function setFilter(f, el) {
   renderKalimat(f);
 }
 
-/* ── Render Kalimat Questions ── */
+/* == Render Kalimat Questions == */
 export function renderKalimat(filter) {
   const main = document.getElementById("kal-main");
   if (!main) return;
@@ -368,7 +368,7 @@ export function renderKalimat(filter) {
   });
 }
 
-/* ── Select Kalimat Answer ── */
+/* == Select Kalimat Answer == */
 export function selectKal(gi, sel, cor) {
   if (kalAnswered[gi] !== undefined) return;
   kalAnswered[gi] = sel === cor;
@@ -402,9 +402,13 @@ export function selectKal(gi, sel, cor) {
     playKalTTS(gi);
   }
   updateKalLive();
-  }
 
-  export function playKalTTS(gi) {
+  const saved = lsGetScoped("hsk_kal_state", {});
+  saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };
+  lsSetScoped("hsk_kal_state", saved);
+}
+
+export function playKalTTS(gi) {
   // Hanya bunyi jika soal sudah terjawab
   if (kalAnswered[gi] === undefined) return;
 
@@ -422,14 +426,9 @@ export function selectKal(gi, sel, cor) {
   }
 
   speakMandarin(speechText);
-  }
-
-  const saved = lsGetScoped("hsk_kal_state", {});
-  saved[currentKalKey] = { kalQ, kalAnswered, submitted: false };
-  lsSetScoped("hsk_kal_state", saved);
 }
 
-/* ── Update Live Score ── */
+/* == Update Live Score == */
 export function updateKalLive() {
   const total = kalQ.length;
   const liveEl = document.getElementById("kal-live");
@@ -443,7 +442,7 @@ export function updateKalLive() {
     progEl.style.width = (total > 0 ? (kalAnsweredN / total) * 100 : 0) + "%";
 }
 
-/* ── Submit Kalimat ── */
+/* == Submit Kalimat == */
 export function submitKalimat(silent = false) {
   const total = kalQ.length;
   const skip = total - kalAnsweredN;
@@ -529,7 +528,7 @@ export function submitKalimat(silent = false) {
   }
 }
 
-/* ── Confirm Retry ── */
+/* == Confirm Retry == */
 export function confirmRetryKalimat() {
   const descEl = document.getElementById("retry-confirm-desc");
   const btnEl = document.getElementById("retry-confirm-btn");
@@ -547,7 +546,7 @@ export function confirmRetryKalimat() {
   if (modalEl) modalEl.classList.add("active");
 }
 
-/* ── Retry Kalimat ── */
+/* == Retry Kalimat == */
 export function retryKalimat() {
   const resEl = document.getElementById("kal-res");
   const warnEl = document.getElementById("kal-warn");
@@ -645,7 +644,7 @@ function _renderKalGrid() {
   }
 }
 
-/* ── Render Kalimat List (layer) ── */
+/* == Render Kalimat List (layer) == */
 export async function renderKalList() {
   const grid = document.getElementById("kal-list-grid");
   if (!grid) return;
@@ -704,7 +703,7 @@ export async function renderKalList() {
   _renderKalGrid();
 }
 
-/* ── Expose ke window untuk dipanggil dari HTML ── */
+/* == Expose ke window untuk dipanggil dari HTML == */
 window.loadKalimatFromDB = loadKalimatFromDB;
 window.startKalimat = startKalimat;
 window.buildKalimat = buildKalimat;

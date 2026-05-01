@@ -345,6 +345,28 @@
   line-height: 1.3;
 }
 
+/* Completion checkmark */
+.kos-tt-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.kos-tt-check svg {
+  width: 14px;
+  height: 14px;
+}
+.kos-tooltip-btn {
+  position: relative;
+}
+
 /* ══════════════════════════════════════════════════════════════
    KOS WORD DETAIL — layer-kos-word
    ══════════════════════════════════════════════════════════════ */

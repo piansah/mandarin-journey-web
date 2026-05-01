@@ -50,6 +50,7 @@ export const kalScoresGlobal = {};
 export const hanziScoresGlobal = {};
 export const fcScoresGlobal = {};
 export const nadaScoresGlobal = {};
+export const tulisScoresGlobal = {};
 export const speakingScoresGlobal = {};
 export const ceritaQuizScoresGlobal = {};
 
@@ -570,6 +571,7 @@ export async function loadScores() {
   Object.keys(hanziScoresGlobal).forEach((k) => delete hanziScoresGlobal[k]);
   Object.keys(fcScoresGlobal).forEach((k) => delete fcScoresGlobal[k]);
   Object.keys(nadaScoresGlobal).forEach((k) => delete nadaScoresGlobal[k]);
+  Object.keys(tulisScoresGlobal).forEach((k) => delete tulisScoresGlobal[k]);
   Object.keys(speakingScoresGlobal).forEach(
     (k) => delete speakingScoresGlobal[k],
   );
@@ -593,6 +595,7 @@ export async function loadScores() {
     if (row.type === "speaking_session")
       speakingScoresGlobal[row.key] = row.score;
     if (row.type === "nada_session") nadaScoresGlobal[row.key] = row.score;
+    if (row.type === "tulis_session") tulisScoresGlobal[row.key] = row.score;
     if (row.type === "cerita_quiz") ceritaQuizScoresGlobal[row.key] = row.score;
   });
 
@@ -708,6 +711,19 @@ export async function upsertScore(type, key, score, meta = null) {
     .from("user_scores")
     .upsert(payload, { onConflict: "user_id,type,key" });
   if (error) throw error;
+
+  // Sync local global objects
+  if (type === "quiz") quizScoresGlobal[key] = score;
+  else if (type === "kal") kalScoresGlobal[key] = score;
+  else if (type === "grammar") gramScores[key] = score;
+  else if (type === "cerita") ceritaScores[key] = score;
+  else if (type === "hanzi") hanziScoresGlobal[key] = score;
+  else if (type === "fc_session") fcScoresGlobal[key] = score;
+  else if (type === "nada_session") nadaScoresGlobal[key] = score;
+  else if (type === "tulis_session") tulisScoresGlobal[key] = score;
+  else if (type === "speaking_session") speakingScoresGlobal[key] = score;
+  else if (type === "cerita_quiz") ceritaQuizScoresGlobal[key] = score;
+
   invalidateStatsCache(); // ← PATCH: reset cache supaya XP fresh dari server
   _recordDailyStreak().catch(console.error);
 }
@@ -785,6 +801,8 @@ export function renderStats() {
     Object.keys(ceritaScores).filter((k) => ceritaScores[k] >= 95).length +
     Object.keys(fcScoresGlobal).filter((k) => fcScoresGlobal[k] > 0).length +
     Object.keys(nadaScoresGlobal).filter((k) => nadaScoresGlobal[k] > 0)
+      .length +
+    Object.keys(tulisScoresGlobal).filter((k) => tulisScoresGlobal[k] > 0)
       .length +
     Object.keys(ceritaQuizScoresGlobal).filter(
       (k) => ceritaQuizScoresGlobal[k] > 0,
@@ -1424,6 +1442,7 @@ window.kalScores = kalScoresGlobal;
 window.hanziScores = hanziScoresGlobal;
 window.fcScores = fcScoresGlobal;
 window.nadaScores = nadaScoresGlobal;
+window.tulisScores = tulisScoresGlobal;
 window.speakingScores = speakingScoresGlobal;
 window.ceritaQuizScores = ceritaQuizScoresGlobal;
 window._calcUserXP = _calcUserXP;
@@ -1467,7 +1486,7 @@ window.renderHeatmap = renderHeatmap;
 window._recordDailyStreak = _recordDailyStreak;
 
 /* ══════════════════════════════════════════════════════════════
-   FINAL: SYNC KE WINDOW UNTUK AUTH.JS
+   FINAL: SYNC KE WINDOW UNTUK AUTH.JS & OTHERS
 ══════════════════════════════════════════════════════════════ */
 window.quizScores = quizScoresGlobal;
 window.kalScores = kalScoresGlobal;
@@ -1475,4 +1494,7 @@ window.gramScores = gramScores;
 window.ceritaScores = ceritaScores;
 window.hanziScores = hanziScoresGlobal;
 window.fcScores = fcScoresGlobal;
+window.nadaScores = nadaScoresGlobal;
+window.tulisScores = tulisScoresGlobal;
 window.speakingScores = speakingScoresGlobal;
+window.ceritaQuizScores = ceritaQuizScoresGlobal;
