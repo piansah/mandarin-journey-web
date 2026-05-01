@@ -131,6 +131,7 @@ let kosCurrentDayNum = null;
 let kosCurrentTitle = "";
 export let kosSetsCache = null;
 let _kosActiveHSK = "all";
+let _kosSrsProgressMap = new Map();
 
 /* ── HSK Filter for Kos Deck Grid ── */
 export function filterKosHSK(level) {
@@ -437,6 +438,72 @@ function _updateKosProgress(sets) {
   fillEl.style.width = pct + "%";
 }
 
+function _kosTodayStr() {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+function _chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function _loadKosSrsProgress(cardIds) {
+  const currentUser = getCurrentUser();
+  if (!currentUser || !cardIds.length) return new Map();
+
+  const progressMap = new Map();
+  const chunks = _chunkArray(cardIds, 100);
+  for (const chunk of chunks) {
+    const { data } = await supa
+      .from("user_card_progress")
+      .select("card_id, srs_level, interval_days, ease_factor, next_review, last_reviewed")
+      .eq("user_id", currentUser.id)
+      .in("card_id", chunk);
+
+    (data ?? []).forEach((row) => progressMap.set(row.card_id, row));
+  }
+
+  return progressMap;
+}
+
+function _isKosCardDue(card) {
+  const currentUser = getCurrentUser();
+  if (!currentUser || !card?.id) return false;
+  const progress = _kosSrsProgressMap.get(card.id);
+  return !progress || (progress.next_review ?? "") <= _kosTodayStr();
+}
+
+async function _loadKosDueMap(sets) {
+  const currentUser = getCurrentUser();
+  if (!currentUser || !sets?.length) return new Map();
+
+  const setIds = sets.map((s) => s.id).filter(Boolean);
+  if (!setIds.length) return new Map();
+
+  const allCards = [];
+  for (const chunk of _chunkArray(setIds, 100)) {
+    const { data } = await supa
+      .from("flashcard_cards")
+      .select("id, set_id")
+      .in("set_id", chunk);
+    if (data) allCards.push(...data);
+  }
+
+  _kosSrsProgressMap = await _loadKosSrsProgress(allCards.map((c) => c.id));
+
+  const dueMap = new Map();
+  allCards.forEach((card) => {
+    if (_isKosCardDue(card)) {
+      dueMap.set(card.set_id, (dueMap.get(card.set_id) ?? 0) + 1);
+    }
+  });
+
+  return dueMap;
+}
+
 export async function refreshKosDashboardProgress() {
   if (window.scoresLoaded) await window.scoresLoaded;
 
@@ -467,7 +534,8 @@ export async function renderKosDeckGrid() {
   await loadTierStartDecks("flashcard_sets");
 
   if (kosSetsCache && kosSetsCache.length > 0) {
-    buildKosDeckGrid(kosSetsCache);
+    const dueMap = await _loadKosDueMap(kosSetsCache);
+    buildKosDeckGrid(kosSetsCache, dueMap);
     _updateKosProgress(kosSetsCache);
     return;
   }
@@ -475,10 +543,13 @@ export async function renderKosDeckGrid() {
   grid.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
   await refreshKosDashboardProgress();
-  if (kosSetsCache) buildKosDeckGrid(kosSetsCache);
+  if (kosSetsCache) {
+    const dueMap = await _loadKosDueMap(kosSetsCache);
+    buildKosDeckGrid(kosSetsCache, dueMap);
+  }
 }
 
-function buildKosDeckGrid(sets) {
+function buildKosDeckGrid(sets, dueMap = new Map()) {
   const grid = document.getElementById("kos-deck-grid");
   if (!grid) return;
 
@@ -494,6 +565,11 @@ function buildKosDeckGrid(sets) {
     const hskLevel = `hsk${hskNum}`;
     const wordCount = s.flashcard_cards?.[0]?.count ?? 20;
     const badge = s.badge || `HSK ${hskNum}`;
+    const dueCount = dueMap.get(s.id) ?? 0;
+    const dueTag =
+      dueCount > 0
+        ? `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,201,109,0.12);border:1px solid rgba(232,201,109,0.25);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--gold);font-weight:600;">${dueCount} due</span>`
+        : "";
     
     // Hanya Flashcard yang menentukan status "Selesai" di grid
     const fcDone = fcScores[`fc${s.id}`] !== undefined;
@@ -512,6 +588,7 @@ function buildKosDeckGrid(sets) {
       <div class="item-desc">${desc}</div>
       <div class="item-meta">
         <span class="item-date">${wordCount} Kosakata ⬩ HSK 3.0</span>
+        ${dueTag}
         <button class="btn-open">Buka</button>
       </div>`;
 
@@ -700,6 +777,14 @@ export async function loadKosDeckData(setId) {
     return;
   }
 
+  const deckProgressMap = await _loadKosSrsProgress(data.map((c) => c.id));
+  deckProgressMap.forEach((value, key) => _kosSrsProgressMap.set(key, value));
+  const withSrs = data.map((card) => ({
+    ...card,
+    _srs: deckProgressMap.get(card.id) ?? null,
+    _isDue: _isKosCardDue(card),
+  }));
+
   // Cek apakah ini deck HSK (default) atau personal
   const isDefault =
     kosSetsCache?.find((s) => s.id === setId)?.is_default ?? false;
@@ -709,10 +794,10 @@ export async function loadKosDeckData(setId) {
     const personal = (currentUser ? kosvokData : []).filter(
       (c) => c.set_id === setId,
     );
-    kosAllData = [...data.filter((c) => !c.added_by), ...personal];
+    kosAllData = [...withSrs.filter((c) => !c.added_by), ...personal];
   } else {
     // Deck personal: ambil semua kartu apa adanya
-    kosAllData = data;
+    kosAllData = withSrs;
   }
 
   kosInitialized = true;
@@ -797,8 +882,12 @@ export function renderKosItems() {
   }
 
   if (countEl) {
+    const dueCount = kosFiltered.filter((c) => c._isDue).length;
     countEl.style.display = "";
-    countEl.textContent = `${kosFiltered.length} kata`;
+    countEl.textContent =
+      dueCount > 0
+        ? `${kosFiltered.length} kata · ${dueCount} due`
+        : `${kosFiltered.length} kata`;
   }
   window._kosFilteredData = kosFiltered;
 
@@ -828,8 +917,13 @@ export function renderKosItems() {
       delBtnHtml = `<button class="kos-deck-del" style="opacity:1;position:static;margin-bottom:4px;" onclick="event.stopPropagation(); window._deleteCardFromDeck(${c.id}, '${(c.hanzi || "").replace(/'/g, "\\'")}')">✕</button>`;
     }
 
+    const dueHtml = c._isDue
+      ? `<span style="display:inline-flex;align-items:center;justify-content:center;border-radius:20px;border:1px solid rgba(232,201,109,0.25);background:rgba(232,201,109,0.12);color:var(--gold);font-size:10px;font-weight:600;padding:2px 7px;margin-bottom:4px;">Due</span>`
+      : "";
+
     metaEl.innerHTML = `
       ${delBtnHtml}
+      ${dueHtml}
       <span class="kos-no">#${idx + 1}</span>
     `;
 
