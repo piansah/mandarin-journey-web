@@ -308,7 +308,14 @@ export function renderQuiz() {
       const opts = q.opts
         .map((o, i) => {
           const labs = ["A", "B", "C", "D"];
-          const optLabel = q.si === 2 ? colorPy(o) : o;
+          const optLabel = (() => {
+            if (q.si === 3) {
+              const blanks = (q.q.match(/_{2,}/g) || []).length;
+              if (blanks >= 2) return o.split(" ").join("，");
+              return o;
+            }
+            return q.si === 2 ? colorPy(o) : o;
+          })();
           const optClass = q.si === 3 ? "opt opt-hz" : "opt";
           return `<button class="${optClass}" id="opt-${q.gi}-${i}" onclick="event.stopPropagation(); window.selectAns(${q.gi},${i},${q.ans})" data-c="${i === q.ans}"><span class="opt-lbl">${labs[i]}</span><span>${optLabel}</span></button>`;
         })

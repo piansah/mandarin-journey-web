@@ -340,7 +340,15 @@ export function renderKalimat(filter) {
     const opts = q.opts
       .map((o, i) => {
         const labs = ["A", "B", "C", "D"];
-        const optLabel = q.si === 2 ? colorPy(o) : o;
+        const optLabel = (() => {
+          if (q.filter === "kalimat-hz") {
+            const rawQ = q.q.replace(/<[^>]+>/g, "");
+            const blanks = (rawQ.match(/_{2,}/g) || []).length;
+            if (blanks >= 2) return o.split(" ").join("，");
+            return o;
+          }
+          return q.si === 2 ? colorPy(o) : o;
+        })();
         let cls = "opt2";
         if (q.filter === "kalimat-hz") cls += " opt-hz";
         if (isAnswered) {
