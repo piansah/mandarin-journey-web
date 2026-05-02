@@ -9,6 +9,7 @@ import { getActiveAvatarUrl, initAvatarSystem } from "./avatar.js";
 import { calcLevel, TITLES, BADGES } from "../core/level.js";
 import { showToast } from "../utilities/helpers.js";
 import { fetchUserStats } from "../utilities/stats-api.js";
+import { renderKoleksiSection, bindKoleksiButtons } from "./personal-deck.js";
 
 import {
   SVG_CAMERA,
@@ -41,7 +42,9 @@ export async function initProfileScreen() {
       // Timeout 10 detik untuk app ready
       await Promise.race([
         window.appReadyPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("App Ready Timeout")), 10000))
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("App Ready Timeout")), 10000),
+        ),
       ]);
     }
   } catch (e) {
@@ -67,13 +70,23 @@ export async function initProfileScreen() {
         _loadFollowCounts(),
         initAvatarSystem(),
       ]),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 12000))
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Fetch Timeout")), 12000),
+      ),
     ]);
   } catch (e) {
     console.error("initProfileScreen error:", e);
     // Jika error, pastikan stats minimal terisi agar tidak crash saat render
     if (!_profStats.xp) {
-      _profStats = { xp: 0, level: 1, kosakataCount: 0, sesiCount: 0, akurasi: 0, rank: "--", streak: 0 };
+      _profStats = {
+        xp: 0,
+        level: 1,
+        kosakataCount: 0,
+        sesiCount: 0,
+        akurasi: 0,
+        rank: "--",
+        streak: 0,
+      };
     }
   } finally {
     _profInitInProgress = false;
@@ -285,6 +298,8 @@ function _renderProfileFull() {
       <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG_RANK}</div><div class="prof-stat-num">${rank}</div><div class="prof-stat-lbl">Peringkat</div></div>
     </div>
 
+    ${renderKoleksiSection()}
+
     <div class="prof-section" style="border-bottom:none">
       <div class="prof-section-header">
         <div class="prof-section-title">Lencana Diraih</div>
@@ -298,6 +313,7 @@ function _renderProfileFull() {
     requestAnimationFrame(() => {
       const fill = document.getElementById("prof-xp-fill");
       if (fill) fill.style.width = Math.min(xpPct, 100) + "%";
+      bindKoleksiButtons();
     }),
   );
 }

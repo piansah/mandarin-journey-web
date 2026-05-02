@@ -13,8 +13,6 @@ import "./CSS/tour.css";
 import "./CSS/navbar.css";
 import "./CSS/dashboard.css";
 import "./CSS/level.css";
-import "./CSS/petualangan.css";
-import "./CSS/lesson.css";
 import "./CSS/quiz.css";
 import "./CSS/hanzi.css";
 import "./CSS/kalimat.css";
@@ -30,6 +28,7 @@ import "./CSS/sosial.css";
 import "./CSS/avatar.css";
 import "./CSS/done-screen.css";
 import "./CSS/search.css";
+import "./CSS/personal-deck.css";
 import "./CSS/app-init.css";
 import "./CSS/report.css";
 /* ── Icons ── */
@@ -62,24 +61,10 @@ import "./JS/features/cerita.js";
 import "./JS/features/nada.js";
 import "./JS/features/speaking.js";
 import "./JS/features/tulis-hanzi.js";
+import "./JS/features/personal-deck.js";
 import "./JS/features/profile.js";
 import "./JS/features/sosial.js";
 import { initBugReportFAB } from "./JS/features/report.js";
-/* ── JS: Lesson (urutan penting) ── */
-import "./JS/lesson/state.js";
-import "./JS/lesson/index.js";
-import "./JS/lesson/nav.js";
-import "./JS/lesson/render.js";
-import "./JS/lesson/check.js";
-import "./JS/lesson/mic.js";
-import "./JS/lesson/save.js";
-/* ── JS: Petualangan (urutan penting) ── */
-import "./JS/petualangan/petualangan-tier.js";
-import "./JS/petualangan/petualangan-nodes.js";
-import "./JS/petualangan/petualangan-tooltip.js";
-import "./JS/petualangan/petualangan-overlay.js";
-import "./JS/petualangan/petualangan-picker.js";
-import "./JS/petualangan/petualangan.js";
 /* ── JS: App Screens ── */
 import "./JS/app/onboarding.js";
 /* ── JS: App Init (paling akhir) ── */

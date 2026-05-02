@@ -138,7 +138,7 @@ export async function initAuth() {
         const anyScreenActive = !!document.querySelector(".screen.active");
 
         if ((onLoginScreen || !anyScreenActive) && !obShown) {
-          showScreen("petualangan-screen");
+          showScreen("dash");
           window.checkTour?.();
         }
 
@@ -260,7 +260,7 @@ export async function initAuth() {
     } else {
       if (_currentUser) {
         // FIX BUG 2: tidak perlu checkOnboarding lagi, sudah dilakukan di atas
-        showScreen("petualangan-screen");
+        showScreen("dash");
         window.checkTour?.();
       } else {
         showScreen("login-screen");
@@ -271,7 +271,7 @@ export async function initAuth() {
     lsRemoveScoped(LS_ACTIVE_QUIZ);
     lsRemoveScoped(LS_ACTIVE_KAL);
     if (_currentUser) {
-      showScreen("petualangan-screen");
+      showScreen("dash");
     } else {
       showScreen("login-screen");
     }
@@ -294,7 +294,7 @@ export async function initAuth() {
       const obShown = await _checkOnboardingOnce();
 
       if ((onLoginScreen || !anyScreenActive) && !obShown) {
-        showScreen("petualangan-screen");
+        showScreen("dash");
         window.checkTour?.();
       }
 

@@ -331,7 +331,7 @@ export async function loadUnlockedTiers() {
         _unlockedTiers = newUnlocked;
         _tiersLoaded = true;
 
-        _syncToPetualangan();
+      
       } catch (e) {
         console.warn("[TierUnlock] loadUnlockedTiers error:", e.message);
       } finally {
@@ -391,7 +391,7 @@ export async function unlockTier(tier) {
     }
   }
 
-  _syncToPetualangan();
+
 
   _unlockListeners.forEach((fn) => {
     try {
@@ -410,16 +410,8 @@ export function onTierUnlock(fn) {
 /* ══════════════════════════════════════════
    SYNC & REFRESH
 ══════════════════════════════════════════ */
-function _syncToPetualangan() {
-  if (typeof window._setTierUnlockedFromGlobal === "function") {
-    window._setTierUnlockedFromGlobal({ ..._unlockedTiers });
-  }
-}
-
 function _refreshAllFeatures(newTier) {
   const hsk = getUnlockedHSK();
-  if (typeof window.renderPetualanganPath === "function")
-    window.renderPetualanganPath();
   if (
     document.getElementById("layer-kos")?.classList.contains("active") &&
     typeof window.renderKosDeckGrid === "function"

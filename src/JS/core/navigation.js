@@ -21,7 +21,6 @@ const _layerRenderState = new Map();
 let _historyReady = false;
 
 const _NAVBAR_SCREENS = [
-  "petualangan-screen",
   "dash",
   "search-screen",
   "sosial-screen",
@@ -76,7 +75,7 @@ function _cleanupCurrentScreen() {
 
 function _getSnapshot() {
   const activeScreen =
-    document.querySelector(".screen.active")?.id || "petualangan-screen";
+    document.querySelector(".screen.active")?.id || "dash";
   const activeLayers = [...document.querySelectorAll(".layer.active")].map(
     (l) => l.id,
   );
@@ -218,21 +217,6 @@ function _triggerScreenInit(id) {
   if (id === "user-profile-screen") {
     // tidak perlu init, konten sudah di-render sebelum showScreen
   }
-  if (id === "petualangan-screen") {
-    const fn = async () => {
-      _isRestoringNav = true;
-      try {
-        await window.renderPetualanganPath?.();
-      } catch (e) {
-        console.error(e);
-      } finally {
-        _isRestoringNav = false;
-      }
-    };
-    typeof window.renderPetualanganPath === "function"
-      ? setTimeout(fn, 50)
-      : setTimeout(fn, 300);
-  }
 }
 
 export function _pushAppHistory() {
@@ -349,8 +333,8 @@ export function initAppHistory() {
 
   const anyActive = document.querySelector(".screen.active");
   if (!anyActive) {
-    const petualangan = document.getElementById("petualangan-screen");
-    if (petualangan) petualangan.classList.add("active");
+    const dash = document.getElementById("dash");
+    if (dash) dash.classList.add("active");
   }
 
   _appHistory = [_getSnapshot()];

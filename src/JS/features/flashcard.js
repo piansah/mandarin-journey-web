@@ -30,6 +30,7 @@ import { calcXPFCSession, XP } from "../utilities/xp.js";
 /* ── State ── */
 let currentFCKey = null;
 let currentFCSetId = null;
+let currentFCReturnLayer = "layer-kos-deck";
 let fcCards = [];
 let fcIdx = 0;
 let fcFlipState = 0;
@@ -331,9 +332,13 @@ export async function startFC(key, setId, _meta) {
   _fcShowHeader(true);
   currentFCKey = key;
   currentFCSetId = setId ?? (parseInt(key.replace(/^fc/, ""), 10) || null);
+  const sourceType = _meta?.sourceType || (String(key).startsWith("pd") ? "personal" : "hsk");
+  currentFCReturnLayer =
+    _meta?.returnLayer || (sourceType === "personal" ? "layer-personal-cards" : "layer-kos-deck");
 
   if (typeof window.closeLayer === "function") {
     window.closeLayer("layer-kos-deck", true);
+    window.closeLayer("layer-personal-cards", true);
     window.closeLayer("layer-kos", true);
   }
 
@@ -387,11 +392,19 @@ export async function startFC(key, setId, _meta) {
   }
   if (loadEl) loadEl.style.display = "";
 
-  const { data, error } = await supa
-    .from("flashcard_cards")
-    .select("*")
-    .eq("set_id", currentFCSetId)
-    .order("created_at", { ascending: true });
+  let data = _meta?.cards || null;
+  let error = null;
+  if (!data) {
+    const table = sourceType === "personal" ? "personal_cards" : "flashcard_cards";
+    const column = sourceType === "personal" ? "deck_id" : "set_id";
+    const res = await supa
+      .from(table)
+      .select("*")
+      .eq(column, currentFCSetId)
+      .order("created_at", { ascending: true });
+    data = res.data;
+    error = res.error;
+  }
 
   if (loadEl) loadEl.style.display = "none";
 
@@ -843,6 +856,7 @@ export function restartFC() {
 export function closeFC() {
   cancelTTS();
   const returnSetId = currentFCSetId;
+  const returnLayer = currentFCReturnLayer;
 
   // Lepas semua event listener global
   if (typeof window._fcDetachDocListeners === "function")
@@ -877,8 +891,10 @@ export function closeFC() {
       return;
     }
 
-    backToLayer("layer-kos-deck");
-    if (typeof window.restoreKosDeckLayer === "function") {
+    backToLayer(returnLayer);
+    if (returnLayer === "layer-personal-cards" && typeof window.renderCards === "function") {
+      window.renderCards(returnSetId).catch?.(console.error);
+    } else if (typeof window.restoreKosDeckLayer === "function") {
       window.restoreKosDeckLayer().catch(console.error);
     } else if (typeof window.loadKosDeckData === "function") {
       window.loadKosDeckData(returnSetId).catch(console.error);

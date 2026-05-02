@@ -796,7 +796,6 @@ async function _openUserPopup(userId) {
           "nada_session",
           "speaking_session",
           "tulis_session",
-          "lesson",
         ]),
     ]);
 

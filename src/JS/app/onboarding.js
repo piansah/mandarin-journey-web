@@ -8,10 +8,10 @@ import { unlockTier, loadUnlockedTiers } from "../utilities/tier-unlock.js";
 import { supa } from "../core/config.js";
 
 const LS_ONBOARDING = "hsk_onboarding_done";
-const OB_ONBOARDING_SLIDES = 7; // slide onboarding murni (0–6)
-const OB_PLACEMENT_SLIDES = 3; // slide placement (7–9)
-const OB_RESULT_SLIDES = 1; // slide result (10)
-const OB_TOTAL = OB_ONBOARDING_SLIDES + OB_PLACEMENT_SLIDES + OB_RESULT_SLIDES; // = 11
+const OB_ONBOARDING_SLIDES = 6; // slide onboarding murni (0–5)
+const OB_PLACEMENT_SLIDES = 3; // slide placement (6–8)
+const OB_RESULT_SLIDES = 1; // slide result (9)
+const OB_TOTAL = OB_ONBOARDING_SLIDES + OB_PLACEMENT_SLIDES + OB_RESULT_SLIDES; // = 10
 
 let _obCur = 0;
 let _obReadTimer = null;
@@ -266,7 +266,7 @@ async function _finishOnboarding(skipDBUpdate = false) {
   setTimeout(() => {
     el.style.display = "none";
     el.classList.remove("hiding");
-    showScreen("petualangan-screen");
+    showScreen("dash");
 
     // Reload data setelah onboarding selesai
     if (typeof window.loadScores === "function")

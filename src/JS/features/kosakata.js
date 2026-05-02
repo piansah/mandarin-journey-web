@@ -40,6 +40,7 @@ import {
   loadUnlockedTiers,
   loadTierStartDecks,
 } from "../utilities/tier-unlock.js";
+import { isFavorited, toggleFavorite } from "./personal-deck.js";
 
 /**
  * Attach long-press TTS + tap handler ke element.
@@ -48,7 +49,7 @@ import {
  * @param {Function} onTap - callback saat tap biasa
  */
 
-function _attachLongPressTTS(el, hanzi, onTap) {
+export function _attachLongPressTTS(el, hanzi, onTap) {
   let pressTimer = null,
     didLongPress = false,
     didMove = false;
@@ -249,7 +250,7 @@ export async function onKosGlobalSearch() {
   _globalSearchTimer = setTimeout(() => _runKosGlobalSearch(), 200);
 }
 
-async function _runKosGlobalSearch() {
+export async function _runKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
   const resultsEl = document.getElementById("kos-global-results");
   const deckSection = document.getElementById("kos-deck-section");
@@ -1123,6 +1124,7 @@ export function renderFCPersonalList() {
 ══════════════════════════════════════════════════════════════ */
 let _kosWordCache = {};
 let _currentKosWord = null;
+let _kosWordReturnLayer = null;
 let _activeKwdTab = "kalimat";
 let _strokeWriters = [];
 let _kwdHeroTapReadyAt = 0;
@@ -1139,6 +1141,7 @@ let _strokeAnimation = null;
 
 export async function openKosWord(card) {
   _currentKosWord = card;
+  _kosWordReturnLayer = card?._returnLayer || null;
   _activeKwdTab = "kalimat";
 
   const listEl = document.getElementById("kwd-examples-list");
@@ -1152,6 +1155,7 @@ export async function openKosWord(card) {
 
   if (typeof window.openLayer === "function")
     window.openLayer("layer-kos-word");
+  document.getElementById("layer-kos-word")?.classList.add("active");
 
   _switchTab("kalimat", true);
   _kwdHeroTapReadyAt = performance.now() + 650;
@@ -1187,6 +1191,7 @@ function _renderHero() {
 
   container.innerHTML = `
     <div class="kwd-hero" id="kwd-hero-main" style="position:relative; cursor:pointer;">
+      <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button">🤍</button>
       <div class="kwd-hz">${card.hanzi || ""}</div>
       <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
       <div class="kwd-arti">${card.arti || ""}</div>
@@ -1199,6 +1204,19 @@ function _renderHero() {
     _attachLongPressTTS(heroEl, card.hanzi, () => {
       if (performance.now() < _kwdHeroTapReadyAt) return;
       speakMandarin(card.hanzi);
+    });
+  }
+
+  const favBtn = document.getElementById("kos-fav-btn");
+  if (favBtn) {
+    favBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const faved = await toggleFavorite(card);
+      favBtn.textContent = faved ? "❤️" : "🤍";
+    });
+    isFavorited(card.hanzi).then((faved) => {
+      const btn = document.getElementById("kos-fav-btn");
+      if (btn) btn.textContent = faved ? "❤️" : "🤍";
     });
   }
 }
@@ -1967,6 +1985,20 @@ export function closeKosWord() {
   const wordLayer = document.getElementById("layer-kos-word");
   if (wordLayer) wordLayer.classList.remove("active");
   setNavStack(_navStack.filter((s) => s.id !== "layer-kos-word"));
+
+  if (_kosWordReturnLayer) {
+    const returnLayer = _kosWordReturnLayer;
+    _kosWordReturnLayer = null;
+    if (typeof backToLayer === "function") backToLayer(returnLayer);
+    if (returnLayer === "layer-personal-cards" && typeof window.renderCards === "function") {
+      setTimeout(() => window.renderCards(), 0);
+    }
+    if (returnLayer === "layer-favorites" && typeof window.renderFavorites === "function") {
+      setTimeout(() => window.renderFavorites(), 0);
+    }
+    return;
+  }
+
   document.body.style.overflow = document.querySelector(".layer.active")
     ? "hidden"
     : "";

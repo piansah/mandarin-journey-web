@@ -26,7 +26,7 @@
   display: flex;
 }
 
-/* ── Layer Header ── */
+  /* ── Layer Header ── */
 .layer-hd {
   background: var(--sur);
   border-bottom: 1px solid var(--bdr);
@@ -128,6 +128,8 @@
   gap: 10px;
   transition: all 0.2s;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .item-card:hover {
   border-color: rgba(232, 201, 109, 0.4);

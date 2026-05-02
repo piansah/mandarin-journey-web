@@ -106,3 +106,37 @@
   position: relative;
   z-index: 1;
 } */
+
+/* ══════════════════════════════════════════
+   BACKGROUND DECORATIVE HANZI CARDS
+══════════════════════════════════════════ */
+.pet-bg-card {
+  position: absolute;
+  border-radius: 10px;
+  border: 1.5px solid rgba(136, 136, 170, 0.3);
+  background: rgba(136, 136, 170, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hanzi, "Noto Sans SC", sans-serif);
+  font-weight: 700;
+  color: rgba(136, 136, 170, 0.35);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  animation: bgCardFloat linear infinite;
+  will-change: transform;
+}
+
+@keyframes bgCardFloat {
+  0%,
+  100% {
+    translate: 0px 0px;
+  }
+  25% {
+    translate: 2px -5px;
+  }
+  75% {
+    translate: -2px 5px;
+  }
+}
