@@ -1,4 +1,3 @@
-/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
 import { supa } from "../core/config.js";
 import { getCurrentUser, openAuthModal } from "../core/auth.js";
 import { openLayer, closeLayer, backToLayer } from "../core/navigation.js";
@@ -20,6 +19,8 @@ const EMOJIS = [
   "📚", "✏️", "💼", "🍜", "🌍", "🎮", "🎵", "🀄",
   "🚗", "🏠", "✨", "🔥", "💎", "⭐", "💡", "🎯", "🚀", "🧠",
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function userOrLogin() {
   const user = getCurrentUser();
@@ -59,6 +60,8 @@ function bindClick(id, handler) {
   return el;
 }
 
+// ─── Koleksi section ──────────────────────────────────────────────────────────
+
 export function renderKoleksiSection() {
   return `
     <div class="prof-section">
@@ -71,7 +74,7 @@ export function renderKoleksiSection() {
           <span class="pd-menu-label">Kata Favorit</span>
           <span class="pd-menu-arrow">❯</span>
         </div>
-        <div class="pd-menu-row" id="pd-btn-open-themes">
+        <div class="pd-menu-row" id="pd-btn-open-themes" style="display: none;">
           <span class="pd-menu-icon">📚</span>
           <span class="pd-menu-label">Deck Personal</span>
           <span class="pd-menu-arrow">❯</span>
@@ -90,6 +93,8 @@ export function bindKoleksiButtons() {
     renderThemes();
   });
 }
+
+// ─── Favorites ────────────────────────────────────────────────────────────────
 
 export async function isFavorited(hanzi) {
   const user = getCurrentUser();
@@ -114,7 +119,10 @@ export async function toggleFavorite(card) {
       .delete()
       .eq("user_id", user.id)
       .eq("hanzi", card.hanzi);
-    if (error) { showToast("Gagal menghapus favorit", "err"); return true; }
+    if (error) {
+      showToast("Gagal menghapus favorit", "err");
+      return true;
+    }
     showToast("Dihapus dari favorit");
     renderFavoritesIfOpen();
     return false;
@@ -129,7 +137,10 @@ export async function toggleFavorite(card) {
     source: card.source || (card.set_id ? "hsk" : "compound"),
     source_id: card.source_id || card.id || null,
   });
-  if (error) { showToast("Gagal menambah favorit", "err"); return false; }
+  if (error) {
+    showToast("Gagal menambah favorit", "err");
+    return false;
+  }
   showToast("Ditambahkan ke favorit", "ok");
   renderFavoritesIfOpen();
   return true;
@@ -154,13 +165,18 @@ export async function renderFavorites() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (error) { list.innerHTML = `<div class="pd-empty">Gagal memuat favorit.</div>`; return; }
+  if (error) {
+    list.innerHTML = `<div class="pd-empty">Gagal memuat favorit.</div>`;
+    return;
+  }
   if (!data?.length) {
     list.innerHTML = `<div class="pd-empty"><div class="pd-empty-icon">❤️</div><div class="pd-empty-title">Belum ada kata favorit</div><div class="pd-empty-sub">Buka detail kata lalu ketuk tombol hati.</div></div>`;
     return;
   }
   renderCardList(list, data, { deletable: false, returnLayer: "layer-favorites" });
 }
+
+// ─── Emoji picker ─────────────────────────────────────────────────────────────
 
 function renderEmojiPicker(selected = "📚") {
   const grid = document.getElementById("pd-emoji-grid");
@@ -182,6 +198,8 @@ function renderEmojiPicker(selected = "📚") {
   grid.dataset.selected = selected;
 }
 
+// ─── Themes ───────────────────────────────────────────────────────────────────
+
 export async function renderThemes() {
   const grid = document.getElementById("pd-theme-grid");
   if (!grid) return;
@@ -195,7 +213,10 @@ export async function renderThemes() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (error) { grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;">Gagal memuat tema.</div>`; return; }
+  if (error) {
+    grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;">Gagal memuat tema.</div>`;
+    return;
+  }
   if (!data?.length) {
     grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;"><div class="pd-empty-title">Belum ada tema</div><div class="pd-empty-sub">Ketuk + Tema untuk membuat tema baru.</div></div>`;
     return;
@@ -228,19 +249,27 @@ export function pdShowAddThemeModal(theme = null) {
   setTimeout(() => input?.focus(), 80);
 }
 
-export function pdHideAddThemeModal() { hideModal("pd-add-theme-modal"); }
+export function pdHideAddThemeModal() {
+  hideModal("pd-add-theme-modal");
+}
 
 async function saveTheme() {
   const user = userOrLogin();
   if (!user) return;
   const name = document.getElementById("pd-theme-name")?.value.trim();
   const icon = document.getElementById("pd-emoji-grid")?.dataset.selected || "📚";
-  if (!name) { showToast("Nama tema tidak boleh kosong", "warn"); return; }
+  if (!name) {
+    showToast("Nama tema tidak boleh kosong", "warn");
+    return;
+  }
   const query = editingThemeId
     ? supa.from("personal_themes").update({ name, icon }).eq("id", editingThemeId)
     : supa.from("personal_themes").insert({ user_id: user.id, name, icon });
   const { error } = await query;
-  if (error) { showToast("Gagal menyimpan tema", "err"); return; }
+  if (error) {
+    showToast("Gagal menyimpan tema", "err");
+    return;
+  }
   pdHideAddThemeModal();
   showToast(editingThemeId ? "Tema diperbarui" : "Tema ditambahkan", "ok");
   renderThemes();
@@ -253,17 +282,31 @@ export function pdShowThemeOptions(theme) {
   showModal("pd-theme-options-modal");
 }
 
-export function pdHideThemeOptions() { hideModal("pd-theme-options-modal"); }
-export function pdThemeOptEdit() { pdHideThemeOptions(); pdShowAddThemeModal(optionTheme); }
+export function pdHideThemeOptions() {
+  hideModal("pd-theme-options-modal");
+}
+
+export function pdThemeOptEdit() {
+  pdHideThemeOptions();
+  pdShowAddThemeModal(optionTheme);
+}
 
 export async function pdThemeOptDelete() {
   if (!optionTheme) return;
   if (!confirm(`Hapus tema "${optionTheme.name}" beserta semua deck?`)) return;
-  const { error } = await supa.from("personal_themes").delete().eq("id", optionTheme.id);
+  const { error } = await supa
+    .from("personal_themes")
+    .delete()
+    .eq("id", optionTheme.id);
   pdHideThemeOptions();
   if (error) showToast("Gagal menghapus tema", "err");
-  else { showToast("Tema dihapus"); renderThemes(); }
+  else {
+    showToast("Tema dihapus");
+    renderThemes();
+  }
 }
+
+// ─── Decks ────────────────────────────────────────────────────────────────────
 
 export function openTheme(themeId, theme) {
   activeTheme = { id: themeId, ...theme };
@@ -284,7 +327,10 @@ export async function renderDecks(themeId = activeTheme?.id) {
     .eq("theme_id", themeId)
     .order("created_at", { ascending: true });
 
-  if (error) { grid.innerHTML = `<div class="pd-empty">Gagal memuat deck.</div>`; return; }
+  if (error) {
+    grid.innerHTML = `<div class="pd-empty">Gagal memuat deck.</div>`;
+    return;
+  }
   if (!data?.length) {
     grid.innerHTML = `<div class="pd-empty"><div class="pd-empty-title">Belum ada deck</div><div class="pd-empty-sub">Ketuk + Deck untuk membuat deck baru.</div></div>`;
     return;
@@ -297,21 +343,24 @@ export async function renderDecks(themeId = activeTheme?.id) {
     const card = document.createElement("div");
     card.className = "item-card";
     card.innerHTML = `
-      <div class="item-card-top"><span class="day-badge">PERSONAL</span></div>
+      <div class="item-card-top">
+        <span class="day-badge">PERSONAL</span>
+      </div>
       <div class="item-title">${esc(title)}</div>
       <div class="item-desc">${esc(deck.description || "Deck Personal")}</div>
       <div class="item-meta">
         <span class="item-date">${count} Kosakata • Deck Personal</span>
         <button class="btn-open">Buka</button>
       </div>`;
-    let suppressOpen = false;
-    const open = () => {
-      if (suppressOpen) { suppressOpen = false; return; }
+
+    // Open button: stop propagation, openDeck directly
+    card.querySelector(".btn-open")?.addEventListener("click", (e) => {
+      e.stopPropagation();
       openDeck(deck.id, deck);
-    };
-    card.addEventListener("click", open);
-    card.querySelector(".btn-open")?.addEventListener("click", (e) => { e.stopPropagation(); open(); });
-    bindLongPress(card, () => { suppressOpen = true; pdShowDeckOptions(deck); setTimeout(() => { suppressOpen = false; }, 600); });
+    });
+
+    // Tap on card body opens deck; long press shows options
+    bindLongPress(card, () => pdShowDeckOptions(deck), () => openDeck(deck.id, deck));
     grid.appendChild(card);
   });
 }
@@ -340,13 +389,19 @@ async function saveDeck() {
   if (!user || !activeTheme?.id) return;
   const title = document.getElementById("pd-deck-title-input")?.value.trim();
   const description = document.getElementById("pd-deck-desc-input")?.value.trim() || null;
-  if (!title) { showToast("Judul deck tidak boleh kosong", "warn"); return; }
+  if (!title) {
+    showToast("Judul deck tidak boleh kosong", "warn");
+    return;
+  }
   const payload = { title, description };
   const query = editingDeckId
     ? supa.from("personal_decks").update(payload).eq("id", editingDeckId)
     : supa.from("personal_decks").insert({ ...payload, theme_id: activeTheme.id, created_by: user.id });
   const { error } = await query;
-  if (error) { showToast("Gagal menyimpan deck", "err"); return; }
+  if (error) {
+    showToast("Gagal menyimpan deck", "err");
+    return;
+  }
   pdHideAddDeckModal();
   showToast(editingDeckId ? "Deck diperbarui" : "Deck ditambahkan", "ok");
   renderDecks();
@@ -359,8 +414,14 @@ export function pdShowDeckOptions(deck) {
   showModal("pd-deck-options-modal");
 }
 
-export function pdHideDeckOptions() { hideModal("pd-deck-options-modal"); }
-export function pdDeckOptEdit() { pdHideDeckOptions(); pdShowAddDeckModal(optionDeck); }
+export function pdHideDeckOptions() {
+  hideModal("pd-deck-options-modal");
+}
+
+export function pdDeckOptEdit() {
+  pdHideDeckOptions();
+  pdShowAddDeckModal(optionDeck);
+}
 
 export async function pdDeckOptDelete() {
   if (!optionDeck) return;
@@ -388,7 +449,9 @@ function showDeckDeleteConfirm(deck) {
   modal.querySelector(".pd-confirm-danger")?.addEventListener("click", () => deleteDeckConfirmed(deck));
 }
 
-function hideDeckDeleteConfirm() { document.getElementById("pd-confirm-modal")?.remove(); }
+function hideDeckDeleteConfirm() {
+  document.getElementById("pd-confirm-modal")?.remove();
+}
 
 async function deleteDeckConfirmed(deck) {
   const targetId = deck.id;
@@ -396,8 +459,13 @@ async function deleteDeckConfirmed(deck) {
   hideDeckDeleteConfirm();
   const { error } = await supa.from("personal_decks").delete().eq("id", targetId);
   if (error) showToast("Gagal menghapus deck", "err");
-  else { showToast(`Deck "${targetTitle}" dihapus`); renderDecks(); }
+  else {
+    showToast(`Deck "${targetTitle}" dihapus`);
+    renderDecks();
+  }
 }
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
 
 export function openDeck(deckId, deck) {
   activeDeck = { id: deckId, ...deck };
@@ -417,7 +485,10 @@ export async function renderCards(deckId = activeDeck?.id) {
     .eq("deck_id", deckId)
     .order("created_at", { ascending: true });
 
-  if (error) { list.innerHTML = `<div class="pd-empty">Gagal memuat kata.</div>`; return; }
+  if (error) {
+    list.innerHTML = `<div class="pd-empty">Gagal memuat kata.</div>`;
+    return;
+  }
   activeCards = data || [];
   setText("pd-cards-deck-count", `${activeCards.length} kata`);
   if (!activeCards.length) {
@@ -454,109 +525,210 @@ function renderCardList(list, cards, { deletable, returnLayer }) {
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   INTERAKSI KARTU — tap, long press (TTS), swipe delete
-   
-   Urutan event di mobile: touchstart → touchmove → touchend
-   → lalu browser emit mousedown + mouseup sebagai compatibility.
-   Guard `didTouch` mencegah mouseup terpicu setelah touchend
-   sehingga handleTap() tidak dipanggil dua kali.
-══════════════════════════════════════════════════════════════ */
+// ─── Touch gesture engine ─────────────────────────────────────────────────────
+//
+//  State machine per pointer ID, using setPointerCapture so events always
+//  reach the originating element even when the finger leaves its bounds.
+//
+//  States:
+//    IDLE      → waiting for contact
+//    PRESSING  → finger down, timer running, direction not yet known
+//    SCROLLING → vertical movement detected; capture released so page scrolls
+//    SWIPING   → horizontal swipe committed (card revealed / closed)
+//
+//  Long press fires inside PRESSING when the 400 ms timer expires.
+//  Tap fires on pointerup when still in PRESSING and duration < 500 ms.
+//  Both fire once and reset to IDLE before executing side-effects.
+
+const GS = { IDLE: 0, PRESSING: 1, SCROLLING: 2, SWIPING: 3 };
+
 function bindCardInteractions(item, wrap, card, returnLayer) {
+  item.style.touchAction = "pan-y";
+
+  let state = GS.IDLE;
+  let pointerId = null;
   let startX = 0;
   let startY = 0;
+  let startTime = 0;
   let pressTimer = null;
-  let didLongPress = false;
-  let didTouch = false; // Guard: cegah mouseup terpicu setelah touchend
 
-  const handleTap = () => {
-    openPersonalCardDetail(card, returnLayer);
+  const reset = () => {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    state = GS.IDLE;
+    pointerId = null;
   };
 
-  const handleLongPress = () => {
-    didLongPress = true;
-    if (card.hanzi && typeof window.speakMandarin === "function") {
+  const fireLongPress = () => {
+    if (state !== GS.PRESSING) return;
+    reset(); // clear before side-effects so re-entrant events don't re-fire
+    if (card.hanzi && typeof window.speakMandarin === "function")
       window.speakMandarin(card.hanzi);
-    }
     item.style.opacity = "0.6";
     setTimeout(() => { item.style.opacity = ""; }, 300);
+    if (navigator.vibrate) navigator.vibrate(50);
   };
 
-  // ── TOUCH ──
-  item.addEventListener("touchstart", (e) => {
-    if (e.touches.length !== 1) return;
-    didTouch = true;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    didLongPress = false;
-    pressTimer = setTimeout(handleLongPress, 500);
-  }, { passive: true });
+  item.addEventListener("pointerdown", (e) => {
+    if (state !== GS.IDLE) return;          // ignore second finger
+    if (e.pointerType === "mouse" && e.button !== 0) return;
 
-  item.addEventListener("touchmove", (e) => {
-    if (e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
+    item.setPointerCapture(e.pointerId);    // keep all events on this element
 
-    // Gerak > 8px → bukan long press, cancel timer
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-      clearTimeout(pressTimer);
-    }
+    state = GS.PRESSING;
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    startTime = Date.now();
+    pressTimer = setTimeout(fireLongPress, 400);
+  });
 
-    // Swipe kiri → reveal tombol delete (langsung saat swipe, bukan di touchend)
-    if (wrap && !wrap.classList.contains("swiped") &&
-        dx < -50 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-      clearTimeout(pressTimer);
-      document.querySelectorAll(".pd-swipe-wrap.swiped")
-        .forEach(el => el !== wrap && el.classList.remove("swiped"));
-      wrap.classList.add("swiped");
-    }
-  }, { passive: true });
+  item.addEventListener("pointermove", (e) => {
+    if (state === GS.IDLE || e.pointerId !== pointerId) return;
+    if (state === GS.SCROLLING || state === GS.SWIPING) return;
 
-  item.addEventListener("touchend", (e) => {
-    clearTimeout(pressTimer);
-    if (didLongPress) return; // Long press sudah ditangani, skip tap
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
 
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
+    // Dead zone: ignore micro-tremor
+    if (adx < 6 && ady < 6) return;
 
-    // Swipe kanan → tutup reveal
-    if (wrap && wrap.classList.contains("swiped") &&
-        dx > 30 && Math.abs(dx) > Math.abs(dy)) {
-      wrap.classList.remove("swiped");
+    // Cancel long press the moment real movement is detected
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+
+    if (ady > adx) {
+      // Vertical scroll: release capture so the native scroller takes over
+      state = GS.SCROLLING;
+      try { item.releasePointerCapture(e.pointerId); } catch (_) { }
       return;
     }
 
-    // Tap — threshold 20px (toleran untuk jari)
-    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-      handleTap();
+    if (wrap) {
+      if (dx < -35) {
+        // Swipe left → reveal delete button
+        state = GS.SWIPING;
+        document.querySelectorAll(".pd-swipe-wrap.swiped").forEach(el => {
+          if (el !== wrap) el.classList.remove("swiped");
+        });
+        wrap.classList.add("swiped");
+      } else if (dx > 30 && wrap.classList.contains("swiped")) {
+        // Swipe right → close delete button
+        state = GS.SWIPING;
+        wrap.classList.remove("swiped");
+      }
     }
   });
 
-  // ── MOUSE (desktop only) — di-skip jika event berasal dari touch ──
-  item.addEventListener("mousedown", (e) => {
-    if (e.button !== 0 || didTouch) return;
-    didLongPress = false;
-    pressTimer = setTimeout(handleLongPress, 500);
-  });
+  const onEnd = (e) => {
+    if (e.pointerId !== pointerId) return;
 
-  item.addEventListener("mouseup", (e) => {
-    if (e.button !== 0 || didTouch) { didTouch = false; return; }
-    clearTimeout(pressTimer);
-    if (!didLongPress) handleTap();
-  });
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
 
-  item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+    const prevState = state;
+    const elapsed = Date.now() - startTime;
+    reset();
 
+    if (e.type === "pointercancel") return;
+    if (prevState === GS.SCROLLING) return;
+    if (prevState === GS.SWIPING) return;
+    if (prevState === GS.IDLE) return; // long press already fired
+
+    if (elapsed >= 500) return; // held without long press firing → discard
+
+    // Tap: close any other open swipe row first; if none, open detail
+    const openSwipe = document.querySelector(".pd-swipe-wrap.swiped");
+    if (openSwipe && openSwipe !== wrap) {
+      openSwipe.classList.remove("swiped");
+      return; // consume tap to close the row
+    }
+
+    openPersonalCardDetail(card, returnLayer);
+  };
+
+  item.addEventListener("pointerup", onEnd);
+  item.addEventListener("pointercancel", onEnd);
   item.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
+// bindLongPress: used on theme cards and deck cards (no swipe, no tap handler)
+// Accepts an optional onTap callback for deck cards that also need tap-to-open.
+function bindLongPress(el, onLongPress, onTap = null) {
+  el.style.touchAction = "pan-y";
+
+  let state = GS.IDLE;
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+  let pressTimer = null;
+  let didFire = false;
+
+  const reset = () => {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    state = GS.IDLE;
+    pointerId = null;
+  };
+
+  const fireLongPress = () => {
+    if (state !== GS.PRESSING) return;
+    didFire = true;
+    reset();
+    onLongPress();
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
+
+  el.addEventListener("pointerdown", (e) => {
+    if (state !== GS.IDLE) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    el.setPointerCapture(e.pointerId);
+    state = GS.PRESSING;
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+    startTime = Date.now();
+    didFire = false;
+    pressTimer = setTimeout(fireLongPress, 400);
+  });
+
+  el.addEventListener("pointermove", (e) => {
+    if (state !== GS.PRESSING || e.pointerId !== pointerId) return;
+    const adx = Math.abs(e.clientX - startX);
+    const ady = Math.abs(e.clientY - startY);
+    if (adx > 10 || ady > 10) reset(); // moved too much → cancel
+  });
+
+  const onEnd = (e) => {
+    if (e.pointerId !== pointerId) return;
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    const prevState = state;
+    const elapsed = Date.now() - startTime;
+    reset();
+
+    if (e.type === "pointercancel") return;
+    if (prevState !== GS.PRESSING) return;
+    if (didFire) return; // long press already fired
+    if (elapsed >= 500) return;
+
+    // Short tap
+    if (onTap) onTap();
+  };
+
+  el.addEventListener("pointerup", onEnd);
+  el.addEventListener("pointercancel", onEnd);
+
+  // Desktop: right-click fires long press once
+  el.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (!didFire) { didFire = true; onLongPress(); }
+  });
+}
+
+// ─── Card detail ──────────────────────────────────────────────────────────────
+
 function openPersonalCardDetail(card, returnLayer) {
   if (!card) return;
-  openKosWord({
-    ...card,
-    _returnLayer: returnLayer || "layer-personal-cards",
-    _deckTitle: activeDeck?.title || "Deck Personal",
-  });
+  openKosWord({ ...card, _returnLayer: returnLayer || "layer-personal-cards" });
 }
 
 function buildKosItem(card, idx) {
@@ -587,10 +759,15 @@ function buildKosItem(card, idx) {
   return item;
 }
 
+// ─── Card CRUD ────────────────────────────────────────────────────────────────
+
 export async function deleteCard(id, hanzi) {
   if (!confirm(`Hapus "${hanzi}" dari deck ini?`)) return;
   const { error } = await supa.from("personal_cards").delete().eq("id", id);
-  if (error) { showToast("Gagal menghapus kata", "err"); return; }
+  if (error) {
+    showToast("Gagal menghapus kata", "err");
+    return;
+  }
   showToast("Kata dihapus");
   activeCards = activeCards.filter((card) => card.id !== id);
   renderCards();
@@ -619,7 +796,9 @@ export function pdShowAddCardModal() {
   setTimeout(() => document.getElementById("pd-card-search")?.focus(), 80);
 }
 
-export function pdHideAddCardModal() { hideModal("pd-add-card-modal"); }
+export function pdHideAddCardModal() {
+  hideModal("pd-add-card-modal");
+}
 
 export async function pdSearchCards(query) {
   const box = document.getElementById("pd-card-search-results");
@@ -630,11 +809,13 @@ export async function pdSearchCards(query) {
   if (!q) return;
   const pattern = `%${q}%`;
   const [hskRes, compoundRes] = await Promise.all([
-    supa.from("flashcard_cards")
+    supa
+      .from("flashcard_cards")
       .select("id, hanzi, pinyin, arti, word_class")
       .or(`hanzi.ilike.${pattern},pinyin.ilike.${pattern},arti.ilike.${pattern}`)
       .limit(12),
-    supa.from("word_compounds")
+    supa
+      .from("word_compounds")
       .select("id, hanzi, pinyin, arti, badge")
       .or(`hanzi.ilike.${pattern},pinyin.ilike.${pattern},arti.ilike.${pattern}`)
       .limit(12),
@@ -648,7 +829,9 @@ export async function pdSearchCards(query) {
   const seen = new Set();
   const cards = [
     ...(hskRes.data || []).map((c) => ({ ...c, source: "hsk", source_id: c.id })),
-    ...(compoundRes.data || []).map((c) => ({ ...c, source: "compound", source_id: c.id, word_class: c.badge || null })),
+    ...(compoundRes.data || []).map((c) => ({
+      ...c, source: "compound", source_id: c.id, word_class: c.badge || null,
+    })),
   ]
     .filter((card) => {
       if (!card.hanzi || seen.has(card.hanzi)) return false;
@@ -674,12 +857,8 @@ export async function pdSearchCards(query) {
         <div class="pd-search-arti">${esc(card.arti || "")}</div>
       </div>
       <button type="button" class="pd-search-add">+ Tambah</button>`;
-    row.addEventListener("click", (e) => {
-      // Klik di luar tombol Tambah → buka detail
-      if (!e.target.closest(".pd-search-add")) {
-        openPersonalCardDetail(card, "layer-personal-cards");
-      }
-    });
+
+    row.addEventListener("click", () => openPersonalCardDetail(card, "layer-personal-cards"));
     row.querySelector(".pd-search-add")?.addEventListener("click", (e) => {
       e.stopPropagation();
       addCard(card, row);
@@ -704,14 +883,19 @@ export async function addCard(card, row) {
     added_by: user.id,
   });
   if (error) {
-    showToast(error.code === "23505" ? "Kata sudah ada di deck" : "Gagal menambah kata", "err");
+    showToast(
+      error.code === "23505" ? "Kata sudah ada di deck" : "Gagal menambah kata",
+      "err",
+    );
     if (btn) btn.disabled = false;
     return;
   }
-  if (btn) btn.textContent = "✓";
+  if (btn) btn.textContent = "OK";
   showToast("Kata ditambahkan", "ok");
   renderCards();
 }
+
+// ─── Latihan ──────────────────────────────────────────────────────────────────
 
 export function pdToggleLatihan() {
   const sheet = document.getElementById("pd-latihan-tooltip");
@@ -749,17 +933,15 @@ export function pdOpenNada() {
 export function pdOpenTulis() {
   pdCloseLatihan();
   if (typeof window.startTulisHanzi === "function") {
-    window.startTulisHanzi(activeCards, activeDeck?.title || "Deck Personal", "layer-personal-cards");
+    window.startTulisHanzi(
+      activeCards,
+      activeDeck?.title || "Deck Personal",
+      "layer-personal-cards",
+    );
   }
 }
 
-function bindLongPress(el, handler) {
-  let timer = null;
-  el.addEventListener("touchstart", () => { timer = setTimeout(handler, 520); });
-  el.addEventListener("touchend", () => clearTimeout(timer));
-  el.addEventListener("touchmove", () => clearTimeout(timer));
-  el.addEventListener("contextmenu", (e) => { e.preventDefault(); handler(); });
-}
+// ─── Global exports ───────────────────────────────────────────────────────────
 
 Object.assign(window, {
   renderFavorites,
