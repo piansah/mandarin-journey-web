@@ -411,8 +411,6 @@ let _globalSearchFilter = "all";
 
 export async function onKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
-  const clearBtn = document.getElementById("kos-global-clear");
-  if (clearBtn) clearBtn.style.display = input?.value ? "" : "none";
   clearTimeout(_globalSearchTimer);
   _globalSearchTimer = setTimeout(() => _runKosGlobalSearch(), 200);
 }
