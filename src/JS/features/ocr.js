@@ -1,7 +1,7 @@
 /* © 2026 Piansah — Mandarin Journey. All rights reserved. */
 /* ============================================================
-   OCR.JS — Optical Character Recognition Implementation
-   Menggunakan Tesseract.js untuk deteksi Hanzi dari Kamera.
+   OCR.JS — Optical Character Recognition + Word Segmentation
+   Scan Hanzi → Pecah jadi Kosakata → Tap untuk buka Detail
    ============================================================ */
 
 import { createWorker } from 'tesseract.js';
@@ -10,66 +10,56 @@ import { openLayer, closeLayer } from '../core/navigation.js';
 let _ocrStream = null;
 let _ocrWorker = null;
 let _isOcrProcessing = false;
+let _isTorchOn = false;
 
 /* ══════════════════════════════════════════════════════════════
-   OPEN OCR SCANNER
+   OPEN / CLOSE OCR SCANNER
 ══════════════════════════════════════════════════════════════ */
 export async function openOCRScanner() {
   const layer = document.getElementById("layer-ocr");
   if (!layer) return;
 
-  // Reset torch state
+  // Reset state
   _isTorchOn = false;
   const torchBtn = document.getElementById("ocr-torch-btn");
   if (torchBtn) torchBtn.classList.remove("active");
 
-  // Reset preview
-  const preview = document.getElementById("ocr-result-preview");
-  if (preview) preview.textContent = "Menunggu...";
+  // Reset UI ke mode kamera
+  _showCameraMode();
 
   openLayer("layer-ocr");
   _startCamera();
-  
-  // Pre-init Tesseract worker
-  if (!_ocrWorker) {
-    _initWorker();
-  }
+
+  if (!_ocrWorker) _initWorker();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   CLOSE OCR SCANNER
-══════════════════════════════════════════════════════════════ */
 export function closeOCRScanner() {
   if (_ocrStream) {
     _ocrStream.getTracks().forEach(track => track.stop());
     _ocrStream = null;
   }
+  _isTorchOn = false;
   closeLayer("layer-ocr");
 }
 
 /* ══════════════════════════════════════════════════════════════
-   INTERNAL: CAMERA LOGIC
+   CAMERA
 ══════════════════════════════════════════════════════════════ */
-let _isTorchOn = false;
-
-/* ── Toggle Senter (Torch) ── */
 window._toggleTorch = async () => {
   if (!_ocrStream) return;
   const track = _ocrStream.getVideoTracks()[0];
-  const capabilities = track.getCapabilities();
+  const caps = track.getCapabilities();
 
-  if (capabilities.torch) {
+  if (caps.torch) {
     _isTorchOn = !_isTorchOn;
     try {
-      await track.applyConstraints({
-        advanced: [{ torch: _isTorchOn }]
-      });
-      document.getElementById("ocr-torch-btn").classList.toggle("active", _isTorchOn);
+      await track.applyConstraints({ advanced: [{ torch: _isTorchOn }] });
+      document.getElementById("ocr-torch-btn")?.classList.toggle("active", _isTorchOn);
     } catch (err) {
       console.error("Torch error:", err);
     }
   } else {
-    alert("Perangkat Anda tidak mendukung fitur Flash/Senter di browser.");
+    alert("Perangkat tidak mendukung flash.");
   }
 };
 
@@ -78,139 +68,224 @@ async function _startCamera() {
   if (!video) return;
 
   try {
-    const constraints = {
+    _ocrStream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "environment",
-        width: { ideal: 1920 }, // Minta resolusi tinggi
+        width: { ideal: 1920 },
         height: { ideal: 1080 },
-        focusMode: "continuous" // Minta fokus otomatis berkelanjutan
+        focusMode: "continuous"
       }
-    };
-    _ocrStream = await navigator.mediaDevices.getUserMedia(constraints);
+    });
     video.srcObject = _ocrStream;
-    
-    // Set focus mode jika didukung setelah track aktif
+
     const track = _ocrStream.getVideoTracks()[0];
     const caps = track.getCapabilities();
-    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+    if (caps.focusMode?.includes('continuous')) {
       await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
     }
   } catch (err) {
-    console.error("OCR Camera Error:", err);
-    alert("Gagal mengakses kamera. Pastikan izin kamera diberikan.");
+    console.error("Camera Error:", err);
+    alert("Gagal mengakses kamera.");
     closeOCRScanner();
   }
 }
 
 async function _initWorker() {
-  const preview = document.getElementById("ocr-result-preview");
-  if (preview) preview.textContent = "Menginisialisasi AI...";
-  
+  const status = document.getElementById("ocr-status");
+  if (status) status.textContent = "Menginisialisasi AI...";
+
   try {
-    _ocrWorker = await createWorker('chi_sim'); // Load Simplified Chinese
-    if (preview) preview.textContent = "Siap untuk memindai";
+    _ocrWorker = await createWorker('chi_sim');
+    if (status) status.textContent = "Siap memindai";
   } catch (err) {
-    console.error("Tesseract Worker Error:", err);
-    if (preview) preview.textContent = "Gagal memuat AI OCR";
+    console.error("Worker Error:", err);
+    if (status) status.textContent = "Gagal memuat AI";
   }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   INTERNAL: CAPTURE & PROCESS
+   CAPTURE & PROCESS
 ══════════════════════════════════════════════════════════════ */
 async function _captureAndProcess() {
   if (_isOcrProcessing || !_ocrWorker) return;
 
   const video = document.getElementById("ocr-video");
   const canvas = document.getElementById("ocr-canvas");
-  const preview = document.getElementById("ocr-result-preview");
-  if (!video || !canvas || !preview) return;
+  const status = document.getElementById("ocr-status");
+  if (!video || !canvas) return;
 
   _isOcrProcessing = true;
-  preview.innerHTML = '<span class="spinner"></span> Memproses...';
-  _lastOcrResult = "";
+  if (status) status.textContent = "Memproses...";
 
   const ctx = canvas.getContext("2d");
-  
-  // 1. Ambil resolusi asli vs dimensi tampilan
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  const cw = video.clientWidth;
-  const ch = video.clientHeight;
-  
-  // Ambil posisi scan box secara visual di layar
+
+  // Crop berdasarkan posisi scan-box di layar
   const scanBox = document.querySelector(".ocr-scan-box");
   const boxRect = scanBox.getBoundingClientRect();
   const videoRect = video.getBoundingClientRect();
 
-  // Hitung rasio & posisi potong yang presisi
-  const scale = vw / cw;
+  const scale = video.videoWidth / video.clientWidth;
   const sx = (boxRect.left - videoRect.left) * scale;
   const sy = (boxRect.top - videoRect.top) * scale;
   const sw = boxRect.width * scale;
   const sh = boxRect.height * scale;
 
-  // Set ukuran canvas (Upscale biar tajam)
   canvas.width = sw * 1.5;
   canvas.height = sh * 1.5;
 
-  // 2. Pre-processing Gambar
   ctx.filter = "grayscale(100%) contrast(160%) brightness(110%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-  // 3. Run OCR
   try {
     const { data: { text } } = await _ocrWorker.recognize(canvas);
-    // Filter: HANYA ambil karakter CJK (Hanzi), buang Latin/angka/simbol
+    // Filter hanya karakter CJK
     const hanziOnly = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF]/g, '');
-    
+
     if (hanziOnly.length > 0) {
-      _lastOcrResult = hanziOnly;
-      preview.innerHTML = `
-        <div class="ocr-result-content" onclick="window._confirmOCRSearch()">
-          <span class="ocr-text-found">${hanziOnly}</span>
-          <span class="ocr-btn-go">Cari ❯</span>
-        </div>
-      `;
+      const words = _segmentText(hanziOnly);
+      _showResultMode(hanziOnly, words);
     } else {
-      preview.textContent = "Tidak terbaca, coba lagi";
+      if (status) status.textContent = "Tidak terbaca, coba lagi";
     }
   } catch (err) {
-    console.error("OCR Process Error:", err);
-    preview.textContent = "Error memproses";
+    console.error("OCR Error:", err);
+    if (status) status.textContent = "Error memproses";
   } finally {
     _isOcrProcessing = false;
   }
 }
 
-let _lastOcrResult = "";
-
-/* ── Fungsi Konfirmasi Search ── */
-window._confirmOCRSearch = () => {
-  if (!_lastOcrResult) return;
-  const textToSearch = _lastOcrResult;
-  closeOCRScanner();
+/* ══════════════════════════════════════════════════════════════
+   WORD SEGMENTATION (Greedy Longest Match)
+══════════════════════════════════════════════════════════════ */
+function _segmentText(text) {
+  const cache = window._getGlobalSearchCache?.() || [];
   
-  const searchInput = document.getElementById("kos-global-search");
-  if (searchInput) {
-    searchInput.value = textToSearch;
-    if (typeof window.onKosGlobalSearch === "function") {
-      window.onKosGlobalSearch();
+  // Build hanzi lookup Map: hanzi → { pinyin, arti, hsk_level, ... }
+  const hanziMap = new Map();
+  cache.forEach(c => {
+    if (c.hanzi && !hanziMap.has(c.hanzi)) {
+      hanziMap.set(c.hanzi, c);
+    }
+  });
+
+  const maxLen = 4; // Panjang kata Mandarin maksimal yg umum
+  const result = [];
+  let i = 0;
+
+  while (i < text.length) {
+    let matched = false;
+
+    // Coba cocokkan dari terpanjang → terpendek
+    for (let len = Math.min(maxLen, text.length - i); len >= 1; len--) {
+      const candidate = text.substring(i, i + len);
+      const wordData = hanziMap.get(candidate);
+
+      if (wordData) {
+        result.push({
+          hanzi: candidate,
+          pinyin: wordData.pinyin || "",
+          arti: wordData.arti || "",
+          hsk: wordData.hsk_level || null,
+          found: true
+        });
+        i += len;
+        matched = true;
+        break;
+      }
+    }
+
+    // Jika tidak ketemu di kamus, ambil 1 karakter
+    if (!matched) {
+      result.push({
+        hanzi: text[i],
+        pinyin: "",
+        arti: "",
+        hsk: null,
+        found: false
+      });
+      i++;
     }
   }
-  _lastOcrResult = "";
+
+  return result;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UI MODES
+══════════════════════════════════════════════════════════════ */
+function _showCameraMode() {
+  const footer = document.getElementById("ocr-footer");
+  if (!footer) return;
+
+  footer.innerHTML = `
+    <div id="ocr-status" class="ocr-status-text">Siap memindai</div>
+    <button id="ocr-capture-btn" class="ocr-btn-shutter">
+      <div class="ocr-shutter-inner"></div>
+    </button>
+  `;
+}
+
+function _showResultMode(rawText, words) {
+  const footer = document.getElementById("ocr-footer");
+  if (!footer) return;
+
+  // Teks asli
+  let html = `<div class="ocr-raw-text">${rawText}</div>`;
+
+  // Daftar kata
+  html += `<div class="ocr-word-list">`;
+  words.forEach((w, idx) => {
+    if (w.found) {
+      html += `
+        <div class="ocr-word-item" onclick="window._ocrTapWord('${w.hanzi}')">
+          <span class="ocr-w-hanzi">${w.hanzi}</span>
+          <span class="ocr-w-pinyin">${w.pinyin}</span>
+          <span class="ocr-w-arti">${w.arti}</span>
+          ${w.hsk ? `<span class="ocr-w-hsk">HSK${w.hsk}</span>` : ''}
+        </div>`;
+    } else {
+      html += `
+        <div class="ocr-word-item not-found">
+          <span class="ocr-w-hanzi">${w.hanzi}</span>
+          <span class="ocr-w-arti dim">Tidak ada di kamus</span>
+        </div>`;
+    }
+  });
+  html += `</div>`;
+
+  // Tombol scan ulang
+  html += `
+    <button id="ocr-rescan-btn" class="ocr-btn-rescan" onclick="window._ocrRescan()">
+      Scan Ulang
+    </button>`;
+
+  footer.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WINDOW FUNCTIONS
+══════════════════════════════════════════════════════════════ */
+window._ocrTapWord = (hanzi) => {
+  closeOCRScanner();
+  // Pakai searchAndOpenWord yang sudah handle HSK + compound
+  if (typeof window.searchAndOpenWord === "function") {
+    window.searchAndOpenWord(hanzi);
+  }
 };
+
+window._ocrRescan = () => {
+  _showCameraMode();
+};
+
+window.openOCRScanner = openOCRScanner;
+window.closeOCRScanner = closeOCRScanner;
 
 /* ══════════════════════════════════════════════════════════════
    EVENT LISTENERS
 ══════════════════════════════════════════════════════════════ */
 document.addEventListener("click", e => {
-  // Tombol shutter SELALU buat foto/scan ulang
   if (e.target.closest("#ocr-capture-btn")) {
     _captureAndProcess();
   }
 });
-
-/* ── Expose ke window ── */
-window.openOCRScanner = openOCRScanner;
-window.closeOCRScanner = closeOCRScanner;

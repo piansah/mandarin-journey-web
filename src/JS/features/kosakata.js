@@ -2514,3 +2514,4 @@ window.openKosTulis = openKosTulis;
 window._switchTab = _switchTab;
 window._openKwdRelated = _openKwdRelated;
 window._currentKosWord = null;
+window._getGlobalSearchCache = () => _globalSearchCache;
