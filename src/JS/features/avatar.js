@@ -427,18 +427,47 @@ export function uploadCustomAvatar() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Ukuran foto maksimal 2MB", "err");
-      return;
-    }
     if (!file.type.startsWith("image/")) {
       showToast("Pilih file gambar (JPEG/PNG)", "err");
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      await _saveCustomAvatar(event.target.result);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // --- Kompresi Gambar (Industry Standard) ---
+        const canvas = document.createElement("canvas");
+        const MAX_SIZE = 500; // Ukuran kotak avatar
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            await _saveCustomAvatar(blob);
+          } else {
+            showToast("Gagal memproses gambar", "err");
+          }
+        }, "image/jpeg", 0.85);
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -451,23 +480,23 @@ export function uploadCustomAvatar() {
   input.click();
 }
 
-async function _saveCustomAvatar(base64Data) {
+async function _saveCustomAvatar(blob) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
 
-  _customAvatarUrl = base64Data;
+  // Preview instan pakai Object URL (Hemat memori dibanding Base64)
+  const previewUrl = URL.createObjectURL(blob);
+  _customAvatarUrl = previewUrl;
   _refreshAvatarUI();
   closeAvatarPicker();
 
   try {
-    const res = await fetch(base64Data);
-    const blob = await res.blob();
-    const ext = blob.type === "image/png" ? "png" : "jpg";
+    const ext = "jpg"; // Hasil kompresi kita selalu JPEG
     const filePath = `${currentUser.id}/avatar.${ext}`;
 
     const { error: uploadError } = await supa.storage
       .from("avatars")
-      .upload(filePath, blob, { upsert: true, contentType: blob.type });
+      .upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
 
     if (uploadError) throw uploadError;
 
