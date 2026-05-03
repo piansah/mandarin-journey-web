@@ -220,13 +220,24 @@ export async function initSosialScreen() {
     if (document.getElementById("sosial-screen")?.classList.contains("active")) {
       const listEl = document.getElementById("xp-leaderboard-list");
       if (listEl) {
-        listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">⚠️</div><div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div></div>`;
+        listEl.innerHTML = `
+          <div class="sosial-empty">
+            <div class="sosial-empty-icon">⚠️</div>
+            <div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div>
+            <button class="sosial-guest-btn" style="margin-top:20px;" onclick="window.retrySosialInit()">Coba Lagi</button>
+          </div>`;
       }
     }
   } finally {
     _sosialInitInProgress = false;
   }
 }
+
+export function retrySosialInit() {
+  _sosialInitInProgress = false;
+  initSosialScreen();
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    DOM STRUCTURE
@@ -243,7 +254,7 @@ function _ensureXPDOM() {
   listWrap.id = "xp-list-wrap";
   listWrap.innerHTML = `
     <div class="sosial-leaderboard-header">
-      <div class="lb-hd-title">🏆 LIGA SAAT INI</div>
+      <div class="lb-hd-title">LIGA SAAT INI</div>
       <div class="sosial-tier-selector">
         <button class="tier-selector-btn" onclick="window.toggleTierDropdown()">
           <span class="tier-dot"></span>
@@ -811,9 +822,9 @@ async function _openUserPopup(userId) {
     const akurasi =
       quizScores.length > 0
         ? Math.round(
-            quizScores.reduce((a, s) => a + (s.score || 0), 0) /
-              quizScores.length,
-          )
+          quizScores.reduce((a, s) => a + (s.score || 0), 0) /
+          quizScores.length,
+        )
         : 0;
 
     if (!userData) {
@@ -1300,6 +1311,7 @@ function _renderGuest() {
    EXPOSE KE WINDOW
 ══════════════════════════════════════════════════════════════ */
 window.initSosialScreen = initSosialScreen;
+window.retrySosialInit = retrySosialInit;
 window.sosialSwitchTab = sosialSwitchTab;
 window.sosialSwitchPeriod = sosialSwitchPeriod;
 window.toggleTierDropdown = toggleTierDropdown;

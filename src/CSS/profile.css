@@ -581,8 +581,8 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  transform: translateY(20px);
-  transition: transform 0.2s;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 #prof-logout-modal.visible .prof-modal-box {

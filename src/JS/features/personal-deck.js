@@ -25,6 +25,19 @@ let _renderDecksId = 0;
 let _renderCardsId = 0;
 let _searchRequestId = 0;
 
+// Helper: Timeout agar tidak stuck skeleton
+async function _withPdTimeout(promise, ms = 12000) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Timeout")), ms);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 function _initPdSearchFilters() {
   const container = document.getElementById("pd-search-filters");
   if (!container) return;
@@ -167,6 +180,7 @@ export async function toggleFavorite(card) {
     pinyin: card.pinyin || "",
     arti: card.arti || "",
     word_class: card.word_class || null,
+    catatan: card.catatan || null, // Tambahkan catatan
     source: card.source || (card.deck_id ? "personal" : (card.set_id ? "hsk" : "compound")),
     source_id: safeSourceId,
   });
@@ -197,22 +211,34 @@ export async function renderFavorites() {
       <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
       <div style="color:var(--dim); font-size:14px;">Memuat favorit...</div>
     </div>`;
-  const { data, error } = await supa
-    .from("personal_favorites")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-  if (reqId !== _renderFavoritesId) return; // stale response
 
-  if (error) {
-    list.innerHTML = `<div class="pd-empty">Gagal memuat favorit.</div>`;
-    return;
+  try {
+    const { data, error } = await _withPdTimeout(
+      supa
+        .from("personal_favorites")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      12000
+    );
+
+    if (reqId !== _renderFavoritesId) return;
+
+    if (error) throw error;
+    if (!data?.length) {
+      list.innerHTML = `<div class="pd-empty"><div class="pd-empty-icon">❤️</div><div class="pd-empty-title">Belum ada kata favorit</div><div class="pd-empty-sub">Buka detail kata lalu ketuk tombol hati.</div></div>`;
+      return;
+    }
+    renderCardList(list, data, { deletable: true, returnLayer: "layer-favorites", isFavoriteList: true });
+  } catch (err) {
+    if (reqId !== _renderFavoritesId) return;
+    console.error("renderFavorites error:", err);
+    list.innerHTML = `
+      <div class="pd-empty">
+        <div>Gagal memuat favorit.</div>
+        <button class="pd-btn-retry" onclick="renderFavorites()" style="margin-top:12px; font-size:12px; padding:6px 12px;">Coba Lagi</button>
+      </div>`;
   }
-  if (!data?.length) {
-    list.innerHTML = `<div class="pd-empty"><div class="pd-empty-icon">❤️</div><div class="pd-empty-title">Belum ada kata favorit</div><div class="pd-empty-sub">Buka detail kata lalu ketuk tombol hati.</div></div>`;
-    return;
-  }
-  renderCardList(list, data, { deletable: true, returnLayer: "layer-favorites", isFavoriteList: true });
 }
 
 // ─── Emoji picker ─────────────────────────────────────────────────────────────
@@ -251,36 +277,47 @@ export async function renderThemes() {
       <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
       <div style="color:var(--dim); font-size:14px;">Memuat tema...</div>
     </div>`;
-  const { data, error } = await supa
-    .from("personal_themes")
-    .select("*, personal_decks(count)")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-  if (reqId !== _renderThemesId) return; // stale response
 
-  if (error) {
-    grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;">Gagal memuat tema.</div>`;
-    return;
+  try {
+    const { data, error } = await _withPdTimeout(
+      supa
+        .from("personal_themes")
+        .select("*, personal_decks(count)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      12000
+    );
+
+    if (reqId !== _renderThemesId) return;
+    if (error) throw error;
+    if (!data?.length) {
+      grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;"><div class="pd-empty-title">Belum ada tema</div><div class="pd-empty-sub">Ketuk + Tema untuk membuat tema baru.</div></div>`;
+      return;
+    }
+
+    grid.innerHTML = "";
+    data.forEach((theme, idx) => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "pd-theme-card";
+      card.dataset.grad = String(idx % 6);
+      card.innerHTML = `
+        <div class="pd-theme-icon">${esc(theme.icon || "📚")}</div>
+        <div class="pd-theme-name">${esc(theme.name)}</div>
+        <div class="pd-theme-count">${theme.personal_decks?.[0]?.count || 0} deck</div>`;
+
+      bindLongPress(card, () => pdShowThemeOptions(theme), () => openTheme(theme.id, theme));
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    if (reqId !== _renderThemesId) return;
+    console.error("renderThemes error:", err);
+    grid.innerHTML = `
+      <div class="pd-empty" style="grid-column:1/-1;">
+        <div>Gagal memuat tema.</div>
+        <button class="pd-btn-retry" onclick="renderThemes()" style="margin-top:12px; font-size:12px; padding:6px 12px;">Coba Lagi</button>
+      </div>`;
   }
-  if (!data?.length) {
-    grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;"><div class="pd-empty-title">Belum ada tema</div><div class="pd-empty-sub">Ketuk + Tema untuk membuat tema baru.</div></div>`;
-    return;
-  }
-
-  grid.innerHTML = "";
-  data.forEach((theme, idx) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "pd-theme-card";
-    card.dataset.grad = String(idx % 6);
-    card.innerHTML = `
-      <div class="pd-theme-icon">${esc(theme.icon || "📚")}</div>
-      <div class="pd-theme-name">${esc(theme.name)}</div>
-      <div class="pd-theme-count">${theme.personal_decks?.[0]?.count || 0} deck</div>`;
-
-    bindLongPress(card, () => pdShowThemeOptions(theme), () => openTheme(theme.id, theme));
-    grid.appendChild(card);
-  });
 }
 
 export function pdShowAddThemeModal(theme = null) {
@@ -376,46 +413,53 @@ export async function renderDecks(themeId = activeTheme?.id) {
       <div style="color:var(--dim); font-size:14px;">Memuat deck...</div>
     </div>`;
 
-  const { data, error } = await supa
-    .from("personal_decks")
-    .select("*, personal_cards(count)")
-    .eq("theme_id", themeId)
-    .order("created_at", { ascending: true });
-  if (reqId !== _renderDecksId) return; // stale response
+  try {
+    const { data, error } = await _withPdTimeout(
+      supa
+        .from("personal_decks")
+        .select("*, personal_cards(count)")
+        .eq("theme_id", themeId)
+        .order("created_at", { ascending: true }),
+      12000
+    );
 
-  if (error) {
-    grid.innerHTML = `<div class="pd-empty">Gagal memuat deck.</div>`;
-    return;
-  }
-  if (!data?.length) {
-    grid.innerHTML = `<div class="pd-empty"><div class="pd-empty-title">Belum ada deck</div><div class="pd-empty-sub">Ketuk + Deck untuk membuat deck baru.</div></div>`;
-    return;
-  }
+    if (reqId !== _renderDecksId) return;
+    if (error) throw error;
+    if (!data?.length) {
+      grid.innerHTML = `<div class="pd-empty"><div class="pd-empty-title">Belum ada deck</div><div class="pd-empty-sub">Ketuk + Deck untuk membuat deck baru.</div></div>`;
+      return;
+    }
 
-  grid.innerHTML = "";
-  data.forEach((deck) => {
-    const count = deck.personal_cards?.[0]?.count || 0;
-    const title = deck.title || "Deck";
-    const card = document.createElement("div");
-    card.className = "item-card";
-    card.innerHTML = `
-      <div class="item-title">${esc(title)}</div>
-      <div class="item-desc">${esc(deck.description || "")}</div>
-      <div class="item-meta">
-        <span class="item-date">${count} Kosakata ⬩ HSK 3.0</span>
-        <button class="btn-open">Buka</button>
-      </div>`;
+    grid.innerHTML = "";
+    data.forEach((deck) => {
+      const count = deck.personal_cards?.[0]?.count || 0;
+      const title = deck.title || "Deck";
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.innerHTML = `
+        <div class="item-title">${esc(title)}</div>
+        <div class="item-desc">${esc(deck.description || "")}</div>
+        <div class="item-meta">
+          <span class="item-date">${count} Kosakata ⬩ HSK 3.0</span>
+          <button class="btn-open">Buka</button>
+        </div>`;
 
-    // Open button: stop propagation, openDeck directly
-    card.querySelector(".btn-open")?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      openDeck(deck.id, deck);
+      card.querySelector(".btn-open")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openDeck(deck.id, deck);
+      });
+      bindLongPress(card, () => pdShowDeckOptions(deck), () => openDeck(deck.id, deck));
+      grid.appendChild(card);
     });
-
-    // Tap on card body opens deck; long press shows options
-    bindLongPress(card, () => pdShowDeckOptions(deck), () => openDeck(deck.id, deck));
-    grid.appendChild(card);
-  });
+  } catch (err) {
+    if (reqId !== _renderDecksId) return;
+    console.error("renderDecks error:", err);
+    grid.innerHTML = `
+      <div class="pd-empty">
+        <div>Gagal memuat deck.</div>
+        <button class="pd-btn-retry" onclick="renderDecks()" style="margin-top:12px; font-size:12px; padding:6px 12px;">Coba Lagi</button>
+      </div>`;
+  }
 }
 
 export function pdShowAddDeckModal(deck = null) {
@@ -509,24 +553,35 @@ export async function renderCards(deckId = activeDeck?.id) {
       <div style="color:var(--dim); font-size:14px;">Memuat kata...</div>
     </div>`;
 
-  const { data, error } = await supa
-    .from("personal_cards")
-    .select("*")
-    .eq("deck_id", deckId)
-    .order("created_at", { ascending: true });
-  if (reqId !== _renderCardsId) return; // stale response
+  try {
+    const { data, error } = await _withPdTimeout(
+      supa
+        .from("personal_cards")
+        .select("*")
+        .eq("deck_id", deckId)
+        .order("created_at", { ascending: true }),
+      12000
+    );
 
-  if (error) {
-    list.innerHTML = `<div class="pd-empty">Gagal memuat kata.</div>`;
-    return;
+    if (reqId !== _renderCardsId) return;
+    if (error) throw error;
+
+    activeCards = data || [];
+    setText("pd-cards-deck-count", `${activeCards.length} kata`);
+    if (!activeCards.length) {
+      list.innerHTML = `<div class="pd-empty"><div class="pd-empty-title">Belum ada kata</div><div class="pd-empty-sub">Ketuk + Kosakata untuk menambahkan kata.</div></div>`;
+      return;
+    }
+    renderCardList(list, activeCards, { deletable: true, returnLayer: "layer-personal-cards" });
+  } catch (err) {
+    if (reqId !== _renderCardsId) return;
+    console.error("renderCards error:", err);
+    list.innerHTML = `
+      <div class="pd-empty">
+        <div>Gagal memuat kata.</div>
+        <button class="pd-btn-retry" onclick="renderCards()" style="margin-top:12px; font-size:12px; padding:6px 12px;">Coba Lagi</button>
+      </div>`;
   }
-  activeCards = data || [];
-  setText("pd-cards-deck-count", `${activeCards.length} kata`);
-  if (!activeCards.length) {
-    list.innerHTML = `<div class="pd-empty"><div class="pd-empty-title">Belum ada kata</div><div class="pd-empty-sub">Ketuk + Kosakata untuk menambahkan kata.</div></div>`;
-    return;
-  }
-  renderCardList(list, activeCards, { deletable: true, returnLayer: "layer-personal-cards" });
 }
 
 function renderCardList(list, cards, { deletable, returnLayer, isFavoriteList }) {

@@ -77,24 +77,30 @@ export async function initProfileScreen() {
         setTimeout(() => reject(new Error("Fetch Timeout")), 12000),
       ),
     ]);
-  } catch (e) {
-    console.error("initProfileScreen error:", e);
-    // Jika error, pastikan stats minimal terisi agar tidak crash saat render
-    if (!_profStats.xp) {
-      _profStats = {
-        xp: 0,
-        level: 1,
-        kosakataCount: 0,
-        sesiCount: 0,
-        akurasi: 0,
-        rank: "--",
-        streak: 0,
-      };
-    }
-  } finally {
     _profInitInProgress = false;
     _renderProfileFull();
+  } catch (e) {
+    console.error("initProfileScreen error:", e);
+    _profInitInProgress = false;
+    _renderProfileError();
   }
+}
+
+function _renderProfileError() {
+  const scroll = document.getElementById("prof-scroll");
+  if (!scroll) return;
+  scroll.innerHTML = `
+    <div class="prof-guest-wrap" style="padding-top:100px;">
+      <div class="prof-guest-icon">⚠️</div>
+      <div class="prof-guest-title">Gagal Memuat Profil</div>
+      <div class="prof-guest-sub">Terjadi masalah saat mengambil data. Pastikan koneksi internet stabil.</div>
+      <button class="prof-guest-btn" onclick="retryProfileInit()">Coba Lagi</button>
+    </div>`;
+}
+
+export function retryProfileInit() {
+  _profInitInProgress = false;
+  initProfileScreen();
 }
 
 /* ══════════════════════════════════════════
@@ -678,10 +684,14 @@ export function resetProfileCache() {
 /* ── Expose ke window ── */
 window.initProfileScreen = initProfileScreen;
 window.resetProfileCache = resetProfileCache;
+window.retryProfileInit = retryProfileInit;
 window._profDoLogout = _profDoLogout;
 window._profShowLogoutConfirm = _profShowLogoutConfirm;
 window._profHideLogoutConfirm = _profHideLogoutConfirm;
 window._profConfirmLogout = _profConfirmLogout;
+window._openFollowSheet = _openFollowSheet;
+window._closeFollowSheet = _closeFollowSheet;
+window._reloadFollowSheet = _reloadFollowSheet;
 window._profStartEditName = _profStartEditName;
 window._profSaveName = _profSaveName;
 window._openFollowSheet = _openFollowSheet;
