@@ -149,13 +149,16 @@ export function resolveQuizLock({
     return { isLocked: true, reason: "tier" };
   }
 
-  const entryPoint = getEntryPointDeck(tableName);
-
-  if (deckIndex + 1 < entryPoint) {
+  // Jika ini adalah item pertama absolut, jangan dikunci
+  if (deckIndex === 0) {
     return { isLocked: false, reason: null };
   }
 
-  if (deckIndex + 1 === entryPoint) {
+  const entryPoint = getEntryPointDeck(tableName);
+
+  // Jika index + 1 kurang dari atau sama dengan entryPoint (ID), 
+  // atau ini adalah kuis pertama dari tier yang baru dibuka
+  if (entryPoint && deckIndex + 1 <= entryPoint) {
     return { isLocked: false, reason: null };
   }
 
@@ -266,8 +269,8 @@ export function lockMessage(reason, { prevTitle = "", unlockAfter = 0 } = {}) {
   if (reason === "tier") return "Selesaikan tier sebelumnya dulu!";
   if (unlockAfter > 0)
     return `Selesaikan ${unlockAfter} Quiz untuk membuka ini!`;
-  if (prevTitle) return `Selesaikan "${prevTitle}" dulu!`;
-  return "Selesaikan item sebelumnya dulu!";
+  if (prevTitle && prevTitle !== "") return `Selesaikan "${prevTitle}" dulu!`;
+  return "Selesaikan kuis sebelumnya dulu!";
 }
 
 /* ══════════════════════════════════════════

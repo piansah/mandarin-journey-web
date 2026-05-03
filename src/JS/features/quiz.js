@@ -611,7 +611,7 @@ export function _ensureQuizSetsCache() {
 
   _quizListFetchPromise = supa
     .from("quiz_sets")
-    .select("key, title, sub, badge, hsk_level")
+    .select("id, key, title, sub, badge, hsk_level")
     .order("sort_order", { ascending: true })
     .then(({ data, error }) => {
       _quizListFetchPromise = null;
@@ -627,7 +627,11 @@ _ensureQuizSetsCache();
 
 function _quizLockedToast(el) {
   const title = el.closest("[data-prev-title]")?.dataset.prevTitle || "";
-  showToast(`Selesaikan “${title}” dulu!`, "warn");
+  if (title) {
+    showToast(`Selesaikan “${title}” dulu!`, "warn");
+  } else {
+    showToast(`Selesaikan kuis sebelumnya dulu!`, "warn");
+  }
 }
 
 function _renderQuizGrid() {
