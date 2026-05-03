@@ -159,3 +159,15 @@ export function _isIndonesianQuery(raw) {
   if (/[a-z]+[1-5]/i.test(raw)) return false;
   return true;
 }
+
+/**
+ * Mengubah setiap karakter Hanzi dalam teks menjadi elemen yang bisa diklik
+ * untuk membuka detail kata (Cross-Referencing ala Pleco).
+ */
+export function _solidifyHanzi(text) {
+  if (!text) return "";
+  // Regex untuk mendeteksi karakter Mandarin
+  return text.replace(/([\u4e00-\u9fff\u3400-\u4dbf]+)/g, (match) => {
+    return `<span class="clickable-hz" onclick="window.searchAndOpenWord('${match}')">${match}</span>`;
+  });
+}

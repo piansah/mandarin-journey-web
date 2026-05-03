@@ -23,7 +23,7 @@ import {
   lsRemove,
   shuffle,
 } from "../utilities/helpers.js";
-import { colorPy, _stripTones } from "../utilities/pinyin.js";
+import { colorPy, _stripTones, _solidifyHanzi } from "../utilities/pinyin.js";
 import { showDoneScreen } from "../core/done-screen.js";
 import { calcXPFCSession, XP } from "../utilities/xp.js";
 
@@ -473,9 +473,9 @@ export function renderFCCard() {
   const pyEl2 = document.getElementById("fc-pinyin2");
   const artiEl = document.getElementById("fc-arti");
 
-  if (hzEl) hzEl.textContent = card.hz;
-  if (hzEl2) hzEl2.textContent = card.hz;
-  if (hzEl3) hzEl3.textContent = card.hz;
+  if (hzEl) hzEl.innerHTML = _solidifyHanzi(card.hz);
+  if (hzEl2) hzEl2.innerHTML = _solidifyHanzi(card.hz);
+  if (hzEl3) hzEl3.innerHTML = _solidifyHanzi(card.hz);
   if (pyEl) pyEl.innerHTML = colorPy(card.py);
   if (pyEl2) pyEl2.innerHTML = colorPy(card.py);
   if (artiEl) artiEl.textContent = card.id;

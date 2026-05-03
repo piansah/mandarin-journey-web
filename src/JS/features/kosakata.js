@@ -31,6 +31,7 @@ import {
   _stripTones,
   _getPinyinRegex,
   _isIndonesianQuery,
+  _solidifyHanzi,
 } from "../utilities/pinyin.js";
 import { _injectBgCards } from "../utilities/bg-cards.js";
 import { startFC } from "./flashcard.js";
@@ -164,11 +165,40 @@ let _globalSearchCache = null;
 let _globalSearchTimer = null;
 let _initGlobalSearchCachePromise = null;
 
-export async function initGlobalSearchCache() {
-  if (_globalSearchCache) return;
-  if (_initGlobalSearchCachePromise) return _initGlobalSearchCachePromise;
+window.searchAndOpenWord = async (hanzi) => {
+  if (!hanzi) return;
+  // Cari di cache dulu
+  if (!_globalSearchCache) await initGlobalSearchCache();
+  const found = _globalSearchCache?.find(c => c.hanzi === hanzi);
+  if (found) {
+    openKosWord(found);
+  } else {
+    // Jika tidak ada di cache HSK, coba cari smart search (compound)
+    const results = await performSmartSearch(hanzi);
+    if (results.length > 0) {
+      openKosWord(results[0]);
+    } else {
+      showToast(`Kata "${hanzi}" tidak ditemukan di database.`, "dim");
+    }
+  }
+};
+
+export async function initGlobalSearchCache(forceRefresh = false) {
+  if (_globalSearchCache && !forceRefresh) return;
+  if (_initGlobalSearchCachePromise && !forceRefresh) return _initGlobalSearchCachePromise;
 
   _initGlobalSearchCachePromise = (async () => {
+    // Cek Local Storage dulu
+    const cacheKey = "hsk_global_search_cache_v1";
+    if (!forceRefresh) {
+      const saved = lsGet(cacheKey);
+      if (saved && Array.isArray(saved) && saved.length > 0) {
+        _globalSearchCache = saved;
+        console.log(`[Kosakata] Loaded ${saved.length} words from local cache.`);
+        return;
+      }
+    }
+
     const currentUser = getCurrentUser();
     const userId = currentUser?.id;
     let sets = [];
@@ -223,9 +253,10 @@ export async function initGlobalSearchCache() {
         ...c,
         hsk_level: setHskMap[c.set_id] || 1,
       }));
+      // Simpan ke Local Storage
+      lsSet(cacheKey, _globalSearchCache);
     }
   })().catch((err) => {
-    // Bug #4: Reset promise on failure so retry is possible
     console.error("[Kosakata] initGlobalSearchCache failed:", err);
     _initGlobalSearchCachePromise = null;
   });
@@ -1814,10 +1845,10 @@ async function _renderCharTab() {
     // Header karakter utama
     html += `
       <div class="kwd-char-main">
-        <div class="kwd-char-hz" onclick="window.speakMandarin('${char}')" style="cursor:pointer">${char}</div>
+        <div class="kwd-char-hz" onclick="window.searchAndOpenWord('${char}')" style="cursor:pointer">${char}</div>
         <div class="kwd-char-main-info">
           ${charInfo.pinyin ? `<div class="kwd-char-main-py">${colorPy(charInfo.pinyin)}</div>` : ""}
-          ${charInfo.arti ? `<div class="kwd-char-main-def">${charInfo.arti}</div>` : ""}
+          ${charInfo.arti ? `<div class="kwd-char-main-def">${_solidifyHanzi(charInfo.arti)}</div>` : ""}
           ${structLabel ? `<div class="kwd-char-struct">${idsChar} · ${structLabel}</div>` : ""}
         </div>
       </div>`;
@@ -1843,11 +1874,11 @@ async function _renderCharTab() {
         const compInfo = _getCompInfo(comp);
 
         html += `
-          <div class="kwd-char-comp" onclick="window._openKwdRelated('${comp}')">
+          <div class="kwd-char-comp" onclick="window.searchAndOpenWord('${comp}')">
             <div class="kwd-char-comp-hz">${comp}</div>
             <div class="kwd-char-comp-detail">
               ${compInfo.pinyin ? `<div class="kwd-char-comp-py">${colorPy(compInfo.pinyin)}</div>` : ""}
-              ${compInfo.arti ? `<div class="kwd-char-comp-def">${compInfo.arti}</div>` : ""}
+              ${compInfo.arti ? `<div class="kwd-char-comp-def">${_solidifyHanzi(compInfo.arti)}</div>` : ""}
               ${subComps.length > 0 ? `<div class="kwd-char-comp-sub">${subComps.join(" · ")}</div>` : ""}
             </div>
           </div>`;
@@ -1962,7 +1993,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
   hanziItems.forEach((h, idx) => {
     allItems.push(h.hanzi || "");
     html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
-      <div class="kwd-ex-hz">${h.hanzi}</div>
+      <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
       <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
       <div class="kwd-ex-id">${h.arti}</div>
     </div>`;
@@ -1982,7 +2013,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
         </div>`
       : "";
     html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
-      ${u.hanzi ? `<div class="kwd-ex-hz">${u.hanzi}</div>` : ""}
+      ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
       ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
       ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
       ${actions}

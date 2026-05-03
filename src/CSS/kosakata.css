@@ -970,3 +970,21 @@
 .kwd-char-block {
   margin-bottom: 20px;
 }
+
+/* Cross-Referencing Clickable Hanzi */
+.clickable-hz {
+  color: var(--gold);
+  cursor: pointer;
+  border-bottom: 1px dashed rgba(232, 201, 109, 0.4);
+  padding: 0 1px;
+  border-radius: 2px;
+  transition: all 0.2s;
+  display: inline-block;
+  font-family: var(--font-hanzi);
+}
+.clickable-hz:hover {
+  background: rgba(232, 201, 109, 0.12);
+  border-bottom-style: solid;
+  border-bottom-color: var(--gold);
+  transform: translateY(-1px);
+}
