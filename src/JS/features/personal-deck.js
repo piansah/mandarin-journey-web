@@ -15,6 +15,22 @@ let editingDeckId = null;
 let optionTheme = null;
 let optionDeck = null;
 let searchTimer = null;
+let _pdSearchFilter = "all";
+
+function _initPdSearchFilters() {
+  const container = document.getElementById("pd-search-filters");
+  if (!container) return;
+  const btns = container.querySelectorAll(".search-filter-btn");
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      _pdSearchFilter = btn.dataset.filter;
+      const q = document.getElementById("pd-card-search")?.value.trim();
+      if (q) pdSearchCards(q);
+    });
+  });
+}
 
 const EMOJIS = [
   "📚", "✏️", "💼", "🍜", "🌍", "🎮", "🎵", "🀄",
@@ -626,36 +642,54 @@ export async function pdSearchCards(query) {
     return;
   }
 
-  const cards = await performSmartSearch(q);
+  const results = await performSmartSearch(q, _pdSearchFilter);
 
-  if (!cards || cards.length === 0) {
+  if (!results || results.length === 0) {
     box.innerHTML = `<div class="pd-empty" style="padding:18px;">Tidak ditemukan kata untuk "${query}"</div>`;
     return;
   }
 
-  box.innerHTML = "";
+  box.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:0 4px 8px;">${results.length} kata ditemukan</div>`;
   const seen = new Set();
-  cards.forEach((card) => {
+  const frag = document.createDocumentFragment();
+
+  results.forEach((card, idx) => {
     if (!card.hanzi || seen.has(card.hanzi)) return;
     seen.add(card.hanzi);
-    const row = document.createElement("div");
-    row.className = "pd-search-item";
-    row.style.cursor = "pointer";
-    row.innerHTML = `
-      <div class="pd-search-hz">${esc(card.hanzi)}</div>
-      <div class="pd-search-info">
-        <div class="pd-search-py">${colorPy(card.pinyin || "")}</div>
-        <div class="pd-search-arti">${esc(card.arti || "")}</div>
-      </div>
-      <button type="button" class="pd-search-add">+ Tambah</button>`;
 
-    row.addEventListener("click", () => openPersonalCardDetail(card, "layer-personal-cards"));
-    row.querySelector(".pd-search-add")?.addEventListener("click", (e) => {
+    let badgeHtml = "";
+    if (card.source === "hsk") {
+      badgeHtml = `<span class="badge-hsk">HSK ${card.hsk_level}</span>`;
+    } else {
+      const label = card.badge === "common" ? "Common" : "Native";
+      badgeHtml = `<span class="badge-${card.badge || "native"}">${label}</span>`;
+    }
+
+    const item = document.createElement("div");
+    item.className = "kos-item";
+    item.style.marginBottom = "8px";
+    item.style.cursor = "pointer";
+    item.innerHTML = `
+      <div class="kos-hz">${esc(card.hanzi)}</div>
+      <div class="kos-info">
+        <div class="kos-py">${colorPy(card.pinyin || "")}</div>
+        <div class="kos-arti">${esc(card.arti || "")}</div>
+      </div>
+      <div class="kos-meta" style="flex-direction:column; gap:6px;">
+        ${badgeHtml}
+        <button type="button" class="pd-search-add" style="margin:0; padding:4px 10px; font-size:11px;">+ Tambah</button>
+      </div>`;
+
+    item.addEventListener("click", () =>
+      openPersonalCardDetail(card, "layer-pd-add-card"),
+    );
+    item.querySelector(".pd-search-add")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      addCard(card, row);
+      addCard(card, item);
     });
-    box.appendChild(row);
+    frag.appendChild(item);
   });
+  box.appendChild(frag);
 }
 
 export async function addCard(card, row) {
@@ -767,3 +801,5 @@ Object.assign(window, {
   bindKoleksiButtons,
   renderKoleksiSection,
 });
+
+document.addEventListener("DOMContentLoaded", _initPdSearchFilters);

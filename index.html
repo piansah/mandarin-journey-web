@@ -1724,7 +1724,7 @@
 
     <!-- Layer: Cari & Tambah Kosakata (Full Screen) -->
     <div id="layer-pd-add-card" class="layer">
-      <div class="search-hd">
+      <div class="search-hd" style="padding-bottom: 0;">
         <button class="back-btn" onclick="window.pdHideAddCardModal()">
           <span class="icon-back"></span>
         </button>
@@ -1737,7 +1737,13 @@
           />
         </div>
       </div>
-      <div class="search-results" id="pd-card-search-results" style="padding-bottom: 40px;">
+      <div class="search-filters-wrap" id="pd-search-filters" style="margin-bottom: 8px;">
+        <div class="search-filter-btn active" data-filter="all">Semua</div>
+        <div class="search-filter-btn" data-filter="hsk">HSK</div>
+        <div class="search-filter-btn" data-filter="common">Common</div>
+        <div class="search-filter-btn" data-filter="native">Native</div>
+      </div>
+      <div class="search-results" id="pd-card-search-results" style="padding-top: 0; padding-bottom: 80px;">
         <!-- Results will be injected here -->
       </div>
     </div>

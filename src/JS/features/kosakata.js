@@ -261,7 +261,7 @@ function _initSearchFilters() {
   });
 }
 
-export async function performSmartSearch(raw) {
+export async function performSmartSearch(raw, filter = "all") {
   if (!raw) return [];
   const q = raw.trim().toLowerCase();
   if (!q) return [];
@@ -336,11 +336,11 @@ export async function performSmartSearch(raw) {
     })),
   ];
 
-  if (_globalSearchFilter === "hsk") {
+  if (filter === "hsk") {
     merged = merged.filter((r) => r.source === "hsk");
-  } else if (_globalSearchFilter === "common") {
+  } else if (filter === "common") {
     merged = merged.filter((r) => r.badge === "common");
-  } else if (_globalSearchFilter === "native") {
+  } else if (filter === "native") {
     merged = merged.filter((r) => r.badge === "native");
   }
 
