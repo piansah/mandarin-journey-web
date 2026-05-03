@@ -527,14 +527,18 @@ async function _saveCustomAvatar(blob) {
       finalUrl = signedData.signedUrl;
     }
 
-    await supa.from("user_profile").upsert(
-      {
-        user_id: currentUser.id,
+    const { error: profileError } = await supa
+      .from("user_profile")
+      .update({
         custom_avatar_url: finalUrl,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    );
+      })
+      .eq("user_id", currentUser.id);
+
+    if (profileError) {
+      console.error("[Avatar] Profile update error:", profileError);
+      throw new Error(`Gagal sinkronisasi profil: ${profileError.message}`);
+    }
 
     _customAvatarUrl = finalUrl;
     _refreshAvatarUI();
