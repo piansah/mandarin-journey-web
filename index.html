@@ -1731,6 +1731,10 @@
           id="pd-theme-name"
           class="pd-input"
           placeholder="Nama tema (contoh: Makanan)"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         />
         <div id="pd-emoji-grid" class="pd-emoji-grid"></div>
         <button id="pd-btn-save-theme" class="pd-btn-main">Simpan Tema</button>
@@ -1746,12 +1750,20 @@
           id="pd-deck-title-input"
           class="pd-input"
           placeholder="Judul deck (contoh: Kata kerja harian)"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         />
         <input
           id="pd-deck-desc-input"
           class="pd-input"
           placeholder="Deskripsi (opsional)"
           style="margin-top: 8px"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
         />
         <button id="pd-btn-save-deck" class="pd-btn-main" style="margin-top: 4px">
           Simpan Deck
@@ -3017,6 +3029,10 @@
               type="text"
               maxlength="30"
               placeholder="Nama baru..."
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
             />
             <button class="upv2-rename-save" onclick="window.saveDisplayName()">
               Simpan
@@ -3092,7 +3108,7 @@
       <div
         class="bnav-item"
         data-screen="search-screen"
-        onclick="window.showScreen('search-screen')"
+        onclick="window.bnavGoTo('search-screen')"
         role="button"
         tabindex="0"
       >

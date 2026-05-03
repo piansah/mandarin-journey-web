@@ -70,14 +70,32 @@ function _getGelarByXP(xp) {
   return { hanzi: "初学者", label: "Pemula" };
 }
 
-function _getTierByRank(rank) {
-  if (rank <= 10) return { name: "yuhuang", icon: "🐲", label: "玉皇 Yùhuáng" };
-  if (rank <= 30) return { name: "long", icon: "🐉", label: "龙 Lóng" };
-  if (rank <= 60) return { name: "shu", icon: "📜", label: "书 Shū" };
-  if (rank <= 100) return { name: "hua", icon: "🌸", label: "花 Huā" };
-  if (rank <= 150) return { name: "zhu", icon: "🎋", label: "竹 Zhú" };
-  if (rank <= 200) return { name: "shi", icon: "🦁", label: "狮 Shī" };
-  if (rank <= 250) return { name: "mo", icon: "✍️", label: "墨 Mò" };
+function _getTierByRank(rank, xp = 0) {
+  const userXP = Number(xp || 0);
+
+  // Kasta berdasarkan gabungan Rank dan Minimal XP (Level)
+  // 1. Kasta Tertinggi: Yuhuang (Naga Emas) - Harus Master
+  if (rank <= 10 && userXP >= 10000) return { name: "yuhuang", icon: "🐲", label: "玉皇 Yùhuáng" };
+  
+  // 2. Kasta Naga: Long - Harus Mahir
+  if (rank <= 30 && userXP >= 5000) return { name: "long", icon: "🐉", label: "龙 Lóng" };
+  
+  // 3. Kasta Buku: Shu
+  if (rank <= 60 && userXP >= 3000) return { name: "shu", icon: "📜", label: "书 Shū" };
+  
+  // 4. Kasta Bunga: Hua
+  if (rank <= 100 && userXP >= 2000) return { name: "hua", icon: "🌸", label: "花 Huā" };
+  
+  // 5. Kasta Bambu: Zhu
+  if (rank <= 150 && userXP >= 1500) return { name: "zhu", icon: "🎋", label: "竹 Zhú" };
+  
+  // 6. Kasta Singa: Shi
+  if (rank <= 200 && userXP >= 1000) return { name: "shi", icon: "🦁", label: "狮 Shī" };
+  
+  // 7. Kasta Tinta: Mo
+  if (rank <= 250 && userXP >= 500) return { name: "mo", icon: "✍️", label: "墨 Mò" };
+
+  // 8. Kasta Dasar: Miao (Tunas) - Untuk user baru atau XP rendah
   return { name: "miao", icon: "🌱", label: "苗 Miáo" };
 }
 
@@ -503,7 +521,7 @@ export function selectTier(tier) {
 function _getUsersInTier(tier) {
   if (!_leaderboardCache) return [];
   return _leaderboardCache.filter(
-    (item) => _getTierByRank(item.rank).name === tier,
+    (item) => _getTierByRank(item.rank, item.xp).name === tier,
   );
 }
 
@@ -611,7 +629,7 @@ async function _loadXPLeaderboard(period) {
     _myRank = leaderboard.find((item) => item.isMe) || null;
     _rankList = leaderboard;
     if (_myRank && !_tierManuallySelected) {
-      const myTier = _getTierByRank(_myRank.rank);
+      const myTier = _getTierByRank(_myRank.rank, _myRank.xp);
       _selectedTier = myTier.name;
       _updateTierSelectorUI(myTier);
     }
@@ -635,7 +653,7 @@ function _renderXPLeaderboard() {
   }
   const ligaEl = document.querySelector("#sosial-banners .liga-banner");
   if (ligaEl && _myRank) {
-    const tier = _getTierByRank(_myRank.rank);
+    const tier = _getTierByRank(_myRank.rank, _myRank.xp);
     const periodLabel = _activePeriod === "week" ? "minggu ini" : "bulan ini";
     const tierUsers = _getUsersInTier(tier.name);
     ligaEl.innerHTML = `<div class="liga-icon">${tier.icon}</div><div class="liga-body"><div class="liga-name">Liga ${tier.label}</div><div class="liga-sub">${periodLabel} · Rank #${_myRank.rank} · dari ${tierUsers.length} di tier ini</div></div>`;
@@ -879,7 +897,7 @@ async function _openUserPopup(userId) {
   // Update header: title + tier badge
   if (titleEl) titleEl.textContent = "Profile";
   if (tierEl) {
-    const tierInfo = userData.rank ? _getTierByRank(userData.rank) : null;
+    const tierInfo = userData.rank ? _getTierByRank(userData.rank, userData.xp) : null;
     tierEl.innerHTML = tierInfo
       ? `<span class="uprof-tier-badge">${tierInfo.icon} Liga ${tierInfo.label}</span>`
       : "";

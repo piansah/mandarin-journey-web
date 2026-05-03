@@ -59,7 +59,7 @@ function _injectReportModal() {
       <div class="report-form">
         <div class="report-form-group">
           <label class="report-label">Judul Masalah</label>
-          <input id="br-title" class="report-input" placeholder="Contoh: Suara tidak muncul">
+          <input id="br-title" class="report-input" placeholder="Contoh: Suara tidak muncul" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         </div>
         <div class="report-form-group">
           <label class="report-label">Detail Kejadian</label>

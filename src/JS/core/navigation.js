@@ -51,10 +51,6 @@ export function updateNavbar(_screenId) {
 }
 
 export function bnavGoTo(screenId) {
-  if (screenId === "dash") {
-    backToDash();
-    return;
-  }
   showScreen(screenId);
 }
 
