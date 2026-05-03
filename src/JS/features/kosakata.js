@@ -1804,7 +1804,17 @@ window.startVoiceSearch = () => {
     const result = finalTranscript || interimTranscript;
     if (result) {
       searchInput.value = result;
-      if (finalTranscript && typeof window.onKosGlobalSearch === "function") {
+      // Trigger input event manually so clear button etc. show up
+      searchInput.dispatchEvent(new Event('input'));
+    }
+
+    if (finalTranscript) {
+      const val = finalTranscript.trim();
+      const isSentence = val.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(val);
+      
+      if (isSentence && typeof window.openSegmentedView === "function") {
+        window.openSegmentedView(val);
+      } else if (typeof window.onKosGlobalSearch === "function") {
         window.onKosGlobalSearch();
       }
     }
