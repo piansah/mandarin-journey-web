@@ -590,6 +590,7 @@
   line-height: 1.5;
   color: var(--txt);
   margin-bottom: 4px;
+  padding-right: 32px; /* Ruang aman agar tidak tabrakan dengan tombol report */
 }
 .kwd-ex-py {
   font-size: 13px;
