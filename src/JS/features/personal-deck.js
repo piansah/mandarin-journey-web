@@ -619,11 +619,11 @@ function renderCardList(list, cards, { deletable, returnLayer, isFavoriteList })
 // ─── Touch gesture engine (Menggunakan _attachLongPressTTS dari kosakata.js) ───
 
 function bindCardInteractions(item, wrap, card, returnLayer) {
-  const onTap = () => {
+  const onHold = () => {
     openPersonalCardDetail(card, returnLayer);
   };
 
-  _attachLongPressTTS(item, card.hanzi, onTap);
+  _attachLongPressTTS(item, null, () => speakMandarin(card.hanzi), onHold);
 
   if (!wrap) return;
 

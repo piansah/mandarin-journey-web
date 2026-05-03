@@ -51,7 +51,7 @@ import { isFavorited, toggleFavorite } from "./personal-deck.js";
  * @param {Function} onTap - callback saat tap biasa
  */
 
-export function _attachLongPressTTS(el, hanzi, onTap) {
+export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   let pressTimer = null,
     didLongPress = false,
     didMove = false;
@@ -62,6 +62,7 @@ export function _attachLongPressTTS(el, hanzi, onTap) {
   const _triggerLongPress = () => {
     didLongPress = true;
     if (hanzi) speakMandarin(hanzi);
+    if (onLongPress) onLongPress();
     el.style.transition = "transform 0.2s";
     el.style.transform = "scale(0.96)";
     setTimeout(() => {
@@ -444,7 +445,7 @@ export async function _runKosGlobalSearch() {
     item.style.cursor = "pointer";
     item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${badgeHtml}</div>`;
 
-    _attachLongPressTTS(item, c.hanzi, () => openKosWordFromGlobal(idx));
+    _attachLongPressTTS(item, null, () => speakMandarin(c.hanzi), () => openKosWordFromGlobal(idx));
 
     frag.appendChild(item);
   });
@@ -1060,7 +1061,7 @@ export function renderKosItems() {
     item.appendChild(infoEl);
     item.appendChild(metaEl);
 
-    _attachLongPressTTS(item, c.hanzi, () =>
+    _attachLongPressTTS(item, null, () => speakMandarin(c.hanzi), () =>
       openKosWord(window._kosFilteredData[idx]),
     );
 
@@ -2151,10 +2152,20 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
 
   listEl.innerHTML = html;
 
-  listEl.querySelectorAll(".kwd-example-card[data-speak-idx]").forEach((card) => {
+  listEl.querySelectorAll(".kwd-example-card").forEach((card) => {
     const idx = parseInt(card.dataset.speakIdx);
     const text = allItems[idx];
-    _attachLongPressTTS(card, text, () => speakMandarin(text));
+    
+    // Tap kartu -> Suara Kalimat
+    _attachLongPressTTS(card, null, () => speakMandarin(text));
+
+    // Hold pada kata -> Detail Kata
+    card.querySelectorAll(".clickable-hz").forEach((hz) => {
+      const match = hz.textContent;
+      _attachLongPressTTS(hz, null, null, () => {
+        if (window.searchAndOpenWord) window.searchAndOpenWord(match);
+      });
+    });
   });
 }
 
