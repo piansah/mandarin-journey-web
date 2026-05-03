@@ -224,7 +224,11 @@ export async function initGlobalSearchCache() {
         hsk_level: setHskMap[c.set_id] || 1,
       }));
     }
-  })();
+  })().catch((err) => {
+    // Bug #4: Reset promise on failure so retry is possible
+    console.error("[Kosakata] initGlobalSearchCache failed:", err);
+    _initGlobalSearchCachePromise = null;
+  });
 
   return _initGlobalSearchCachePromise;
 }
@@ -600,13 +604,16 @@ export async function renderKosDeckGrid() {
   grid.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
   await refreshKosDashboardProgress();
-  if (kosSetsCache) {
+  if (kosSetsCache && kosSetsCache.length > 0) {
     const dueMap = await _withKosTimeout(
       _loadKosDueMap(kosSetsCache),
       3500,
       new Map(),
     );
     buildKosDeckGrid(kosSetsCache, dueMap);
+  } else {
+    // Bug #7: Fallback saat fetch gagal agar spinner tidak stuck
+    grid.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">⚠️</div><div>Gagal memuat deck. Periksa koneksi internet.</div></div>';
   }
 }
 

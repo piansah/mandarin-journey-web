@@ -1724,16 +1724,20 @@
 
     <!-- Layer: Cari & Tambah Kosakata (Full Screen) -->
     <div id="layer-pd-add-card" class="layer">
-      <div class="search-hd" style="padding-bottom: 0;">
-        <button class="back-btn" onclick="window.pdHideAddCardModal()">
-          <span class="icon-back"></span>
-        </button>
-        <div class="search-box">
+      <div class="search-hd">
+        <div class="btn-back" onclick="window.pdHideAddCardModal()">←</div>
+        <div style="flex: 1; margin: 0 12px; position: relative">
           <input
+            type="search"
+            inputmode="search"
             id="pd-card-search"
             class="search-input"
             placeholder="Cari Hanzi, Pinyin, atau Arti..."
             autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            oninput="window.pdSearchCardsV2(this.value)"
           />
         </div>
       </div>
@@ -1749,10 +1753,10 @@
     </div>
 
     <!-- Modal: Opsi Deck (Edit / Hapus) -->
-    <div id="pd-deck-options-modal" class="pd-modal-overlay">
+    <div id="pd-deck-options-modal" class="pd-modal-overlay bottom">
       <div class="pd-modal-backdrop" onclick="window.pdHideDeckOptions()"></div>
       <div class="pd-modal-content">
-        <div class="modal-close" onclick="window.pdHideDeckOptions()">✕</div>
+        <div class="pd-modal-handle"></div>
         <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Deck</div>
         <button id="pd-deck-opt-edit" class="pd-btn-option" onclick="window.pdDeckOptEdit()">
           Edit Deck
@@ -1764,10 +1768,10 @@
     </div>
 
     <!-- Modal: Opsi Tema (Edit / Hapus) -->
-    <div id="pd-theme-options-modal" class="pd-modal-overlay">
+    <div id="pd-theme-options-modal" class="pd-modal-overlay bottom">
       <div class="pd-modal-backdrop" onclick="window.pdHideThemeOptions()"></div>
       <div class="pd-modal-content">
-        <div class="modal-close" onclick="window.pdHideThemeOptions()">✕</div>
+        <div class="pd-modal-handle"></div>
         <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Tema</div>
         <button id="pd-theme-opt-edit" class="pd-btn-option" onclick="window.pdThemeOptEdit()">
           Edit Tema

@@ -47,10 +47,9 @@
 
 .search-filters-wrap {
   display: flex;
-  gap: 8px;
-  padding: 0 16px 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  gap: 10px;
+  padding: 4px 16px 16px;
+  justify-content: center;
 }
 .search-filters-wrap::-webkit-scrollbar {
   display: none;

@@ -172,7 +172,10 @@ function _isFollowing(userId) {
    ENTRY POINT
 ══════════════════════════════════════════════════════════════ */
 export async function initSosialScreen() {
-  if (_sosialInitInProgress) return; // cegah concurrent init
+  // Bug #6: Allow re-init if screen was navigated away and came back
+  const sosialScreen = document.getElementById("sosial-screen");
+  const isScreenActive = sosialScreen?.classList.contains("active");
+  if (_sosialInitInProgress && !isScreenActive) return;
   _sosialInitInProgress = true;
 
   // Tunggu app init selesai
@@ -213,9 +216,12 @@ export async function initSosialScreen() {
     ]);
   } catch (e) {
     console.error("initSosialScreen error:", e);
-    const listEl = document.getElementById("xp-leaderboard-list");
-    if (listEl) {
-      listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">⚠️</div><div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div></div>`;
+    // Bug #6: Only write to DOM if screen is still active
+    if (document.getElementById("sosial-screen")?.classList.contains("active")) {
+      const listEl = document.getElementById("xp-leaderboard-list");
+      if (listEl) {
+        listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">⚠️</div><div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div></div>`;
+      }
     }
   } finally {
     _sosialInitInProgress = false;

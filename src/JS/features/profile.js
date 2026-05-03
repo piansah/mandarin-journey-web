@@ -33,7 +33,10 @@ let _profFollowCounts = { followers: 0, following: 0 };
    ENTRY POINT
 ══════════════════════════════════════════ */
 export async function initProfileScreen() {
-  if (_profInitInProgress) return; // cegah concurrent init
+  // Bug #6: Allow re-init if screen was navigated away and came back
+  const profScreen = document.getElementById("profile-screen");
+  const isScreenActive = profScreen?.classList.contains("active");
+  if (_profInitInProgress && !isScreenActive) return;
   _profInitInProgress = true;
 
   // Tunggu app init selesai agar auth & keys siap
@@ -226,7 +229,7 @@ function _renderProfileFull() {
   const scroll = document.getElementById("prof-scroll");
   if (!scroll) return;
 
-  const { xp, level, kosakataCount, sesiCount, akurasi, rank, streak } =
+  const { xp = 0, level = 1, kosakataCount = 0, sesiCount = 0, akurasi = 0, rank = "--", streak = 0 } =
     _profStats;
   const currentUser = getCurrentUser();
   const displayName =

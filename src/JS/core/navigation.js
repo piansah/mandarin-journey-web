@@ -146,6 +146,10 @@ function _triggerLayerRender(id) {
     "layer-kos-deck": "restoreKosDeckLayer",
     "layer-grammar": "renderGrammarList",
     "layer-cerita": "renderCeritaList",
+    "layer-personal-themes": "renderThemes",
+    "layer-personal-decks": "renderDecks",
+    "layer-personal-cards": "renderCards",
+    "layer-favorites": "renderFavorites",
   };
   const fnName = renderMap[id];
   if (!fnName) return;

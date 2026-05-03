@@ -122,10 +122,10 @@
   background: var(--sur);
   border: 1px solid var(--bdr);
   border-radius: 14px;
-  padding: 18px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   transition: all 0.2s;
   cursor: pointer;
   user-select: none;

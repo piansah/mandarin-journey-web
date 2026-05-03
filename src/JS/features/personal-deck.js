@@ -16,6 +16,14 @@ let optionTheme = null;
 let optionDeck = null;
 let searchTimer = null;
 let _pdSearchFilter = "all";
+let _currentDeckHanzi = new Set();
+
+// Race condition guards — render request IDs
+let _renderFavoritesId = 0;
+let _renderThemesId = 0;
+let _renderDecksId = 0;
+let _renderCardsId = 0;
+let _searchRequestId = 0;
 
 function _initPdSearchFilters() {
   const container = document.getElementById("pd-search-filters");
@@ -27,7 +35,7 @@ function _initPdSearchFilters() {
       btn.classList.add("active");
       _pdSearchFilter = btn.dataset.filter;
       const q = document.getElementById("pd-card-search")?.value.trim();
-      if (q) pdSearchCards(q);
+      if (q) pdSearchCardsV2(q);
     });
   });
 }
@@ -182,13 +190,19 @@ export async function renderFavorites() {
   if (!list) return;
   const user = userOrLogin();
   if (!user) return;
+  const reqId = ++_renderFavoritesId;
 
-  list.innerHTML = `<div class="pd-loading"><span class="spinner"></span> Memuat favorit...</div>`;
+  list.innerHTML = `
+    <div class="pd-loading">
+      <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
+      <div style="color:var(--dim); font-size:14px;">Memuat favorit...</div>
+    </div>`;
   const { data, error } = await supa
     .from("personal_favorites")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+  if (reqId !== _renderFavoritesId) return; // stale response
 
   if (error) {
     list.innerHTML = `<div class="pd-empty">Gagal memuat favorit.</div>`;
@@ -230,13 +244,19 @@ export async function renderThemes() {
   if (!grid) return;
   const user = userOrLogin();
   if (!user) return;
+  const reqId = ++_renderThemesId;
 
-  grid.innerHTML = `<div class="pd-loading" style="grid-column:1/-1;"><span class="spinner"></span> Memuat tema...</div>`;
+  grid.innerHTML = `
+    <div class="pd-loading" style="grid-column:1/-1;">
+      <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
+      <div style="color:var(--dim); font-size:14px;">Memuat tema...</div>
+    </div>`;
   const { data, error } = await supa
     .from("personal_themes")
     .select("*, personal_decks(count)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
+  if (reqId !== _renderThemesId) return; // stale response
 
   if (error) {
     grid.innerHTML = `<div class="pd-empty" style="grid-column:1/-1;">Gagal memuat tema.</div>`;
@@ -257,7 +277,7 @@ export async function renderThemes() {
       <div class="pd-theme-icon">${esc(theme.icon || "📚")}</div>
       <div class="pd-theme-name">${esc(theme.name)}</div>
       <div class="pd-theme-count">${theme.personal_decks?.[0]?.count || 0} deck</div>`;
-    
+
     bindLongPress(card, () => pdShowThemeOptions(theme), () => openTheme(theme.id, theme));
     grid.appendChild(card);
   });
@@ -349,13 +369,19 @@ export function openTheme(themeId, theme) {
 export async function renderDecks(themeId = activeTheme?.id) {
   const grid = document.getElementById("pd-deck-grid");
   if (!grid || !themeId) return;
-  grid.innerHTML = `<div class="pd-loading"><span class="spinner"></span> Memuat deck...</div>`;
+  const reqId = ++_renderDecksId;
+  grid.innerHTML = `
+    <div class="pd-loading">
+      <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
+      <div style="color:var(--dim); font-size:14px;">Memuat deck...</div>
+    </div>`;
 
   const { data, error } = await supa
     .from("personal_decks")
     .select("*, personal_cards(count)")
     .eq("theme_id", themeId)
     .order("created_at", { ascending: true });
+  if (reqId !== _renderDecksId) return; // stale response
 
   if (error) {
     grid.innerHTML = `<div class="pd-empty">Gagal memuat deck.</div>`;
@@ -373,13 +399,10 @@ export async function renderDecks(themeId = activeTheme?.id) {
     const card = document.createElement("div");
     card.className = "item-card";
     card.innerHTML = `
-      <div class="item-card-top">
-        <span class="day-badge">PERSONAL</span>
-      </div>
       <div class="item-title">${esc(title)}</div>
-      <div class="item-desc">${esc(deck.description || "Deck Personal")}</div>
+      <div class="item-desc">${esc(deck.description || "")}</div>
       <div class="item-meta">
-        <span class="item-date">${count} Kosakata • Deck Personal</span>
+        <span class="item-date">${count} Kosakata ⬩ HSK 3.0</span>
         <button class="btn-open">Buka</button>
       </div>`;
 
@@ -470,6 +493,7 @@ export async function pdDeckOptDelete() {
 
 export function openDeck(deckId, deck) {
   activeDeck = { id: deckId, ...deck };
+  _currentDeckHanzi = new Set(); // Bug #16: reset saat pindah deck
   setText("pd-cards-deck-title", deck.title || "Deck");
   openLayer("layer-personal-cards");
   renderCards(deckId);
@@ -478,13 +502,19 @@ export function openDeck(deckId, deck) {
 export async function renderCards(deckId = activeDeck?.id) {
   const list = document.getElementById("pd-cards-list");
   if (!list || !deckId) return;
-  list.innerHTML = `<div class="pd-loading"><span class="spinner"></span> Memuat kata...</div>`;
+  const reqId = ++_renderCardsId;
+  list.innerHTML = `
+    <div class="pd-loading">
+      <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
+      <div style="color:var(--dim); font-size:14px;">Memuat kata...</div>
+    </div>`;
 
   const { data, error } = await supa
     .from("personal_cards")
     .select("*")
     .eq("deck_id", deckId)
     .order("created_at", { ascending: true });
+  if (reqId !== _renderCardsId) return; // stale response
 
   if (error) {
     list.innerHTML = `<div class="pd-empty">Gagal memuat kata.</div>`;
@@ -537,13 +567,13 @@ function bindCardInteractions(item, wrap, card, returnLayer) {
   const onTap = () => {
     openPersonalCardDetail(card, returnLayer);
   };
-  
+
   _attachLongPressTTS(item, card.hanzi, onTap);
 
   if (!wrap) return;
 
   let startX = 0;
-  
+
   wrap.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
   }, { passive: true });
@@ -607,9 +637,23 @@ export async function deleteCard(cardId, hanzi) {
   });
 }
 
-export function pdShowAddCardModal() {
+export async function pdShowAddCardModal() {
   const input = document.getElementById("pd-card-search");
   const results = document.getElementById("pd-card-search-results");
+
+  // Bug #15: clear stale timer from previous open
+  clearTimeout(searchTimer);
+  searchTimer = null;
+
+  // Bug #2: Load hanzi set BEFORE opening layer to avoid wrong button states
+  if (activeDeck?.id) {
+    const { data } = await supa
+      .from("personal_cards")
+      .select("hanzi")
+      .eq("deck_id", activeDeck.id);
+    _currentDeckHanzi = new Set(data?.map((d) => d.hanzi) || []);
+  }
+
   if (input) {
     input.value = "";
     input.oninput = () => {
@@ -619,7 +663,7 @@ export function pdShowAddCardModal() {
         if (results) results.innerHTML = "";
         return;
       }
-      searchTimer = setTimeout(() => pdSearchCards(q), 300);
+      searchTimer = setTimeout(() => pdSearchCardsV2(q), 300);
     };
   }
   if (results) results.innerHTML = "";
@@ -628,13 +672,21 @@ export function pdShowAddCardModal() {
 }
 
 export function pdHideAddCardModal() {
+  // Bug #3: Clear search timer saat layer ditutup
+  clearTimeout(searchTimer);
+  searchTimer = null;
   backToLayer("layer-personal-cards");
 }
 
-export async function pdSearchCards(query) {
+export async function pdSearchCardsV2(query) {
   const box = document.getElementById("pd-card-search-results");
   if (!box) return;
-  box.innerHTML = `<div class="pd-loading" style="padding:18px;"><span class="spinner"></span> Mencari...</div>`;
+  const reqId = ++_searchRequestId;
+  box.innerHTML = `
+    <div class="pd-loading" style="padding:40px 0;">
+      <span class="spinner" style="width:24px; height:24px; border-width:3px; margin:0 0 12px 0;"></span>
+      <div style="color:var(--dim); font-size:14px;">Mencari kata...</div>
+    </div>`;
 
   const q = query.trim();
   if (!q) {
@@ -643,9 +695,11 @@ export async function pdSearchCards(query) {
   }
 
   const results = await performSmartSearch(q, _pdSearchFilter);
+  if (reqId !== _searchRequestId) return; // stale response
 
   if (!results || results.length === 0) {
-    box.innerHTML = `<div class="pd-empty" style="padding:18px;">Tidak ditemukan kata untuk "${query}"</div>`;
+    // Bug #14: escape query to prevent XSS
+    box.innerHTML = `<div class="pd-empty" style="padding:18px;">Tidak ditemukan kata untuk "${esc(query)}"</div>`;
     return;
   }
 
@@ -657,37 +711,31 @@ export async function pdSearchCards(query) {
     if (!card.hanzi || seen.has(card.hanzi)) return;
     seen.add(card.hanzi);
 
-    let badgeHtml = "";
-    if (card.source === "hsk") {
-      badgeHtml = `<span class="badge-hsk">HSK ${card.hsk_level}</span>`;
-    } else {
-      const label = card.badge === "common" ? "Common" : "Native";
-      badgeHtml = `<span class="badge-${card.badge || "native"}">${label}</span>`;
-    }
-
-    const item = document.createElement("div");
-    item.className = "kos-item";
-    item.style.marginBottom = "8px";
-    item.style.cursor = "pointer";
-    item.innerHTML = `
-      <div class="kos-hz">${esc(card.hanzi)}</div>
-      <div class="kos-info">
-        <div class="kos-py">${colorPy(card.pinyin || "")}</div>
-        <div class="kos-arti">${esc(card.arti || "")}</div>
+    const isAdded = _currentDeckHanzi.has(card.hanzi);
+    const row = document.createElement("div");
+    row.className = "pd-search-item";
+    row.style.cursor = "pointer";
+    row.innerHTML = `
+      <div class="pd-search-hz">${esc(card.hanzi)}</div>
+      <div class="pd-search-info">
+        <div class="pd-search-py">${colorPy(card.pinyin || "")}</div>
+        <div class="pd-search-arti">${esc(card.arti || "")}</div>
       </div>
-      <div class="kos-meta" style="flex-direction:column; gap:6px;">
-        ${badgeHtml}
-        <button type="button" class="pd-search-add" style="margin:0; padding:4px 10px; font-size:11px;">+ Tambah</button>
-      </div>`;
+      <button type="button" class="pd-search-add ${isAdded ? "is-added" : ""}">${isAdded ? "Hapus" : "+ Tambah"}</button>`;
 
-    item.addEventListener("click", () =>
+    row.addEventListener("click", () =>
       openPersonalCardDetail(card, "layer-pd-add-card"),
     );
-    item.querySelector(".pd-search-add")?.addEventListener("click", (e) => {
+    row.querySelector(".pd-search-add")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      addCard(card, item);
+      const btn = e.target;
+      if (btn.classList.contains("is-added")) {
+        removeCardFromSearch(card, row);
+      } else {
+        addCard(card, row);
+      }
     });
-    frag.appendChild(item);
+    frag.appendChild(row);
   });
   box.appendChild(frag);
 }
@@ -715,8 +763,40 @@ export async function addCard(card, row) {
     if (btn) btn.disabled = false;
     return;
   }
-  if (btn) btn.textContent = "OK";
+  if (btn) {
+    btn.textContent = "Hapus";
+    btn.classList.add("is-added");
+    btn.disabled = false;
+  }
+  _currentDeckHanzi.add(card.hanzi);
   showToast("Kata ditambahkan", "ok");
+  renderCards();
+}
+
+export async function removeCardFromSearch(card, row) {
+  if (!activeDeck?.id) return;
+  const btn = row?.querySelector(".pd-search-add");
+  if (btn) btn.disabled = true;
+
+  const { error } = await supa
+    .from("personal_cards")
+    .delete()
+    .eq("deck_id", activeDeck.id)
+    .eq("hanzi", card.hanzi);
+
+  if (error) {
+    showToast("Gagal menghapus", "err");
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  if (btn) {
+    btn.textContent = "+ Tambah";
+    btn.classList.remove("is-added");
+    btn.disabled = false;
+  }
+  _currentDeckHanzi.delete(card.hanzi);
+  showToast("Kata dihapus", "ok");
   renderCards();
 }
 
@@ -793,6 +873,7 @@ Object.assign(window, {
   pdDeckOptEdit,
   pdDeckOptDelete,
   deleteCard,
+  pdSearchCardsV2,
   pdToggleLatihan,
   pdCloseLatihan,
   pdOpenFlashcard,
