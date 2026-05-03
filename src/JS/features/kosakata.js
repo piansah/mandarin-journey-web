@@ -1321,7 +1321,7 @@ function _renderHero() {
   container.innerHTML = `
     <div style="position: relative;">
       <div style="position: absolute; top: 10px; right: 10px; z-index: 4; display: flex; gap: 8px;">
-        <button class="kwd-report-btn" title="Laporkan Kesalahan" onclick="window.openBugReportModal('Kesalahan Data Kata','Ditemukan kesalahan pada kata: ${card.hanzi} (${card.pinyin}). Mohon perbaiki bagian: [Arti / Pinyin / Kelas Kata / Catatan]', 'content', '${card.id}')">🚩</button>
+        <button class="kwd-report-btn" title="Laporkan Kesalahan" onclick="window.openBugReportModal('Kesalahan Data Kata','Ditemukan kesalahan pada kata: ${card.hanzi} (${card.pinyin}). Mohon perbaiki bagian: [Arti / Pinyin / Kelas Kata / Catatan]', 'content', '${card.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></button>
         <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button" style="position: relative; top: 0; right: 0; color:var(--dim2); border-color:var(--bdr); background:var(--sur2);">${SVG_FAV_OUTLINE}</button>
       </div>
       <div class="kwd-hero" id="kwd-hero-main" style="cursor:pointer; padding-top: 24px;">
@@ -2160,7 +2160,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
           <div class="kwd-ex-id">${h.arti}</div>
         </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')">🚩</div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
       </div>
     </div>`;
   });
@@ -2185,7 +2185,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
           ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
         </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')">🚩</div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
       </div>
       ${actions}
     </div>`;
@@ -2218,7 +2218,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           ontouchstart="event.stopPropagation()" 
           ontouchend="event.stopPropagation()" 
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"
-          style="position:absolute; top:10px; right:10px; z-index:11;">🚩</div>
+          style="position:absolute; top:10px; right:10px; z-index:11;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
         <div>
           <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
@@ -2249,7 +2249,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           ontouchstart="event.stopPropagation()" 
           ontouchend="event.stopPropagation()" 
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"
-          style="position:absolute; top:10px; right:10px; z-index:11;">🚩</div>
+          style="position:absolute; top:10px; right:10px; z-index:11;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
         <div>
           ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
