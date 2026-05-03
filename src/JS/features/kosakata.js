@@ -554,12 +554,35 @@ export async function _runKosGlobalSearch() {
   resultsEl.style.display = "";
 
   resultsEl.innerHTML =
-    '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat kosakata...</div>';
+    '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
   
-  const results = await performSmartSearch(raw);
+  const isSentence = raw.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(raw);
+  let results = [];
+  let sentenceWords = [];
+
+  if (isSentence) {
+    // Mode Kalimat: Gunakan _segmentText
+    sentenceWords = (typeof window._segmentText === "function") ? window._segmentText(raw) : [];
+    results = sentenceWords.filter(w => w.found);
+  } else {
+    // Mode Kata: Pencarian normal
+    results = await performSmartSearch(raw);
+  }
+
   if (requestId !== _globalSearchRequestId) return;
 
-  if (results.length === 0) {
+  // Filter hasil berdasarkan kategori
+  const filter = _globalSearchFilter || "all";
+  let filtered = results;
+  if (filter === "hsk") {
+    filtered = results.filter(r => r.source === "hsk" || r.hsk);
+  } else if (filter === "common") {
+    filtered = results.filter(r => r.badge === "common");
+  } else if (filter === "native") {
+    filtered = results.filter(r => r.badge === "native" || (r.source === "compound" && !r.badge));
+  }
+
+  if (filtered.length === 0 && !isSentence) {
     resultsEl.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">🔍</div><div>Tidak ditemukan untuk "<strong style="color:var(--txt);">${raw}</strong>"</div></div>`;
     return;
   }
@@ -570,30 +593,59 @@ export async function _runKosGlobalSearch() {
       deckMap[s.id] = s.badge || s.title;
     });
 
-  resultsEl.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${results.length} kata ditemukan</div><div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;"></div>`;
+  let html = "";
+  
+  // Tampilkan Konteks Kalimat jika mode kalimat
+  if (isSentence) {
+    html += `
+      <div class="search-sentence-context">
+        <div class="ssc-label">KONTEKS KALIMAT</div>
+        <div class="ssc-text">${raw}</div>
+      </div>
+      <div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Kosakata Ditemukan:</div>
+    `;
+  } else {
+    html += `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${filtered.length} kata ditemukan</div>`;
+  }
+
+  html += `<div id="kos-global-list" style="display:flex;flex-direction:column;gap:10px;padding:0 16px 80px;"></div>`;
+  resultsEl.innerHTML = html;
 
   const listEl = document.getElementById("kos-global-list");
-  window._globalResults = results;
+  window._globalResults = filtered;
 
   const frag = document.createDocumentFragment();
-  results.forEach((c, idx) => {
+  filtered.forEach((c, idx) => {
     let badgeHtml = "";
-    if (c.source === "hsk") {
-      const label = deckMap[c.set_id] || `HSK ${c.hsk_level}`;
+    
+    // Robust Badge Logic
+    const isHSK = c.source === "hsk" || !!c.hsk || !!c.hsk_level;
+    if (isHSK) {
+      const hskVal = c.hsk || c.hsk_level || 1;
+      const label = deckMap[c.set_id] || `HSK ${hskVal}`;
       badgeHtml = `<span class="badge-hsk">${label}</span>`;
     } else {
-      const label = c.badge === "common" ? "Common" : "Native";
-      badgeHtml = `<span class="badge-${c.badge || "native"}">${label}</span>`;
+      const bType = c.badge === "common" ? "common" : "native";
+      const bLabel = bType === "common" ? "Common" : "Native";
+      badgeHtml = `<span class="badge-${bType}">${bLabel}</span>`;
     }
 
     const item = document.createElement("div");
     item.className = "kos-item";
+    if (isHSK) item.classList.add("hsk");
+    
     item.dataset.gidx = idx;
     item.style.cursor = "pointer";
-    item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${badgeHtml}</div>`;
+    item.innerHTML = `
+      <div class="kos-hz">${c.hanzi || ""}</div>
+      <div class="kos-info">
+        <div class="kos-py">${colorPy(c.pinyin || "")}</div>
+        <div class="kos-arti">${c.arti || ""}</div>
+      </div>
+      <div class="kos-meta">${badgeHtml}</div>
+    `;
 
     _attachLongPressTTS(item, c.hanzi, () => openKosWordFromGlobal(idx));
-
     frag.appendChild(item);
   });
   listEl.appendChild(frag);
@@ -1810,11 +1862,8 @@ window.startVoiceSearch = () => {
 
     if (finalTranscript) {
       const val = finalTranscript.trim();
-      const isSentence = val.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(val);
-      
-      if (isSentence && typeof window.openSegmentedView === "function") {
-        window.openSegmentedView(val);
-      } else if (typeof window.onKosGlobalSearch === "function") {
+      // Jangan buka openSegmentedView (OCR), tapi biarkan _runKosGlobalSearch yang menangani di layar pencarian
+      if (typeof window.onKosGlobalSearch === "function") {
         window.onKosGlobalSearch();
       }
     }

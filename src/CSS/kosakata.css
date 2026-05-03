@@ -126,6 +126,36 @@
   padding: 2px 7px;
   border-radius: 6px;
 }
+
+/* ── Global Search Badges ── */
+.badge-hsk, .badge-common, .badge-native {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.badge-hsk {
+  background: rgba(232, 201, 109, 0.15);
+  color: var(--gold);
+  border: 1px solid rgba(232, 201, 109, 0.3);
+}
+
+.badge-common {
+  background: rgba(101, 223, 77, 0.12);
+  color: #65df4d;
+  border: 1px solid rgba(101, 223, 77, 0.25);
+}
+
+.badge-native {
+  background: rgba(77, 159, 223, 0.12);
+  color: #4d9fdf;
+  border: 1px solid rgba(77, 159, 223, 0.25);
+}
+
 .kos-actions {
   display: flex;
   gap: 5px;

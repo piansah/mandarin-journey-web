@@ -228,3 +228,30 @@
     translate: -2px 5px;
   }
 }
+
+/* ── Sentence Context View ── */
+.search-sentence-context {
+  background: linear-gradient(135deg, var(--sur2), var(--sur));
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 0 4px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.ssc-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.ssc-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: "Noto Sans SC", sans-serif;
+  line-height: 1.4;
+}
