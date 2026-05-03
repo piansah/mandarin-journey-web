@@ -1,0 +1,259 @@
+/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
+/* ============================================================
+   STATISTIC.CSS — Statistics Detail Layer
+   ============================================================ */
+
+/* ── Tabs ── */
+.stat-tabs {
+  display: flex;
+  background: var(--sur);
+  padding: 8px 16px;
+  gap: 8px;
+  border-bottom: 1px solid var(--sur2);
+}
+.stat-tab {
+  flex: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 18px;
+  background: var(--sur2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.stat-tab.active {
+  background: rgba(232,201,109,0.1);
+  border-color: rgba(232,201,109,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* ── Layer scroll ── */
+#layer-statistic .stat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 40px;
+}
+
+/* ── Section ── */
+.stat-section {
+  margin-bottom: 24px;
+}
+.stat-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dim2);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 12px;
+}
+
+/* ── Hero number ── */
+.stat-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 0 20px;
+}
+.stat-hero-icon { font-size: 36px; margin-bottom: 8px; }
+.stat-hero-num {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.stat-hero-label {
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 6px;
+}
+.stat-hero-sub {
+  font-size: 11px;
+  color: var(--dim2);
+  margin-top: 4px;
+}
+
+/* ── Heatmap (7-day) ── */
+.stat-heatmap {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px 0;
+}
+.stat-heat-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.stat-heat-block {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--sur2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dim2);
+}
+.stat-heat-block.lv1 { background: rgba(74,222,128,0.12); color: var(--green); }
+.stat-heat-block.lv2 { background: rgba(74,222,128,0.25); color: var(--green); }
+.stat-heat-block.lv3 { background: rgba(74,222,128,0.45); color: #fff; }
+.stat-heat-label { font-size: 9px; color: var(--dim2); }
+
+/* ── Donut chart ── */
+.stat-donut-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+}
+.stat-donut {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+.stat-donut svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.stat-donut circle {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1.2s ease;
+}
+.stat-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.stat-donut-pct {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.stat-donut-lbl {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: -2px;
+}
+
+/* ── Category cards (2x2) ── */
+.stat-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-cat-card {
+  background: var(--sur2);
+  border-radius: 12px;
+  padding: 14px;
+  border-left: 3px solid var(--dim2);
+}
+.stat-cat-card.mature { border-color: var(--green); }
+.stat-cat-card.learning { border-color: #fb923c; }
+.stat-cat-card.critical { border-color: var(--red); }
+.stat-cat-card.neww { border-color: var(--blue); }
+.stat-cat-num {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-cat-card.mature .stat-cat-num { color: var(--green); }
+.stat-cat-card.learning .stat-cat-num { color: #fb923c; }
+.stat-cat-card.critical .stat-cat-num { color: var(--red); }
+.stat-cat-card.neww .stat-cat-num { color: var(--blue); }
+.stat-cat-name { font-size: 10px; color: var(--dim); margin-top: 4px; }
+
+/* ── Progress bars ── */
+.stat-prog-row { margin-bottom: 10px; }
+.stat-prog-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.stat-prog-label span:first-child { color: var(--dim); }
+.stat-prog-label span:last-child { font-weight: 600; }
+.stat-prog-track {
+  height: 6px;
+  background: var(--sur2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.stat-prog-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+
+/* ── Word list (critical words) ── */
+.stat-word-list { display: flex; flex-direction: column; gap: 6px; }
+.stat-word-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--sur2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.stat-word-row:active { opacity: 0.6; }
+.stat-word-hz { font-size: 20px; min-width: 44px; text-align: center; font-family: 'Noto Sans SC', sans-serif; }
+.stat-word-info { flex: 1; }
+.stat-word-py { font-size: 12px; font-weight: 500; }
+.stat-word-arti { font-size: 10px; color: var(--dim); }
+.stat-word-badge {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stat-word-badge.danger { background: rgba(248,113,113,0.15); color: var(--red); }
+.stat-word-badge.warn { background: rgba(251,146,60,0.15); color: #fb923c; }
+.stat-word-badge.ok { background: rgba(74,222,128,0.12); color: var(--green); }
+
+/* ── Session type list ── */
+.stat-type-list { display: flex; flex-direction: column; gap: 6px; }
+.stat-type-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--sur2);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.stat-type-icon { font-size: 20px; flex-shrink: 0; }
+.stat-type-info { flex: 1; }
+.stat-type-name { font-size: 12px; font-weight: 500; }
+.stat-type-sub { font-size: 10px; color: var(--dim); }
+.stat-type-num { font-size: 16px; font-weight: 700; color: var(--txt); }
+
+/* ── Empty state ── */
+.stat-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dim);
+  font-size: 12px;
+}
+.stat-empty-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+
+/* ── Loading ── */
+.stat-loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--dim);
+}

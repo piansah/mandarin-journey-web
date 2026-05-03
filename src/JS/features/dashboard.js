@@ -520,9 +520,15 @@ async function _renderLevel() {
 /* ══════════════════════════════════════════════════════════════
    LOAD SCORES FROM SUPABASE
 ══════════════════════════════════════════════════════════════ */
+let _loadScoresPromise = null;
+
 export async function loadScores() {
-  const currentUser = getCurrentUser();
-  try {
+  if (_loadScoresPromise) return _loadScoresPromise;
+  
+  _loadScoresPromise = (async () => {
+    const currentUser = getCurrentUser();
+    try {
+
     if (!currentUser) {
       renderStats();
       updateDailyProgress();
@@ -652,7 +658,10 @@ export async function loadScores() {
     checkUnlockAndNotify().catch(console.error);
   } finally {
     _resolveScoresLoaded();
+    _loadScoresPromise = null;
   }
+  })();
+  return _loadScoresPromise;
 }
 
 /* ══════════════════════════════════════════════════════════════

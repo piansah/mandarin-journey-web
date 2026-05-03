@@ -20,7 +20,7 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 36px 12px 16px;
+  padding: 12px 64px 12px 16px; /* Tambah padding kanan untuk mic */
   background: var(--sur2);
   border: 1px solid var(--bdr);
   border-radius: 12px;
@@ -35,14 +35,63 @@
 
 .search-clear-btn {
   position: absolute;
-  right: 12px;
+  right: 40px; /* Geser ke kiri sedikit agar tidak tumpuk dengan mic */
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: var(--dim);
   font-size: 16px;
-  background: none;
-  border: none;
+  padding: 4px;
+}
+
+.search-mic-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: opacity 0.2s;
+}
+
+.search-mic-btn:active {
+  opacity: 0.5;
+}
+
+/* ── OCR FAB ── */
+#search-screen .search-ocr-fab {
+  position: fixed; /* Gunakan fixed agar posisi stabil terhadap layar */
+  bottom: 85px;
+  right: 20px;
+  z-index: 1000;
+  width: 48px;
+  height: 48px;
+  background: var(--sur);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--txt);
+  border: 1px solid var(--bdr);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#search-screen .search-ocr-fab:active {
+  transform: scale(0.9);
+  background: var(--sur2);
+}
+
+#search-screen .search-ocr-fab svg {
+  color: var(--txt);
+  opacity: 0.8;
 }
 
 .search-filters-wrap {

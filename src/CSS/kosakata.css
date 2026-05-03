@@ -886,12 +886,16 @@
 
 .kwd-char-main {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
   padding: 16px;
   background: var(--sur2);
   border-radius: 14px;
   margin-bottom: 4px;
+}
+.kwd-char-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .kwd-char-hz {
   font-size: 52px;
@@ -935,17 +939,22 @@
 }
 .kwd-char-comp {
   flex: 1;
-  min-width: 120px;
+  min-width: 140px;
   background: var(--sur2);
   border-radius: 12px;
   padding: 12px 14px;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   transition: opacity 0.15s;
 }
 .kwd-char-comp:active { opacity: 0.6; }
+.kwd-char-comp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .kwd-char-comp-hz {
   font-size: 36px;
   font-family: 'Noto Sans SC', sans-serif;
@@ -953,14 +962,14 @@
   min-width: 42px;
   text-align: center;
 }
-.kwd-char-comp-detail {
+.kwd-char-comp-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .kwd-char-comp-py { font-size: 13px; font-weight: 600; }
 .kwd-char-comp-def { font-size: 11px; color: var(--dim); line-height: 1.4; }
-.kwd-char-comp-sub { font-size: 10px; color: var(--dim); opacity: 0.6; margin-top: 2px; }
+.kwd-char-comp-sub { font-size: 10px; color: var(--dim); opacity: 0.6; margin-top: 2px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); }
 .kwd-char-no-decomp {
   font-size: 12px;
   color: var(--dim);
@@ -1024,4 +1033,35 @@
   background: rgba(255, 107, 107, 0.1);
   border-color: #ff6b6b;
   transform: translateY(-2px);
+}
+
+/* ── Etymology Styles (Refined) ── */
+.kwd-char-etym {
+  font-size: 11.5px;
+  color: var(--dim2);
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(232, 201, 109, 0.2);
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-style: italic;
+}
+.kwd-char-etym span {
+  font-size: 14px;
+  filter: grayscale(1) opacity(0.7);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.kwd-char-comp-etym {
+  font-size: 10.5px;
+  color: var(--dim);
+  margin-top: 4px;
+  line-height: 1.5;
+  opacity: 0.8;
+  font-style: italic;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }

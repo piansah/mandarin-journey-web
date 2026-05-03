@@ -1006,10 +1006,8 @@ function _renderUserProfileScreen(
 
     <div class="prof-stats-grid">
       <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.streak}</div><div class="prof-stat-num">${userData.streak}</div><div class="prof-stat-lbl">Hari Streak</div></div>
-      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.xp}</div><div class="prof-stat-num gold">${userData.xp.toLocaleString()}</div><div class="prof-stat-lbl">Total XP</div></div>
       <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.book}</div><div class="prof-stat-num blue">${userData.kosakataCount ?? "—"}</div><div class="prof-stat-lbl">Kosakata</div></div>
       <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.trophy}</div><div class="prof-stat-num">${userData.sesiCount ?? "—"}</div><div class="prof-stat-lbl">Sesi Belajar</div></div>
-      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.target}</div><div class="prof-stat-num">${userData.akurasi > 0 ? userData.akurasi + "%" : "—"}</div><div class="prof-stat-lbl">Akurasi Quiz</div></div>
       <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG.rank}</div><div class="prof-stat-num">${userData.rank ? "#" + userData.rank : "—"}</div><div class="prof-stat-lbl">Peringkat</div></div>
     </div>
 

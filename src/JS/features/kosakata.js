@@ -445,7 +445,7 @@ export async function _runKosGlobalSearch() {
     item.style.cursor = "pointer";
     item.innerHTML = `<div class="kos-hz">${c.hanzi || ""}</div><div class="kos-info"><div class="kos-py">${colorPy(c.pinyin || "")}</div><div class="kos-arti">${c.arti || ""}</div></div><div class="kos-meta">${badgeHtml}</div>`;
 
-    _attachLongPressTTS(item, null, () => speakMandarin(c.hanzi), () => openKosWordFromGlobal(idx));
+    _attachLongPressTTS(item, c.hanzi, () => openKosWordFromGlobal(idx));
 
     frag.appendChild(item);
   });
@@ -1061,7 +1061,7 @@ export function renderKosItems() {
     item.appendChild(infoEl);
     item.appendChild(metaEl);
 
-    _attachLongPressTTS(item, null, () => speakMandarin(c.hanzi), () =>
+    _attachLongPressTTS(item, c.hanzi, () =>
       openKosWord(window._kosFilteredData[idx]),
     );
 
@@ -1173,20 +1173,32 @@ export function invalidateKosLockCache() {}
 /* ══════════════════════════════════════════════════════════════
    KOSAKATA PERSONAL
 ══════════════════════════════════════════════════════════════ */
+let _loadKosvokPromise = null;
 export async function loadKosvok() {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return;
-  const { data, error } = await supa
-    .from("flashcard_cards")
-    .select(FC_CARD_COLS)
-    .eq("added_by", currentUser.id)
-    .order("id", { ascending: false });
-  if (!error && data) {
-    kosvokData = data;
-    if (typeof window.updateAuthUI === "function") window.updateAuthUI();
-    renderFCPersonalList();
-    refreshKosPersonal();
-  }
+  if (_loadKosvokPromise) return _loadKosvokPromise;
+
+  _loadKosvokPromise = (async () => {
+    try {
+      const currentUser = getCurrentUser();
+      if (!currentUser) return;
+      const { data, error } = await supa
+        .from("flashcard_cards")
+        .select(FC_CARD_COLS)
+        .eq("added_by", currentUser.id)
+        .order("id", { ascending: false });
+      if (!error && data) {
+        kosvokData = data;
+        if (typeof window.updateAuthUI === "function") window.updateAuthUI();
+        renderFCPersonalList();
+        refreshKosPersonal();
+      }
+    } catch (e) {
+      console.error("[Kosakata] loadKosvok failed:", e);
+    } finally {
+      _loadKosvokPromise = null;
+    }
+  })();
+  return _loadKosvokPromise;
 }
 
 export function renderFCPersonalList() {
@@ -1603,6 +1615,62 @@ function _strokePlayStroke(charIdx, strokeIdx) {
   _playStrokeSequence(charIdx, strokeIdx);
 }
 
+// ── Voice Search Implementation ──
+window.startVoiceSearch = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Maaf, browser Anda tidak mendukung fitur Voice Search.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "zh-CN"; // Prioritas Mandarin
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  const micBtn = document.getElementById("kos-global-mic");
+  const searchInput = document.getElementById("kos-global-search");
+
+  recognition.onstart = () => {
+    if (micBtn) micBtn.style.color = "var(--red)"; // Indikator merekam
+    if (searchInput) searchInput.placeholder = "Mendengarkan...";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    if (searchInput) {
+      searchInput.value = transcript;
+      // Trigger search
+      if (typeof window.onKosGlobalSearch === "function") {
+        window.onKosGlobalSearch();
+      }
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error("SpeechRecognition error:", event.error);
+    if (micBtn) micBtn.style.color = "var(--gold)";
+    if (searchInput) searchInput.placeholder = "Cari Hanzi, Pinyin, atau Arti...";
+  };
+
+  recognition.onend = () => {
+    if (micBtn) micBtn.style.color = "var(--gold)";
+    if (searchInput && !searchInput.value) {
+      searchInput.placeholder = "Cari Hanzi, Pinyin, atau Arti...";
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+window.openOCRScanner = () => {
+  alert("Fitur OCR Scanner (Kamera) akan segera hadir!");
+};
+
 window._strokePlayPause = () => {
   const writer = _strokeWriters[_strokeCharIdx];
   if (!writer) return;
@@ -1732,7 +1800,10 @@ async function _renderWordTab() {
   const container = document.getElementById("kwd-native-list");
   if (!container) return;
 
-  const hanzi = _currentKosWord.hanzi;
+  const hanzi = _currentKosWord?.hanzi;
+  if (!hanzi) return;
+
+  const myId = ++_kosWordLoadId;
 
   // Cek Cache
   if (_compoundCache.has(hanzi)) {
@@ -1743,22 +1814,27 @@ async function _renderWordTab() {
   container.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
 
-  const { data, error } = await supa
-    .from("word_compounds")
-    .select("hanzi, pinyin, arti, badge")
-    .ilike("hanzi", `%${hanzi}%`)
-    .order("frequency", { ascending: false });
+  try {
+    const { data, error } = await supa
+      .from("word_compounds")
+      .select("hanzi, pinyin, arti, badge")
+      .ilike("hanzi", `%${hanzi}%`)
+      .order("frequency", { ascending: false });
 
-  if (!error && data) {
-    _compoundCache.set(hanzi, data);
-    _renderWordTabWithData(container, data);
-    return;
-  }
+    if (myId !== _kosWordLoadId) return;
 
-  if (error || !data || data.length === 0) {
+    if (!error && data && data.length > 0) {
+      _compoundCache.set(hanzi, data);
+      _renderWordTabWithData(container, data);
+      return;
+    }
+
     container.innerHTML =
       '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata gabungan ditemukan.</div>';
-    return;
+  } catch (e) {
+    if (myId !== _kosWordLoadId) return;
+    console.error("[Word] Error loading compounds:", e);
+    container.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Gagal memuat data.</div>';
   }
 }
 
@@ -1823,12 +1899,18 @@ async function _renderCharTab() {
   if (!container) return;
 
   const hanzi = _currentKosWord?.hanzi || "";
+  if (!hanzi) return;
+
+  const myId = ++_kosWordLoadId;
   const chars = [...hanzi];
 
   container.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span>Memuat data karakter...</div>';
 
-  const dict = await _loadDictMap();
+  try {
+    const dict = await _loadDictMap();
+    if (myId !== _kosWordLoadId) return;
+
 
   const IDS_LABEL = {
     "⿰": "kiri · kanan",
@@ -1879,14 +1961,18 @@ async function _renderCharTab() {
     html += `<div class="kwd-char-block">`;
 
     // Header karakter utama
+    const etym = entry?.etymology;
     html += `
       <div class="kwd-char-main">
-        <div class="kwd-char-hz" onclick="window.searchAndOpenWord('${char}')" style="cursor:pointer">${char}</div>
-        <div class="kwd-char-main-info">
-          ${charInfo.pinyin ? `<div class="kwd-char-main-py">${colorPy(charInfo.pinyin)}</div>` : ""}
-          ${charInfo.arti ? `<div class="kwd-char-main-def">${_solidifyHanzi(charInfo.arti)}</div>` : ""}
-          ${structLabel ? `<div class="kwd-char-struct">${idsChar} · ${structLabel}</div>` : ""}
+        <div class="kwd-char-header">
+          <div class="kwd-char-hz" onclick="window.searchAndOpenWord('${char}')" style="cursor:pointer">${char}</div>
+          <div class="kwd-char-main-info">
+            ${charInfo.pinyin ? `<div class="kwd-char-main-py">${colorPy(charInfo.pinyin)}</div>` : ""}
+            ${charInfo.arti ? `<div class="kwd-char-main-def">${_solidifyHanzi(charInfo.arti)}</div>` : ""}
+            ${structLabel ? `<div class="kwd-char-struct">${idsChar} · ${structLabel}</div>` : ""}
+          </div>
         </div>
+        ${etym && etym.hint ? `<div class="kwd-char-etym">${etym.hint}</div>` : ""}
       </div>`;
 
     if (components.length === 0) {
@@ -1909,14 +1995,18 @@ async function _renderCharTab() {
           : [];
         const compInfo = _getCompInfo(comp);
 
+        const compEtym = compEntry?.etymology;
         html += `
           <div class="kwd-char-comp" onclick="window.searchAndOpenWord('${comp}')">
-            <div class="kwd-char-comp-hz">${comp}</div>
-            <div class="kwd-char-comp-detail">
-              ${compInfo.pinyin ? `<div class="kwd-char-comp-py">${colorPy(compInfo.pinyin)}</div>` : ""}
-              ${compInfo.arti ? `<div class="kwd-char-comp-def">${_solidifyHanzi(compInfo.arti)}</div>` : ""}
-              ${subComps.length > 0 ? `<div class="kwd-char-comp-sub">${subComps.join(" · ")}</div>` : ""}
+            <div class="kwd-char-comp-header">
+              <div class="kwd-char-comp-hz">${comp}</div>
+              <div class="kwd-char-comp-info">
+                ${compInfo.pinyin ? `<div class="kwd-char-comp-py">${colorPy(compInfo.pinyin)}</div>` : ""}
+                ${compInfo.arti ? `<div class="kwd-char-comp-def">${_solidifyHanzi(compInfo.arti)}</div>` : ""}
+              </div>
             </div>
+            ${compEtym && compEtym.hint ? `<div class="kwd-char-comp-etym">${compEtym.hint}</div>` : ""}
+            ${subComps.length > 0 ? `<div class="kwd-char-comp-sub">${subComps.join(" · ")}</div>` : ""}
           </div>`;
       }
 
@@ -1926,9 +2016,14 @@ async function _renderCharTab() {
     html += `</div>`;
   }
 
-  container.innerHTML =
-    html ||
-    `<div style="text-align:center;padding:48px;color:var(--dim);">Tidak ada data.</div>`;
+    container.innerHTML =
+      html ||
+      `<div style="text-align:center;padding:48px;color:var(--dim);">Tidak ada data.</div>`;
+  } catch (e) {
+    if (myId !== _kosWordLoadId) return;
+    console.error("[Char] Error rendering char tab:", e);
+    container.innerHTML = `<div style="text-align:center;padding:48px;color:var(--dim);">Gagal memuat data karakter.</div>`;
+  }
 }
 
 function _openWordCompound(w) {
@@ -2156,10 +2251,10 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     const idx = parseInt(card.dataset.speakIdx);
     const text = allItems[idx];
     
-    // Tap kartu -> Suara Kalimat
-    _attachLongPressTTS(card, null, () => speakMandarin(text));
+    // Kembali ke behavior lama: Tap/Hold kartu untuk suara kalimat
+    _attachLongPressTTS(card, text, () => speakMandarin(text));
 
-    // Hold pada kata -> Detail Kata
+    // Tetap pertahankan Hold pada kata untuk Detail (Solusi UX)
     card.querySelectorAll(".clickable-hz").forEach((hz) => {
       const match = hz.textContent;
       _attachLongPressTTS(hz, null, null, () => {

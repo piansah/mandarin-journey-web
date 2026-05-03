@@ -34,6 +34,8 @@ const _hanziCache = {};
 
 let _hanziTapCount = 0;
 let _hanziReadDone = new Set();
+let _renderHanziListId = 0;
+let _loadHanziPromises = new Map();
 
 /* ── LocalStorage helpers untuk read progress ── */
 function _getHanziReadProgress(key) {
@@ -80,6 +82,10 @@ function _hanziUpdateTapCounter() {
 /* ── Load Hanzi from Supabase ── */
 export async function loadHanziFromDB(key) {
   if (_hanziCache[key]) return _hanziCache[key];
+  if (_loadHanziPromises.has(key)) return _loadHanziPromises.get(key);
+
+  const p = (async () => {
+    try {
 
   const [metaRes, itemsRes] = await Promise.all([
     supa
@@ -124,6 +130,13 @@ export async function loadHanziFromDB(key) {
   };
   _hanziCache[key] = result;
   return result;
+    } finally {
+      _loadHanziPromises.delete(key);
+    }
+  })();
+
+  _loadHanziPromises.set(key, p);
+  return p;
 }
 
 /* ── Start Hanzi ── */
@@ -779,8 +792,11 @@ export async function renderHanziList() {
   const grid = document.getElementById("hanzi-list-grid");
   if (!grid) return;
 
+  const myId = ++_renderHanziListId;
+
   await withTimeout(loadUnlockedTiers(), 2500);
   await withTimeout(loadTierStartDecks("hanzi_sets"), 2500);
+  if (myId !== _renderHanziListId) return;
 
   const cacheComplete =
     window._hanziSetsCache &&
@@ -796,6 +812,7 @@ export async function renderHanziList() {
       )
       .order("hsk_level", { ascending: true })
       .order("sort_order", { ascending: true });
+    if (myId !== _renderHanziListId) return;
     if (error) {
       grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--dim);">Gagal memuat: ${error.message}</div>`;
       return;
@@ -814,9 +831,11 @@ export async function renderHanziList() {
       .select("key, hsk_level")
       .order("hsk_level", { ascending: true })
       .order("sort_order", { ascending: true });
+    if (myId !== _renderHanziListId) return;
     if (qData) window._quizSetsCache = qData;
   }
 
+  if (myId !== _renderHanziListId) return;
   grid.innerHTML = window._hanziSetsCache
     .map((s, i) => {
       const hsk = `hsk${s.hsk_level}`;

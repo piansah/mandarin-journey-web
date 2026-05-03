@@ -252,6 +252,16 @@ export function openLayer(id) {
 }
 
 export function closeLayer(id, _suppressHistory = false) {
+  if (!_suppressHistory && _appHistIdx > 0) {
+    // Jika kita menutup layer yang ada di history, lebih baik back()
+    // Tapi kita perlu cek apakah state saat ini memang layer tersebut
+    const snap = _appHistory[_appHistIdx];
+    if (snap && snap.activeLayers.includes(id)) {
+      history.back();
+      return;
+    }
+  }
+
   document.getElementById(id).classList.remove("active");
   document.body.style.overflow = "";
   _navStack = _navStack.filter((s) => !(s.type === "layer" && s.id === id));
@@ -292,30 +302,33 @@ export function showScreen(id) {
 }
 
 export function backToDash() {
-  const currentScreen = document.querySelector(".screen.active");
-  if (currentScreen)
-    _screenScrollPos[currentScreen.id] = currentScreen.scrollTop;
-  _cleanupCurrentScreen();
-  document
-    .querySelectorAll(".screen")
-    .forEach((s) => s.classList.remove("active"));
-  const dash = document.getElementById("dash");
-  dash.classList.add("active");
-  dash.scrollTop = _screenScrollPos["dash"] ?? 0;
-  _navStack = [{ type: "dash" }];
-  _pushAppHistory();
-  setFabVisible(true);
-  _syncNavbar();
+  if (_appHistIdx > 0) {
+    history.back();
+  } else {
+    // Fallback jika tidak ada history
+    _cleanupCurrentScreen();
+    document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    const dash = document.getElementById("dash");
+    dash.classList.add("active");
+    dash.scrollTop = _screenScrollPos["dash"] ?? 0;
+    _navStack = [{ type: "dash" }];
+    setFabVisible(true);
+    _syncNavbar();
+  }
 }
 
 export function backToLayer(id) {
+  if (_appHistIdx > 0) {
+    const prevSnap = _appHistory[_appHistIdx - 1];
+    if (prevSnap && prevSnap.activeLayers.includes(id)) {
+      history.back();
+      return;
+    }
+  }
+
   _cleanupCurrentScreen();
-  document
-    .querySelectorAll(".screen")
-    .forEach((s) => s.classList.remove("active"));
-  document
-    .querySelectorAll(".layer")
-    .forEach((l) => l.classList.remove("active"));
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  document.querySelectorAll(".layer").forEach((l) => l.classList.remove("active"));
   document.getElementById("dash").classList.add("active");
   document.getElementById(id).classList.add("active");
   document.body.style.overflow = "hidden";
@@ -377,22 +390,7 @@ window.addEventListener("popstate", function (e) {
   }
 });
 
-/* ── Mouse back/forward ── */
-document.addEventListener("mousedown", (e) => {
-  if (e.button === 3 || e.button === 4) e.preventDefault();
-});
-document.addEventListener("mouseup", (e) => {
-  if (e.button === 3 || e.button === 4) e.preventDefault();
-});
-document.addEventListener("click", (e) => {
-  if (e.button === 3 || e.button === 4) e.preventDefault();
-});
-document.addEventListener("auxclick", (e) => {
-  if (e.button === 3 || e.button === 4) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-});
+/* Mouse back/forward biarkan default browser menangani history */
 
 /* ── Expose ke window (dipanggil dari HTML onclick) ── */
 window.bnavGoTo = bnavGoTo;
@@ -402,3 +400,4 @@ window.closeLayer = closeLayer;
 window.backToDash = backToDash;
 window.backToLayer = backToLayer;
 window.initAppHistory = initAppHistory;
+window.appBack = () => history.back();

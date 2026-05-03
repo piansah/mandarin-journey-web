@@ -38,6 +38,8 @@ let _isRestoringFromRefresh = false;
 
 const _quizCache = {};
 let _quizScoresPatchScheduled = false;
+let _renderQuizListId = 0;
+let _loadQuizPromises = new Map();
 
 /* ── Render helpers ── */
 function renderQText(q) {
@@ -69,42 +71,49 @@ function renderRumpang(text) {
 /* ── Load Quiz from Supabase ── */
 export async function loadQuizFromDB(key) {
   if (_quizCache[key]) return _quizCache[key];
+  if (_loadQuizPromises.has(key)) return _loadQuizPromises.get(key);
 
-  const [metaRes, questRes] = await Promise.all([
-    supa.from("quiz_sets").select("title, sub").eq("key", key).single(),
-    supa
-      .from("quiz_questions")
-      .select("section, sort_order, question, options, answer_index")
-      .eq("quiz_key", key)
-      .order("section")
-      .order("sort_order"),
-  ]);
+  const p = (async () => {
+    try {
+      const [metaRes, questRes] = await Promise.all([
+        supa.from("quiz_sets").select("title, sub").eq("key", key).single(),
+        supa
+          .from("quiz_questions")
+          .select("section, sort_order, question, options, answer_index")
+          .eq("quiz_key", key)
+          .order("section")
+          .order("sort_order"),
+      ]);
 
-  if (metaRes.error)
-    throw new Error(
-      "Gagal load quiz meta " + key + ": " + metaRes.error.message,
-    );
-  if (questRes.error)
-    throw new Error(
-      "Gagal load quiz soal " + key + ": " + questRes.error.message,
-    );
+      if (metaRes.error)
+        throw new Error("Gagal load quiz meta " + key + ": " + metaRes.error.message);
+      if (questRes.error)
+        throw new Error("Gagal load quiz soal " + key + ": " + questRes.error.message);
 
-  const result = {
-    title: metaRes.data.title,
-    sub: metaRes.data.sub,
-    A: [],
-    B: [],
-    C: [],
-    D: [],
-  };
-  for (const row of questRes.data)
-    result[row.section].push({
-      q: row.question,
-      opts: row.options,
-      ans: row.answer_index,
-    });
-  _quizCache[key] = result;
-  return result;
+      const result = {
+        title: metaRes.data.title,
+        sub: metaRes.data.sub,
+        A: [], B: [], C: [], D: [],
+      };
+
+      for (const row of questRes.data) {
+        if (result[row.section]) {
+          result[row.section].push({
+            q: row.question,
+            opts: row.options,
+            ans: row.answer_index,
+          });
+        }
+      }
+      _quizCache[key] = result;
+      return result;
+    } finally {
+      _loadQuizPromises.delete(key);
+    }
+  })();
+
+  _loadQuizPromises.set(key, p);
+  return p;
 }
 
 /* ── Start Quiz ── */
@@ -687,6 +696,8 @@ export async function renderQuizList() {
   const grid = document.getElementById("quiz-list-grid");
   if (!grid) return;
 
+  const myId = ++_renderQuizListId;
+
   await withTimeout(loadUnlockedTiers(), 2500);
   await withTimeout(loadTierStartDecks("quiz_sets"), 2500);
 
@@ -719,6 +730,8 @@ export async function renderQuizList() {
       ]);
     }
   }
+
+  if (myId !== _renderQuizListId) return;
 
   _renderQuizGrid();
 
