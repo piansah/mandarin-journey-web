@@ -70,19 +70,22 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
 
   const _triggerLongPress = () => {
     didLongPress = true;
-    // Hapus speakMandarin otomatis di sini agar tidak bentrok dengan aksi hold
     if (onLongPress) onLongPress();
     el.style.transition = "transform 0.2s";
     el.style.transform = "scale(0.96)";
     setTimeout(() => {
       el.style.transform = "";
     }, 300);
+    // Kunci status long press sedikit lebih lama untuk blokir klik hantu
+    setTimeout(() => {
+      didLongPress = false;
+    }, 500);
   };
 
   el.addEventListener(
     "touchstart",
     (e) => {
-      e.stopPropagation(); // Mencegah kartu di bawahnya ikutan bereaksi
+      e.stopPropagation();
       didLongPress = false;
       didMove = false;
       startX = e.touches[0].clientX;
@@ -106,16 +109,24 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
     clearTimeout(pressTimer);
     _wasTouched = true;
     setTimeout(() => { _wasTouched = false; }, 500);
-    if (!didMove) e.preventDefault();
-    if (!didLongPress && !didMove && onTap) {
+    
+    // Jika baru saja long press, cegah kejadian klik bawaan
+    if (didLongPress) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (!didMove && onTap) {
+      e.preventDefault();
       e.stopPropagation();
       onTap();
     }
   });
 
   el.addEventListener("mousedown", (e) => {
-    e.stopPropagation(); // Mencegah kartu di bawahnya ikutan bereaksi
-    _wasTouched = false;
+    e.stopPropagation();
+    if (_wasTouched) return;
     didLongPress = false;
     didMove = false;
     pressTimer = setTimeout(() => {
@@ -126,11 +137,27 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   el.addEventListener("mouseup", (e) => {
     if (_wasTouched) return;
     clearTimeout(pressTimer);
-    if (!didLongPress && onTap) {
+    
+    if (didLongPress) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (onTap) {
+      e.preventDefault();
       e.stopPropagation();
       onTap();
     }
   });
+
+  // Listener tambahan untuk memastikan klik tidak tembus
+  el.addEventListener("click", (e) => {
+    if (didLongPress) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
 
   el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
   el.addEventListener("contextmenu", (e) => e.preventDefault());
