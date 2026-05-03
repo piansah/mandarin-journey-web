@@ -2694,9 +2694,6 @@
               dari <span id="tulis-count-denom">0</span>
             </div>
           </div>
-          <button class="tulis-strict-btn" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()">
-            <span>🔓 Strict Off</span>
-          </button>
         </div>
       </div>
       <!-- Progress bar -->
@@ -2716,27 +2713,27 @@
           <div id="tulis-hanzi-target"></div>
         </div>
         <!-- Hint row -->
-        <div class="tulis-hint-row">
-          <button
-            class="tulis-hint-btn"
-            id="tulis-hint-btn"
-            onclick="window.toggleTulisHint()"
-          >
-            👀 Tampilkan Panduan
+        <!-- Control Row (Icons) -->
+        <div class="tulis-ctrl-row">
+          <button class="tulis-icon-btn" onclick="window.tulisHanziClear()" title="Ulangi">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </button>
+          <button class="tulis-icon-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()" title="Tampilkan Panduan">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+          <button class="tulis-icon-btn" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()" title="Strict Mode">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
           </button>
         </div>
       </div>
       <!-- Bottom bar -->
       <div class="tulis-bottom">
-        <button class="tulis-btn-clear" onclick="window.tulisHanziClear()">
-          Ulangi
-        </button>
         <button
           class="tulis-btn-next"
           id="tulis-btn-next"
           onclick="window.tulisHanziNext()"
         >
-          Lanjut
+          Lanjutkan
         </button>
       </div>
     </div>

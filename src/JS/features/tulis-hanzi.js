@@ -21,6 +21,7 @@ let _idx = 0; // index karakter aktif
 let _writer = null; // HanziWriter instance
 let _hintOn = false; // apakah panduan hanzi transparan ditampilkan
 let _quizActive = false; // apakah quiz stroke sedang berjalan
+let _mistakeCount = 0; // Hitung kesalahan buat Strict Mode penalty
 let _sourceScreen = null; // screen asal sebelum buka tulis hanzi
 let _deckTitle = "";
 let _tulisIsPersonal = false;
@@ -140,9 +141,15 @@ function _renderCard() {
       <div class="tulis-canvas-wrap">
         <div id="tulis-hanzi-target"></div>
       </div>
-      <div class="tulis-hint-row">
-        <button class="tulis-hint-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()">
-          👀 Tampilkan Panduan
+      <div class="tulis-ctrl-row">
+        <button class="tulis-icon-btn" onclick="window.tulisHanziClear()" title="Ulangi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        </button>
+        <button class="tulis-icon-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()" title="Tampilkan Panduan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+        <button class="tulis-icon-btn ${_strictMode ? "active" : ""}" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()" title="Strict Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         </button>
       </div>
     `;
@@ -182,7 +189,6 @@ function _renderCard() {
   _quizActive = false;
   const hintBtn = document.getElementById("tulis-hint-btn");
   if (hintBtn) {
-    hintBtn.textContent = "👀 Tampilkan Panduan";
     hintBtn.classList.remove("active");
   }
 
@@ -190,7 +196,7 @@ function _renderCard() {
   const nextBtn = document.getElementById("tulis-btn-next");
   if (nextBtn) {
     nextBtn.disabled = true;
-    nextBtn.textContent = _idx < _cards.length - 1 ? "Lanjut" : "Selesai ✓";
+    nextBtn.textContent = _idx < _cards.length - 1 ? "Lanjutkan" : "Selesai ✓";
   }
 
   // Init HanziWriter
@@ -210,6 +216,7 @@ function _initWriter(character) {
   target.style.width = size + "px";
   target.style.height = size + "px";
   target.innerHTML = "";
+  _mistakeCount = 0; // Reset counter tiap kali ganti karakter
 
   _writer = HanziWriter.create("tulis-hanzi-target", character, {
     width: size,
@@ -245,9 +252,21 @@ function _startQuiz() {
   const card = _cards[_idx]; // ← ambil card saat ini
 
   _writer.quiz({
-    onMistake: (_strokeData) => {},
-    onCorrectStroke: (_strokeData) => {},
-    onComplete: (_summaryData) => {
+    onMistake: (strokeData) => {
+      if (_strictMode) {
+        _mistakeCount++;
+        if (_mistakeCount >= 3) {
+          showToast("Salah 3x! Ulangi dari awal karakter ini.", "err");
+          tulisHanziClear(); // Reset karakter ini
+        }
+      }
+    },
+    onCorrectStroke: (strokeData) => {
+      // Jika benar, kita bisa kurangi mistakeCount atau biarkan (biasanya reset per stroke)
+      // Tapi lebih fair kalau reset per stroke benar
+      _mistakeCount = 0; 
+    },
+    onComplete: (summaryData) => {
       _quizActive = false;
       const nextBtn = document.getElementById("tulis-btn-next");
       if (nextBtn) nextBtn.disabled = false;
@@ -283,7 +302,6 @@ export function toggleTulisHint() {
       onComplete: () => {
         _hintOn = false;
         if (hintBtn) {
-          hintBtn.textContent = "👀 Tampilkan Panduan";
           hintBtn.classList.remove("active");
         }
 
@@ -296,7 +314,6 @@ export function toggleTulisHint() {
       },
     });
     if (hintBtn) {
-      hintBtn.textContent = "⏳ Animasi berjalan...";
       hintBtn.classList.add("active");
     }
   }
@@ -311,10 +328,8 @@ export function toggleTulisStrictMode() {
   if (btn) {
     if (_strictMode) {
       btn.classList.add("active");
-      btn.innerHTML = `<span>🔒 Strict On</span>`;
     } else {
       btn.classList.remove("active");
-      btn.innerHTML = `<span>🔓 Strict Off</span>`;
     }
   }
   
@@ -338,7 +353,6 @@ export function tulisHanziClear() {
   _hintOn = false;
   const hintBtn = document.getElementById("tulis-hint-btn");
   if (hintBtn) {
-    hintBtn.textContent = "👀 Tampilkan Panduan";
     hintBtn.classList.remove("active");
   }
 }
@@ -362,9 +376,15 @@ export function tulisHanziReset() {
       <div class="tulis-canvas-wrap">
         <div id="tulis-hanzi-target"></div>
       </div>
-      <div class="tulis-hint-row">
-        <button class="tulis-hint-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()">
-          👀 Tampilkan Panduan
+      <div class="tulis-ctrl-row">
+        <button class="tulis-icon-btn" onclick="window.tulisHanziClear()" title="Ulangi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        </button>
+        <button class="tulis-icon-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()" title="Tampilkan Panduan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+        <button class="tulis-icon-btn ${_strictMode ? "active" : ""}" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()" title="Strict Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
         </button>
       </div>
     `;

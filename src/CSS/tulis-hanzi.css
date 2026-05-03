@@ -151,28 +151,46 @@
   gap: 8px;
 }
 
-.tulis-hint-btn {
+/* ── Control Row (Icons) ── */
+.tulis-ctrl-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 10px;
+  padding: 10px 0;
+}
+
+.tulis-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   background: var(--sur2);
   border: 1px solid var(--bdr);
-  border-radius: 20px;
-  padding: 8px 18px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--font-ui);
   color: var(--dim2);
-  cursor: pointer;
-  transition: all 0.15s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
 }
-.tulis-hint-btn:active {
+
+.tulis-icon-btn:hover {
   background: var(--sur3);
+  color: var(--txt);
+  transform: translateY(-2px);
 }
-.tulis-hint-btn.active {
+
+.tulis-icon-btn.active {
+  background: var(--gold);
+  color: #000;
   border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(232, 201, 109, 0.08);
+  box-shadow: 0 0 15px rgba(232, 201, 109, 0.2);
+}
+
+.tulis-icon-btn:active {
+  transform: scale(0.9);
 }
 
 
@@ -188,22 +206,6 @@
   margin-top: auto;
 }
 
-.tulis-btn-clear {
-  flex: 0 0 auto;
-  background: var(--sur2);
-  border: 1px solid var(--bdr);
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: var(--font-ui);
-  color: var(--dim2);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.tulis-btn-clear:active {
-  background: var(--sur3);
-}
 
 .tulis-btn-next {
   flex: 1;
@@ -287,31 +289,4 @@
 }
 .tulis-done-btn:active {
   opacity: 0.8;
-}
-
-/* ── Strict Mode Toggle ── */
-.tulis-strict-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--bdr);
-  border-radius: 20px;
-  padding: 6px 12px;
-  color: var(--dim);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.tulis-strict-btn.active {
-  background: var(--gold);
-  color: #000;
-  border-color: var(--gold);
-  box-shadow: 0 0 100px rgba(232, 201, 109, 0.1);
-}
-
-.tulis-strict-btn:active {
-  transform: scale(0.95);
 }
