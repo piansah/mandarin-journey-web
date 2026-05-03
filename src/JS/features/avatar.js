@@ -499,8 +499,10 @@ async function _saveCustomAvatar(blob) {
   closeAvatarPicker();
 
   try {
-    const ext = "jpg"; // Hasil kompresi kita selalu JPEG
-    const filePath = `${currentUser.id}/avatar.${ext}`;
+    const ext = "jpg";
+    // Gunakan timestamp agar nama file selalu unik (Anti-RLS Update Issue)
+    const fileName = `avatar_${Date.now()}.${ext}`;
+    const filePath = `${currentUser.id}/${fileName}`;
 
     const { error: uploadError } = await supa.storage
       .from("avatars")
