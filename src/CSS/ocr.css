@@ -90,21 +90,17 @@
   position: relative;
 }
 
-/* Efek Gelap di Luar Scan Box */
-.ocr-scan-area::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  box-shadow: inset 0 0 0 4000px rgba(0, 0, 0, 0.5);
-}
-
+/* Scan Box — area TERANG di tengah, luar GELAP */
 .ocr-scan-box {
   width: 280px;
   height: 120px;
   position: relative;
+  z-index: 1;
   background: transparent;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
+  /* Box-shadow raksasa ke luar → bikin gelap di luar kotak */
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.55);
 }
 
 /* Corners */

@@ -18,6 +18,15 @@ export async function openOCRScanner() {
   const layer = document.getElementById("layer-ocr");
   if (!layer) return;
 
+  // Reset torch state
+  _isTorchOn = false;
+  const torchBtn = document.getElementById("ocr-torch-btn");
+  if (torchBtn) torchBtn.classList.remove("active");
+
+  // Reset preview
+  const preview = document.getElementById("ocr-result-preview");
+  if (preview) preview.textContent = "Menunggu...";
+
   openLayer("layer-ocr");
   _startCamera();
   
@@ -152,13 +161,14 @@ async function _captureAndProcess() {
   // 3. Run OCR
   try {
     const { data: { text } } = await _ocrWorker.recognize(canvas);
-    const cleanedText = text.replace(/\s+/g, '').trim(); 
+    // Filter: HANYA ambil karakter CJK (Hanzi), buang Latin/angka/simbol
+    const hanziOnly = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF]/g, '');
     
-    if (cleanedText && cleanedText.length > 0) {
-      _lastOcrResult = cleanedText;
+    if (hanziOnly.length > 0) {
+      _lastOcrResult = hanziOnly;
       preview.innerHTML = `
         <div class="ocr-result-content" onclick="window._confirmOCRSearch()">
-          <span class="ocr-text-found">${cleanedText}</span>
+          <span class="ocr-text-found">${hanziOnly}</span>
           <span class="ocr-btn-go">Cari ❯</span>
         </div>
       `;
