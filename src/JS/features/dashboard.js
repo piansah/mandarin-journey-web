@@ -1412,6 +1412,7 @@ export async function updateSrsDashboard() {
   const hafalToday = todayCards.filter((r) => r.srs_level >= 1).length;
   const lupaToday = todayCards.filter((r) => r.srs_level === 0).length;
   const totalToday = hafalToday + lupaToday;
+  const totalHafal = reviewed.filter((r) => r.srs_level >= 1).length;
   const dueCount = reviewed.filter((r) => r.next_review <= today).length;
   const pct = totalToday > 0 ? Math.round((hafalToday / totalToday) * 100) : 0;
 
@@ -1422,7 +1423,7 @@ export async function updateSrsDashboard() {
   const textEl = document.getElementById("srs-bar-text");
   const pctEl = document.getElementById("srs-bar-pct");
   if (totalEl) totalEl.textContent = total;
-  if (matureEl) matureEl.textContent = hafalToday;
+  if (matureEl) matureEl.textContent = totalHafal;
   if (dueEl) dueEl.textContent = dueCount;
   if (fillEl) fillEl.style.width = pct + "%";
   if (textEl)

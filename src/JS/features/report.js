@@ -9,12 +9,17 @@ import { showToast } from "../utilities/helpers.js";
 
 // State
 let _isSubmitting = false;
+let _currentReportType = "bug";
+let _currentReportTargetId = null;
 
 /* ══════════════════════════════════════════════════════════════
    FAB INJECTION & TOGGLE
 ══════════════════════════════════════════════════════════════ */
 
 export function initBugReportFAB() {
+  _injectReportModal();
+  console.log("[Report] Bug report system initialized.");
+
   if (document.getElementById("bug-report-fab")) return;
 
   const fab = document.createElement("div");
@@ -24,8 +29,6 @@ export function initBugReportFAB() {
   fab.title = "Laporkan Bug";
   fab.onclick = openBugReportModal;
   document.body.appendChild(fab);
-
-  _injectReportModal();
 }
 
 export function toggleBugReportFAB(isVisible) {
@@ -76,17 +79,34 @@ function _injectReportModal() {
   document.body.appendChild(modal);
 }
 
-export function openBugReportModal() {
+export function openBugReportModal(preTitle = "", preDesc = "", type = "bug", targetId = null) {
+  console.log("[Report] Opening modal:", { preTitle, type, targetId });
   const modal = document.getElementById("bug-report-modal");
   if (modal) {
+    _currentReportType = type;
+    _currentReportTargetId = targetId;
+
+    const titleInp = document.getElementById("br-title");
+    const descInp = document.getElementById("br-desc");
+    if (titleInp) titleInp.value = preTitle || "";
+    if (descInp) descInp.value = preDesc || "";
+
     modal.classList.add("active");
     _updateDevicePreview();
+  } else {
+    console.error("[Report] Modal element not found in DOM!");
   }
 }
 
+window.openBugReportModal = openBugReportModal;
+
 window.closeBugReportModal = function() {
   const modal = document.getElementById("bug-report-modal");
-  if (modal) modal.classList.remove("active");
+  if (modal) {
+    modal.classList.remove("active");
+    _currentReportType = "bug";
+    _currentReportTargetId = null;
+  }
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -142,7 +162,9 @@ window.submitBugReport = async function() {
       user_id: user ? user.id : null,
       title: title,
       description: desc,
-      device_info: deviceInfo
+      device_info: deviceInfo,
+      report_type: _currentReportType,
+      target_id: _currentReportTargetId ? String(_currentReportTargetId) : null
     });
 
     if (error) throw error;

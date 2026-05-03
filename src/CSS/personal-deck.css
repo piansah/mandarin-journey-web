@@ -417,9 +417,12 @@
   cursor: pointer;
   z-index: 1;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 .pd-swipe-wrap.swiped .pd-swipe-delete {
   pointer-events: auto;
+  opacity: 1;
 }
 #pd-latihan-btn {
   width: 100%;

@@ -3,6 +3,7 @@
    APP/APP-INIT.JS — Theme Init & App Entry Point
    ============================================================ */
 import { initApp } from "../core/config.js";
+import "../features/report.js";
 
 /* ── Theme Toggle ── */
 (function () {

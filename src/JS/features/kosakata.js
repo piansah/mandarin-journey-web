@@ -62,9 +62,10 @@ export function _attachLongPressTTS(el, hanzi, onTap) {
   const _triggerLongPress = () => {
     didLongPress = true;
     if (hanzi) speakMandarin(hanzi);
-    el.style.opacity = "0.6";
+    el.style.transition = "transform 0.2s";
+    el.style.transform = "scale(0.96)";
     setTimeout(() => {
-      el.style.opacity = "";
+      el.style.transform = "";
     }, 300);
   };
 
@@ -265,10 +266,13 @@ export async function initGlobalSearchCache(forceRefresh = false) {
 }
 
 export function warmUpGlobalSearchCache() {
-  if (_globalSearchCache || _initGlobalSearchCachePromise) return;
-  initGlobalSearchCache().catch(() => {
-    _initGlobalSearchCachePromise = null;
-  });
+  if (!_globalSearchCache && !_initGlobalSearchCachePromise) {
+    initGlobalSearchCache().catch(() => {
+      _initGlobalSearchCachePromise = null;
+    });
+  }
+  // Prefetch dictionary map untuk tab Char agar instan
+  _loadDictMap().catch(() => {});
 }
 
 
@@ -536,15 +540,19 @@ async function _loadKosSrsProgress(cardIds) {
   if (!currentUser || !cardIds.length) return new Map();
 
   const progressMap = new Map();
-  const chunks = _chunkArray(cardIds, 500); // Increased chunk size
-  for (const chunk of chunks) {
-    const { data } = await supa
+  // ✅ OPTIMASI: Gunakan satu query tunggal untuk semua progress user
+  // Daripada query per-chunk card_id (yang lambat), ambil semua progress milik user ini.
+  try {
+    const { data, error } = await supa
       .from("user_card_progress")
       .select("card_id, srs_level, interval_days, ease_factor, next_review, last_reviewed")
-      .eq("user_id", currentUser.id)
-      .in("card_id", chunk);
+      .eq("user_id", currentUser.id);
 
-    (data ?? []).forEach((row) => progressMap.set(row.card_id, row));
+    if (!error && data) {
+      data.forEach((row) => progressMap.set(row.card_id, row));
+    }
+  } catch (err) {
+    console.error("Error loading SRS progress:", err);
   }
 
   return progressMap;
@@ -565,10 +573,15 @@ async function _loadKosDueMap(sets) {
   if (!setIds.length) return new Map();
 
   let allCards = [];
+  if (!_globalSearchCache) {
+    await initGlobalSearchCache();
+  }
+  
   if (_globalSearchCache) {
     const setIdsSet = new Set(setIds);
     allCards = _globalSearchCache.filter((c) => setIdsSet.has(c.set_id));
   } else {
+    // Fallback jika cache benar-benar gagal
     for (const chunk of _chunkArray(setIds, 100)) {
       const { data } = await supa
         .from("flashcard_cards")
@@ -1221,6 +1234,10 @@ let _activeKwdTab = "kalimat";
 let _strokeWriters = [];
 let _kwdHeroTapReadyAt = 0;
 
+// ── Caching untuk tab ──
+let _exampleCache = new Map();
+let _compoundCache = new Map();
+
 // ── Stroke state ──
 let _strokeChars = [];
 let _strokeCharIdx = 0;
@@ -1290,7 +1307,8 @@ function _renderHero() {
 
   container.innerHTML = `
     <div style="position: relative;">
-      <div style="position: absolute; top: 10px; right: 10px; z-index: 4;">
+      <div style="position: absolute; top: 10px; right: 10px; z-index: 4; display: flex; gap: 8px;">
+        <button class="kwd-report-btn" title="Laporkan Kesalahan" onclick="window.openBugReportModal('Kesalahan Data Kata','Ditemukan kesalahan pada kata: ${card.hanzi} (${card.pinyin}). Mohon perbaiki bagian: [Arti / Pinyin / Kelas Kata / Catatan]', 'content', '${card.id}')">🚩</button>
         <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button" style="position: relative; top: 0; right: 0; color:var(--dim2); border-color:var(--bdr); background:var(--sur2);">${SVG_FAV_OUTLINE}</button>
       </div>
       <div class="kwd-hero" id="kwd-hero-main" style="cursor:pointer; padding-top: 24px;">
@@ -1715,6 +1733,12 @@ async function _renderWordTab() {
 
   const hanzi = _currentKosWord.hanzi;
 
+  // Cek Cache
+  if (_compoundCache.has(hanzi)) {
+    _renderWordTabWithData(container, _compoundCache.get(hanzi));
+    return;
+  }
+
   container.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
 
@@ -1724,14 +1748,25 @@ async function _renderWordTab() {
     .ilike("hanzi", `%${hanzi}%`)
     .order("frequency", { ascending: false });
 
+  if (!error && data) {
+    _compoundCache.set(hanzi, data);
+    _renderWordTabWithData(container, data);
+    return;
+  }
+
   if (error || !data || data.length === 0) {
     container.innerHTML =
       '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata gabungan ditemukan.</div>';
     return;
   }
+}
 
+function _renderWordTabWithData(container, data) {
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata gabungan ditemukan.</div>';
+    return;
+  }
   const frag = document.createDocumentFragment();
-
   data.forEach((w, idx) => {
     const item = document.createElement("div");
     item.className = "kos-item";
@@ -1961,6 +1996,14 @@ async function _loadKosWordExamples(hanzi) {
   if (!listEl) return;
 
   const myId = ++_kosWordLoadId;
+
+  // Cek Cache
+  if (_exampleCache.has(hanzi)) {
+    const { hData, uData } = _exampleCache.get(hanzi);
+    _renderKosWordExamples(listEl, hData, uData);
+    return;
+  }
+
   listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim);"><span class="spinner"></span></div>';
 
   try {
@@ -1976,6 +2019,10 @@ async function _loadKosWordExamples(hanzi) {
       .order("id", { ascending: true });
 
     if (myId !== _kosWordLoadId) return;
+
+    if (hData || uData) {
+      _exampleCache.set(hanzi, { hData: hData || [], uData: uData || [] });
+    }
 
     _renderKosWordExamples(listEl, hData || [], uData || []);
   } catch (e) {
@@ -1993,9 +2040,14 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
   hanziItems.forEach((h, idx) => {
     allItems.push(h.hanzi || "");
     html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
-      <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
-      <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
-      <div class="kwd-ex-id">${h.arti}</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div style="flex:1;">
+          <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
+          <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
+          <div class="kwd-ex-id">${h.arti}</div>
+        </div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')">🚩</div>
+      </div>
     </div>`;
   });
 
@@ -2013,9 +2065,14 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
         </div>`
       : "";
     html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
-      ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
-      ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
-      ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div style="flex:1;">
+          ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
+          ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
+          ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
+        </div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')">🚩</div>
+      </div>
       ${actions}
     </div>`;
   });
@@ -2040,10 +2097,19 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
 
   hanziItems.forEach((h, idx) => {
     allItems.push(h.hanzi || "");
-    html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
-      <div class="kwd-ex-hz">${_escapeHtml(h.hanzi)}</div>
-      <div class="kwd-ex-py">${colorPy(_escapeHtml(h.pinyin))}</div>
-      <div class="kwd-ex-id">${_escapeHtml(h.arti)}</div>
+    html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer; position:relative;">
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" 
+          onmousedown="event.stopPropagation()" 
+          onmouseup="event.stopPropagation()" 
+          ontouchstart="event.stopPropagation()" 
+          ontouchend="event.stopPropagation()" 
+          onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"
+          style="position:absolute; top:10px; right:10px; z-index:11;">🚩</div>
+        <div>
+          <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
+          <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
+          <div class="kwd-ex-id">${_escapeHtml(h.arti)}</div>
+        </div>
     </div>`;
   });
 
@@ -2062,10 +2128,19 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
         </div>`
       : "";
 
-    html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
-      ${u.hanzi ? `<div class="kwd-ex-hz">${_escapeHtml(u.hanzi)}</div>` : ""}
-      ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(_escapeHtml(u.pinyin))}</div>` : ""}
-      ${u.arti ? `<div class="kwd-ex-id">${_escapeHtml(u.arti)}</div>` : ""}
+    html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer; position:relative;">
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" 
+          onmousedown="event.stopPropagation()" 
+          onmouseup="event.stopPropagation()" 
+          ontouchstart="event.stopPropagation()" 
+          ontouchend="event.stopPropagation()" 
+          onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"
+          style="position:absolute; top:10px; right:10px; z-index:11;">🚩</div>
+        <div>
+          ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
+          ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
+          ${u.arti ? `<div class="kwd-ex-id">${_escapeHtml(u.arti)}</div>` : ""}
+        </div>
       ${actions}
     </div>`;
   });
