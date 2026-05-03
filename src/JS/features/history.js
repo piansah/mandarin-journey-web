@@ -27,19 +27,14 @@ export async function saveSearchHistory(query) {
   const user = getCurrentUser();
   if (user) {
     try {
-      // Cek apakah query yang sama sudah ada hari ini (opsional, untuk de-duplication)
-      await supa.from("user_search_history").upsert({
+      const { error } = await supa.from("user_search_history").insert({
         user_id: user.id,
         query: cleanQuery,
-        is_archived: false,
-        created_at: new Date().toISOString()
-      }, { onConflict: 'user_id,query' }).catch(() => {
-        // Jika tidak ada constraint unique, pakai insert biasa
-        return supa.from("user_search_history").insert({
-          user_id: user.id,
-          query: cleanQuery
-        });
+        is_archived: false
       });
+      if (error) {
+        console.warn("[History] Supabase Insert Error (Normal if Duplicate):", error.message);
+      }
     } catch (err) {
       console.error("[History] Gagal simpan ke database:", err);
     }
@@ -59,17 +54,17 @@ export async function getSearchHistory(includeArchived = false) {
   }
 
   try {
-    let query = supa
+    let q = supa
       .from("user_search_history")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
 
     if (!includeArchived) {
-      query = query.eq("is_archived", false);
+      q = q.eq("is_archived", false);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await q;
     if (error) throw error;
     return data;
   } catch (err) {

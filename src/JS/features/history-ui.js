@@ -9,8 +9,16 @@ export function initHistoryUI() {
   const input = document.getElementById("kos-global-search");
   if (!input) return;
 
-  // Tampilkan history saat fokus
-  input.addEventListener("focus", () => showSearchHistoryDropdown());
+  console.log("[History UI] Initializing listeners...");
+
+  // Tampilkan history saat fokus atau klik
+  const triggerShow = () => {
+    console.log("[History UI] Input focused/clicked");
+    showSearchHistoryDropdown();
+  };
+
+  input.addEventListener("focus", triggerShow);
+  input.addEventListener("click", triggerShow);
 
   // Sembunyikan history saat klik di luar
   document.addEventListener("click", (e) => {
@@ -22,14 +30,17 @@ export function initHistoryUI() {
 
 export async function showSearchHistoryDropdown() {
   const input = document.getElementById("kos-global-search");
+  // Hanya muncul jika input kosong
   if (!input || input.value.trim().length > 0) return;
 
   const parent = input.parentElement;
   if (!parent) return;
 
+  // Bersihkan yang lama
   hideHistoryDropdown();
 
   const history = await getSearchHistory() || [];
+  console.log("[History UI] History count:", history.length);
   if (history.length === 0) return;
 
   const container = document.createElement("div");
@@ -43,8 +54,9 @@ export async function showSearchHistoryDropdown() {
   `;
 
   history.forEach(item => {
+    const safeQuery = (item.query || "").replace(/'/g, "\\'");
     html += `
-      <div class="history-item" onclick="window.useSearchHistory('${item.query.replace(/'/g, "\\'")}')">
+      <div class="history-item" onclick="window.useSearchHistory('${safeQuery}')">
         <div class="history-icon">🕒</div>
         <div class="history-text">${item.query}</div>
         <div class="history-actions">
@@ -64,7 +76,7 @@ export function hideHistoryDropdown() {
   if (old) old.remove();
 }
 
-// Global Handlers
+// Global Handlers (Exposed via window for onclick)
 window.useSearchHistory = function(query) {
   const input = document.getElementById("kos-global-search");
   if (input) {
@@ -77,9 +89,15 @@ window.useSearchHistory = function(query) {
 };
 
 window.handleHistoryAction = async function(id) {
-  await updateHistoryStatus(id, 'delete');
-  showSearchHistoryDropdown();
+  if (typeof window.updateHistoryStatus === "function") {
+    await window.updateHistoryStatus(id, 'delete');
+    showSearchHistoryDropdown();
+  }
 };
 
 // Auto Init
-document.addEventListener("DOMContentLoaded", initHistoryUI);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initHistoryUI);
+} else {
+  initHistoryUI();
+}

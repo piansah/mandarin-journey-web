@@ -9,11 +9,11 @@
     left: 0;
     right: 0;
     background: var(--sur2);
-    border: 1px solid var(--bdr);
+    border: 1px solid var(--gold);
     border-radius: 12px;
     margin-top: 8px;
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    z-index: 999999 !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     overflow: hidden;
     animation: slideDown 0.2s ease-out;
 }
