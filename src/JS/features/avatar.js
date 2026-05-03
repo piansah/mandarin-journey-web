@@ -432,44 +432,52 @@ export function uploadCustomAvatar() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        // --- Kompresi Gambar (Industry Standard) ---
-        const canvas = document.createElement("canvas");
-        const MAX_SIZE = 500; // Ukuran kotak avatar
-        let width = img.width;
-        let height = img.height;
+    // Gunakan Object URL (Jauh lebih hemat memori daripada FileReader/Base64)
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    
+    img.onload = () => {
+      // Bebaskan memori segera setelah gambar dimuat
+      URL.revokeObjectURL(objectUrl);
 
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
+      // --- Kompresi Gambar (Industry Standard) ---
+      const canvas = document.createElement("canvas");
+      const MAX_SIZE = 500; 
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
         }
+      } else {
+        if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+      }
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(async (blob) => {
-          if (blob) {
-            await _saveCustomAvatar(blob);
-          } else {
-            showToast("Gagal memproses gambar", "err");
-          }
-        }, "image/jpeg", 0.85);
-      };
-      img.src = event.target.result;
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          await _saveCustomAvatar(blob);
+        } else {
+          showToast("Gagal memproses gambar", "err");
+        }
+      }, "image/jpeg", 0.85);
     };
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      showToast("Gagal membaca file gambar", "err");
+    };
+
+    img.src = objectUrl;
   };
 
   // Fallback: kalau user cancel (tidak pilih file), tetap bersihkan DOM
@@ -498,37 +506,48 @@ async function _saveCustomAvatar(blob) {
       .from("avatars")
       .upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("[Avatar] Upload error:", uploadError);
+      throw new Error(`Upload gagal: ${uploadError.message || "Izin ditolak atau bucket tidak ditemukan"}`);
+    }
 
-    // Signed URL expire 1 tahun (foto profil tidak perlu expire pendek)
-    const { data: signedData, error: signedError } = await supa.storage
+    // Coba ambil Public URL dulu (lebih stabil daripada Signed URL jika bucket publik)
+    const { data: publicData } = supa.storage
       .from("avatars")
-      .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+      .getPublicUrl(filePath);
+    
+    let finalUrl = publicData?.publicUrl;
 
-    if (signedError) throw signedError;
-
-    const signedUrl = signedData.signedUrl;
+    // Jika tidak dapat public URL, baru pakai Signed URL
+    if (!finalUrl) {
+      const { data: signedData, error: signedError } = await supa.storage
+        .from("avatars")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+      if (signedError) throw signedError;
+      finalUrl = signedData.signedUrl;
+    }
 
     await supa.from("user_profile").upsert(
       {
         user_id: currentUser.id,
-        custom_avatar_url: signedUrl,
+        custom_avatar_url: finalUrl,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
     );
 
-    _customAvatarUrl = signedUrl;
+    _customAvatarUrl = finalUrl;
     _refreshAvatarUI();
 
     if (window._profileCache) {
-      window._profileCache.custom_avatar_url = signedUrl;
+      window._profileCache.custom_avatar_url = finalUrl;
     }
 
-    showToast("Foto berhasil diupload!", "ok");
+    showToast("Foto berhasil diupdate! ✨", "ok");
   } catch (e) {
-    console.error("_saveCustomAvatar:", e);
-    showToast("Gagal upload foto", "err");
+    console.error("_saveCustomAvatar error detail:", e);
+    // Tampilkan pesan error spesifik ke user biar kita tau kenapa gagalnya
+    showToast(e.message || "Gagal upload foto", "err");
     _customAvatarUrl = null;
     _refreshAvatarUI();
   }

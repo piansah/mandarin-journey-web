@@ -70,7 +70,7 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
 
   const _triggerLongPress = () => {
     didLongPress = true;
-    if (hanzi) speakMandarin(hanzi);
+    // Hapus speakMandarin otomatis di sini agar tidak bentrok dengan aksi hold
     if (onLongPress) onLongPress();
     el.style.transition = "transform 0.2s";
     el.style.transform = "scale(0.96)";
@@ -82,13 +82,13 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   el.addEventListener(
     "touchstart",
     (e) => {
+      e.stopPropagation(); // Mencegah kartu di bawahnya ikutan bereaksi
       didLongPress = false;
       didMove = false;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       pressTimer = setTimeout(() => {
         if (!didMove) {
-          e.stopPropagation();
           _triggerLongPress();
         }
       }, 500);
@@ -96,22 +96,16 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
     { passive: false },
   );
 
-  el.addEventListener(
-    "touchmove",
-    (e) => {
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-      if (dx > 10 || dy > 10) didMove = true;
-    },
-    { passive: true },
-  );
+  el.addEventListener("touchmove", (e) => {
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dx > 10 || dy > 10) didMove = true;
+  }, { passive: true });
 
   el.addEventListener("touchend", (e) => {
     clearTimeout(pressTimer);
     _wasTouched = true;
-    setTimeout(() => {
-      _wasTouched = false;
-    }, 500);
+    setTimeout(() => { _wasTouched = false; }, 500);
     if (!didMove) e.preventDefault();
     if (!didLongPress && !didMove && onTap) {
       e.stopPropagation();
@@ -120,11 +114,11 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   });
 
   el.addEventListener("mousedown", (e) => {
+    e.stopPropagation(); // Mencegah kartu di bawahnya ikutan bereaksi
     _wasTouched = false;
     didLongPress = false;
     didMove = false;
     pressTimer = setTimeout(() => {
-      e.stopPropagation();
       _triggerLongPress();
     }, 500);
   });
