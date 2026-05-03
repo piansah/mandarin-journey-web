@@ -372,3 +372,11 @@
   color: var(--dim);
   font-size: 13px;
 }
+
+
+/* Disable Hanzi interactivity inside Flashcards to focus on memorization */
+#fc-screen .clickable-hz {
+  border-bottom: none !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}

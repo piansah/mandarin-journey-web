@@ -237,14 +237,7 @@ function _segmentText(text) {
       const wordData = hanziMap.get(candidate);
 
       if (wordData) {
-        result.push({
-          hanzi: candidate,
-          pinyin: wordData.pinyin || "",
-          arti: wordData.arti || "",
-          hsk: wordData.hsk_level || null,
-          badge: wordData.badge || null,
-          found: true
-        });
+        result.push({ ...wordData, hanzi: candidate, found: true });
         i += len;
         matched = true;
         break;

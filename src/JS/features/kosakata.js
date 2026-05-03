@@ -87,10 +87,13 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       pressTimer = setTimeout(() => {
-        if (!didMove) _triggerLongPress();
+        if (!didMove) {
+          e.stopPropagation();
+          _triggerLongPress();
+        }
       }, 500);
     },
-    { passive: true },
+    { passive: false },
   );
 
   el.addEventListener(
@@ -98,10 +101,7 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
     (e) => {
       const dx = Math.abs(e.touches[0].clientX - startX);
       const dy = Math.abs(e.touches[0].clientY - startY);
-      if (dx > 8 || dy > 8) {
-        didMove = true;
-        clearTimeout(pressTimer);
-      }
+      if (dx > 10 || dy > 10) didMove = true;
     },
     { passive: true },
   );
@@ -113,24 +113,97 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
       _wasTouched = false;
     }, 500);
     if (!didMove) e.preventDefault();
-    if (!didLongPress && !didMove && onTap) onTap();
+    if (!didLongPress && !didMove && onTap) {
+      e.stopPropagation();
+      onTap();
+    }
   });
 
-  el.addEventListener("mousedown", () => {
-    if (_wasTouched) return;
+  el.addEventListener("mousedown", (e) => {
+    _wasTouched = false;
     didLongPress = false;
     didMove = false;
-    pressTimer = setTimeout(_triggerLongPress, 500);
+    pressTimer = setTimeout(() => {
+      e.stopPropagation();
+      _triggerLongPress();
+    }, 500);
   });
 
-  el.addEventListener("mouseup", () => {
+  el.addEventListener("mouseup", (e) => {
     if (_wasTouched) return;
     clearTimeout(pressTimer);
-    if (!didLongPress && onTap) onTap();
+    if (!didLongPress && onTap) {
+      e.stopPropagation();
+      onTap();
+    }
   });
 
   el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
   el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+/**
+ * Segmentasi Hanzi untuk contoh kalimat (Cross-Referencing)
+ */
+function _segmentifyHanzi(text) {
+  if (!text) return "";
+  
+  // 1. Ambil data dari cache global (HSK + Compounds)
+  if (!_globalSearchCache && typeof initGlobalSearchCache === "function") {
+    initGlobalSearchCache();
+  }
+  const cache = _globalSearchCache || [];
+  const hanziMap = new Map();
+  cache.forEach(c => {
+    if (c.hanzi && !hanziMap.has(c.hanzi)) {
+      hanziMap.set(c.hanzi, c);
+    }
+  });
+
+  // 2. Jalankan mesin pemecah kata (Greedy Longest Match)
+  const maxLen = 4;
+  const result = [];
+  let i = 0;
+
+  while (i < text.length) {
+    let matched = false;
+    // Deteksi karakter non-mandarin (spasi, tanda baca, dll)
+    if (!/[\u4e00-\u9fff\u3400-\u4dbf]/.test(text[i])) {
+      result.push({ hanzi: text[i], found: false });
+      i++;
+      continue;
+    }
+
+    for (let len = Math.min(maxLen, text.length - i); len >= 1; len--) {
+      const candidate = text.substring(i, i + len);
+      const wordData = hanziMap.get(candidate);
+      if (wordData) {
+        result.push({ ...wordData, hanzi: candidate, found: true });
+        i += len;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      result.push({ hanzi: text[i], found: false });
+      i++;
+    }
+  }
+
+  // 3. Render HTML dengan interaksi Tap/Hold
+  return result.map(w => {
+    if (w.found) {
+      // Kata yang ditemukan (Garis bawah EMAS + Margin)
+      return `<span class="segmented-hz" data-hanzi="${w.hanzi}" style="margin: 0 2px; border-bottom: 1.5px solid var(--gold) !important; color: var(--txt);">${w.hanzi}</span>`;
+    } else {
+      // Karakter Mandarin tunggal (Garis bawah ABU TIPIS + Margin)
+      if (/[\u4e00-\u9fff\u3400-\u4dbf]/.test(w.hanzi)) {
+        return `<span class="clickable-hz" style="margin: 0 1px; border-bottom: 1px dashed rgba(255,255,255,0.2) !important; opacity: 0.8;">${w.hanzi}</span>`;
+      }
+      // Spasi atau tanda baca (Tanpa garis bawah)
+      return `<span style="border-bottom:none !important; margin:0 1px; display:inline-block; opacity: 0.5;">${w.hanzi}</span>`;
+    }
+  }).join("");
 }
 
 const FC_CARD_COLS =
@@ -2190,7 +2263,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
     html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div style="flex:1;">
-          <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
+          <div class="kwd-ex-hz">${_segmentifyHanzi(h.hanzi)}</div>
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
           <div class="kwd-ex-id">${h.arti}</div>
         </div>
@@ -2215,7 +2288,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
     html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div style="flex:1;">
-          ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
+          ${u.hanzi ? `<div class="kwd-ex-hz">${_segmentifyHanzi(u.hanzi)}</div>` : ""}
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
           ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
         </div>
@@ -2254,7 +2327,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"
           style="position:absolute; top:10px; right:10px; z-index:11; color: var(--dim2);">${SVG_FLAG}</div>
         <div>
-          <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
+          <div class="kwd-ex-hz">${_segmentifyHanzi(h.hanzi)}</div>
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
           <div class="kwd-ex-id">${_escapeHtml(h.arti)}</div>
         </div>
@@ -2285,7 +2358,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"
           style="position:absolute; top:10px; right:10px; z-index:11; color: var(--dim2);">${SVG_FLAG}</div>
         <div>
-          ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
+          ${u.hanzi ? `<div class="kwd-ex-hz">${_segmentifyHanzi(u.hanzi)}</div>` : ""}
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
           ${u.arti ? `<div class="kwd-ex-id">${_escapeHtml(u.arti)}</div>` : ""}
         </div>
@@ -2306,12 +2379,17 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     // Kembali ke behavior lama: Tap/Hold kartu untuk suara kalimat
     _attachLongPressTTS(card, text, () => speakMandarin(text));
 
-    // Tetap pertahankan Hold pada kata untuk Detail (Solusi UX)
-    card.querySelectorAll(".clickable-hz").forEach((hz) => {
-      const match = hz.textContent;
-      _attachLongPressTTS(hz, null, null, () => {
-        if (window.searchAndOpenWord) window.searchAndOpenWord(match);
-      });
+    // Hold & Tap pada kata untuk Detail & TTS (Segmentasi Cerdas)
+    card.querySelectorAll(".segmented-hz, .clickable-hz").forEach((hz) => {
+      const match = hz.dataset.hanzi || hz.textContent;
+      _attachLongPressTTS(hz, null, 
+        () => { // Tap -> TTS
+          speakMandarin(match);
+        }, 
+        () => { // Hold -> Detail
+          if (window.searchAndOpenWord) window.searchAndOpenWord(match);
+        }
+      );
     });
   });
 }
