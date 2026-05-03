@@ -196,13 +196,14 @@ async function _captureAndProcess() {
     const { data: { text, confidence } } = await _ocrWorker.recognize(canvas);
     console.log(`[OCR] Result: "${text.trim()}" | Confidence: ${confidence}%`);
     
-    // Filter hanya karakter CJK
-    const hanziOnly = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF]/g, '');
+    // Filter karakter CJK + Tanda Baca Mandarin (Full-width)
+    // Range: \u3000-\u303F (Symbols/Punct), \uFF00-\uFFEF (Half/Full-width forms)
+    const scannedText = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F\uFF00-\uFFEF]/g, '');
 
-    if (hanziOnly.length > 0) {
-      if (typeof window.saveSearchHistory === 'function') { window.saveSearchHistory(hanziOnly); }
-      const words = _segmentText(hanziOnly);
-      _showResultMode(hanziOnly, words);
+    if (scannedText.length > 0) {
+      if (typeof window.saveSearchHistory === 'function') { window.saveSearchHistory(scannedText); }
+      const words = _segmentText(scannedText);
+      _showResultMode(scannedText, words);
     } else {
       if (status) status.textContent = "Tidak terbaca, coba lagi";
     }
@@ -248,15 +249,19 @@ function _segmentText(text) {
       }
     }
 
-    // Jika tidak ketemu di kamus, ambil 1 karakter
+    // Jika tidak ketemu di kamus, cek apakah ini tanda baca atau karakter asing
     if (!matched) {
+      const char = text[i];
+      const isPunct = /[\u3000-\u303F\uFF00-\uFFEF]/.test(char);
+
       result.push({
-        hanzi: text[i],
+        hanzi: char,
         pinyin: "",
         arti: "",
         hsk: null,
         badge: null,
-        found: false
+        found: false,
+        isPunct: isPunct
       });
       i++;
     }
@@ -293,7 +298,10 @@ function _showResultMode(rawText, words) {
   // Daftar kata
   html += `<div class="ocr-word-list">`;
   words.forEach((w, idx) => {
-    if (w.found) {
+    if (w.isPunct) {
+      // Tanda baca tampil polos saja
+      html += `<span class="ocr-punct-item">${w.hanzi}</span>`;
+    } else if (w.found) {
       html += `
         <div class="ocr-word-item" data-idx="${idx}">
           <span class="ocr-w-hanzi">${w.hanzi}</span>
