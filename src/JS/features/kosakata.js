@@ -200,7 +200,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
 
   _initGlobalSearchCachePromise = (async () => {
     // Cek Local Storage dulu
-    const cacheKey = "hsk_global_search_cache_v2";
+    const cacheKey = "hsk_global_search_cache_v3";
     if (!forceRefresh) {
       const saved = lsGet(cacheKey);
       if (saved && Array.isArray(saved) && saved.length > 0) {
@@ -261,11 +261,20 @@ export async function initGlobalSearchCache(forceRefresh = false) {
 
     let allCompounds = [];
     try {
-      const { data: compData, error: e3 } = await supa
-        .from("word_compounds")
-        .select("id, hanzi, pinyin, arti, badge")
-        .order("id", { ascending: true });
-      if (!e3 && compData) allCompounds = compData;
+      let cFrom = 0;
+      const C_PAGE = 1000;
+      while (true) {
+        const { data: compData, error: e3 } = await supa
+          .from("word_compounds")
+          .select("id, hanzi, pinyin, arti, badge")
+          .order("id", { ascending: true })
+          .range(cFrom, cFrom + C_PAGE - 1);
+        
+        if (e3 || !compData || compData.length === 0) break;
+        allCompounds = allCompounds.concat(compData);
+        if (compData.length < C_PAGE) break;
+        cFrom += C_PAGE;
+      }
     } catch (e) {
       console.error("[Kosakata] Fetch word_compounds failed:", e);
     }
@@ -283,6 +292,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
       _globalSearchCache = [...hskMapped, ...compMapped];
       // Simpan ke Local Storage
       lsSet(cacheKey, _globalSearchCache);
+      console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total.`);
     }
   })().catch((err) => {
     console.error("[Kosakata] initGlobalSearchCache failed:", err);
