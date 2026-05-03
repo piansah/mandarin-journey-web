@@ -432,6 +432,7 @@ export async function _runKosGlobalSearch() {
 
   if (!input || !resultsEl) return;
   const raw = input.value.trim();
+  if (raw.length > 0 && typeof window.saveSearchHistory === 'function') { window.saveSearchHistory(raw); }
 
   if (!raw) {
     resultsEl.style.display = "none";
@@ -1318,7 +1319,8 @@ export async function openKosWord(card) {
   if (kwdLayer) {
     document.body.appendChild(kwdLayer);
     kwdLayer.classList.add("active");
-    kwdLayer.style.zIndex = "99999";
+    // Layering diatur via class CSS untuk konsistensi
+    kwdLayer.classList.add("overlay-top");
   }
 
   _switchTab("kalimat", true);

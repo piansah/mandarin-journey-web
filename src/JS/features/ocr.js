@@ -174,15 +174,17 @@ async function _captureAndProcess() {
   ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-  // --- Manual Thresholding & Sharpening (Booster) ---
+  // --- Optimized Thresholding (Booster Speed) ---
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  const buf = new Uint32Array(imageData.data.buffer);
   
-  // Sederhananya: Jika lebih gelap dari abu-abu tengah, jadikan hitam pekat. Jika lebih terang, jadikan putih.
-  for (let i = 0; i < data.length; i += 4) {
-    const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-    const val = avg < 120 ? 0 : 255; 
-    data[i] = data[i+1] = data[i+2] = val;
+  for (let i = 0; i < buf.length; i++) {
+    const pixel = buf[i];
+    const r = pixel & 0xFF;
+    const g = (pixel >> 8) & 0xFF;
+    const b = (pixel >> 16) & 0xFF;
+    const avg = (r + g + b) / 3;
+    buf[i] = avg < 128 ? 0xFF000000 : 0xFFFFFFFF; 
   }
   ctx.putImageData(imageData, 0, 0);
 
@@ -194,6 +196,7 @@ async function _captureAndProcess() {
     const hanziOnly = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF]/g, '');
 
     if (hanziOnly.length > 0) {
+      if (typeof window.saveSearchHistory === 'function') { window.saveSearchHistory(hanziOnly); }
       const words = _segmentText(hanziOnly);
       _showResultMode(hanziOnly, words);
     } else {
