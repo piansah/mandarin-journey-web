@@ -238,10 +238,7 @@ function _renderProfileFull() {
       ? TITLES.find((t) => t.id === titleId) || TITLES[0]
       : TITLES?.[0] || { hanzi: "初学者", pinyin: "Chūxuézhě" };
 
-  const { xpForNext, xpPrev } = _xpProgressInfo(level, xp);
-  const xpPct =
-    xpForNext > 0 ? Math.round(((xp - xpPrev) / xpForNext) * 100) : 100;
-  const xpLeft = xpForNext > 0 ? xpPrev + xpForNext - xp : 0;
+  const { pct: xpPct, xpLeft } = _xpProgressInfo(xp);
 
   const { followers, following } = _profFollowCounts;
 
@@ -488,14 +485,14 @@ async function _loadFollowSheetList(subTab) {
    UTILITIES
 ══════════════════════════════════════════ */
 
-function _xpProgressInfo(level, xp) {
-  if (typeof window.XP_PER_LEVEL !== "undefined") {
-    const xpPrev = window.XP_PER_LEVEL[level - 1] || 0;
-    const xpNext = window.XP_PER_LEVEL[level] || 0;
-    return { xpForNext: xpNext - xpPrev, xpPrev };
+function _xpProgressInfo(xp) {
+  if (typeof window.getXPProgress === "function") {
+    return window.getXPProgress(xp);
   }
+  // Fallback
+  const level = Math.floor(xp / 500) + 1;
   const xpPrev = (level - 1) * 500;
-  return { xpForNext: 500, xpPrev };
+  return { pct: Math.floor(((xp - xpPrev) / 500) * 100), xpLeft: 500 - (xp - xpPrev) };
 }
 
 function _buildBadgeCountHTML() {

@@ -492,7 +492,7 @@ async function _renderLevel() {
 
   const elLevel = document.getElementById("stat-level");
   const elSub = document.getElementById("stat-level-sub");
-  const level = calcLevel(userXP, maxXP);
+  const level = calcLevel(userXP);
   const tier = calcTier(level);
   if (elLevel) elLevel.textContent = level;
   if (elSub) elSub.textContent = `${userXP} XP`;

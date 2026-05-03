@@ -71,14 +71,14 @@ function _getGelarByXP(xp) {
 }
 
 function _getTierByRank(rank) {
-  if (rank <= 10) return { name: "miao", icon: "🌱", label: "苗 Miáo" };
-  if (rank <= 30) return { name: "mo", icon: "✍️", label: "墨 Mò" };
-  if (rank <= 60) return { name: "shi", icon: "🦁", label: "狮 Shī" };
-  if (rank <= 100) return { name: "zhu", icon: "🎋", label: "竹 Zhú" };
-  if (rank <= 150) return { name: "hua", icon: "🌸", label: "花 Huā" };
-  if (rank <= 200) return { name: "shu", icon: "📜", label: "书 Shū" };
-  if (rank <= 250) return { name: "long", icon: "🐉", label: "龙 Lóng" };
-  return { name: "yuhuang", icon: "🐲", label: "玉皇 Yùhuáng" };
+  if (rank <= 10) return { name: "yuhuang", icon: "🐲", label: "玉皇 Yùhuáng" };
+  if (rank <= 30) return { name: "long", icon: "🐉", label: "龙 Lóng" };
+  if (rank <= 60) return { name: "shu", icon: "📜", label: "书 Shū" };
+  if (rank <= 100) return { name: "hua", icon: "🌸", label: "花 Huā" };
+  if (rank <= 150) return { name: "zhu", icon: "🎋", label: "竹 Zhú" };
+  if (rank <= 200) return { name: "shi", icon: "🦁", label: "狮 Shī" };
+  if (rank <= 250) return { name: "mo", icon: "✍️", label: "墨 Mò" };
+  return { name: "miao", icon: "🌱", label: "苗 Miáo" };
 }
 
 /* ══════════════════════════════════════════════════════════════

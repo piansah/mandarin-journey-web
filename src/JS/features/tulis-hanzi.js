@@ -111,9 +111,20 @@ export function startTulisHanzi(cards, title, fromScreen = "layer-kos-deck", isP
   _pushAppHistory();
   showScreen("tulis-screen");
   _renderCard();
+
+  // FIX: Handle window resize (orientation change)
+  window.addEventListener("resize", _handleResize);
+}
+
+function _handleResize() {
+  if (document.getElementById("tulis-screen")?.classList.contains("active")) {
+    const card = _cards[_idx];
+    if (card) _initWriter(card.hanzi);
+  }
 }
 
 export function closeTulisHanzi() {
+  window.removeEventListener("resize", _handleResize);
   _destroyWriter();
   if ((_sourceScreen || "").startsWith("layer-")) {
     backToLayer(_sourceScreen || "layer-kos-deck");

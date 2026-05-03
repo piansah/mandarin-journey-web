@@ -1,29 +1,44 @@
-# Mandarin Journey — Dokumentasi & Roadmap
+# Mandarin Journey — Documentation & Roadmap
 
-Aplikasi belajar Mandarin berbasis web (mandarin-journey.vercel.app) yang dirancang untuk penguasaan kosa kata HSK 3.0 melalui sistem Spaced Repetition (SRS) dan eksplorasi kosa kata ala Pleco.
+A premium web-based Mandarin learning application ([mandarin-journey.vercel.app](https://mandarin-journey.vercel.app)) designed for mastering HSK 3.0 vocabulary through a Spaced Repetition System (SRS) and Pleco-style exploration.
 
-## 🚀 Tech Stack & Konvensi
-- **Core**: Vanilla JS (ES Modules), HTML5, CSS3 (Modern Theme).
-- **Backend**: Supabase (Database & Auth).
-- **Pola Navigasi**: Single Page Application (SPA) dengan History State Management (mendukung tombol back hardware/mobile/mouse).
-- **UI/UX**: Dark mode premium, glassmorphism, dan animasi mikro berbasis state.
+## 🚀 Tech Stack & Conventions
+- **Core**: Vanilla JS (ES Modules), HTML5, CSS3 (Modern Premium Theme).
+- **Backend**: Supabase (Database, Auth & Real-time).
+- **Navigation Pattern**: Single Page Application (SPA) with History State Management (supporting hardware/mobile/mouse back buttons).
+- **UI/UX**: Premium dark mode, glassmorphism, and state-driven micro-animations.
 
-## ✨ Fitur Utama (Implemented)
-- **HSK Vocabulary Library**: Akses lengkap HSK 1-9 dengan progres per level.
-- **SRS Flashcards**: Sistem belajar berulang dengan status "Hafal/Lupa" untuk efisiensi memori.
-- **Personal Deck & Collection**: User bisa membuat kategori tema, deck, dan menambahkan kosa kata favorit atau pribadi.
-- **Contextual Bug & Content Reporting**: Sistem pelaporan kesalahan konten yang terintegrasi langsung dengan metadata kosa kata.
-- **Pleco-Style Interaction**: Navigasi detail kosa kata melalui hold-tap pada Hanzi di dalam kalimat.
-- **Reading & Speaking Practice**: Mode cerita dengan auto-scroll dan latihan pengucapan (TTS).
+## ✨ Key Features (Implemented)
+- **HSK Vocabulary Library**: Full access to HSK 1-9 with level-based progress tracking.
+- **SRS Flashcards**: Efficient spaced repetition system with "Memorized/Forgotten" logic.
+- **Hanzi Writing Practice (Strict Mode)**: 🛡️
+    - **Test Mode**: Hide outlines for memory-based practice.
+    - **Penalty System**: Automatic reset after 3 failed strokes for high-stakes learning.
+    - **Responsive Canvas**: Smooth scaling across portrait and landscape orientations.
+- **Social Rankings & Leagues**: 🐲
+    - Competitive tier system (from **Miáo** 🌱 to **Yùhuáng** 🐲).
+    - Unified 500 XP per Level system for fair and consistent progress tracking.
+- **Personal Decks & Collections**: Create custom themes, organize decks, and add personal/favorite vocabulary.
+- **Contextual Reporting**: Integrated feedback system for content errors tied directly to vocabulary metadata.
+- **Pleco-Style Interaction**: Deep-dive into vocabulary details via hold-tap/long-press on Hanzi within sentences.
+- **Reading & Speaking Practice**: Story mode with auto-scroll and Text-to-Speech (TTS) pronunciation.
 
 ---
 
-## 🗺️ Rencana Pengembangan (Roadmap)
+## 🗺️ Roadmap
 
 ### 🧠 Spaced Repetition (SRS) Enhancement
-- **Import/Export Personal Deck**: Memungkinkan user pro untuk mengelola database kata mereka sendiri via CSV.
-- **Deep Audio Recognition**: Upgrade engine pengenalan suara untuk latihan speaking agar lebih akurat dan tidak hanya bergantung pada bot bawaan browser.
-- **Audio/Image Assets**: Dukungan untuk menambahkan gambar atau audio kustom pada kartu di Personal Deck.
+- **Deep Audio Recognition**: Upgrade the voice recognition engine for more accurate speaking practice beyond native browser bots.
+- **Audio/Image Assets**: Support for custom media (images/audio) on cards within Personal Decks.
 
+### 🖨️ Printable PDF Writing Sheet Generator
+- **Concept**: Automatically generate handwriting practice sheets (Tianzige/Mizige) from Personal Decks or specific themes.
+- **Main Features**: 
+    - **Auto-populate**: Hanzi, Pinyin, and Definitions.
+    - **Stroke Order Diagrams**: Display step-by-step stroke sequences (using SVG data) as a guide on every line.
+    - **A4 Optimized**: Precision layouts designed for A4 printing via CSS Print Media.
+    - **Smart Selection**: Option to focus printing on "Critical Words" (words frequently missed in SRS).
+- **Workflow**: Select Theme -> Click "Print" -> New tab opens with print-ready layout -> Save as PDF or Print.
 
-
+---
+© 2026 Piansah — Mandarin Journey. All rights reserved.

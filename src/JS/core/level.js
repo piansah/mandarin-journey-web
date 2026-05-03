@@ -10,10 +10,20 @@ import { getCurrentUser } from "../core/auth.js";
    1. LEVEL THRESHOLDS
 ══════════════════════════════════════════════ */
 
-export function calcLevel(userXP, maxXP = 10000) {
+export const XP_PER_LEVEL = 500;
+
+export function calcLevel(userXP) {
   if (!userXP || userXP <= 0) return 1;
-  if (maxXP <= 0) return 1;
-  return Math.min(100, Math.max(1, Math.floor((userXP / maxXP) * 100)));
+  return Math.floor(userXP / XP_PER_LEVEL) + 1;
+}
+
+export function getXPProgress(userXP) {
+  const level = calcLevel(userXP);
+  const xpPrev = (level - 1) * XP_PER_LEVEL;
+  const xpInLevel = userXP - xpPrev;
+  const pct = Math.floor((xpInLevel / XP_PER_LEVEL) * 100);
+  const xpLeft = XP_PER_LEVEL - xpInLevel;
+  return { level, xpInLevel, xpPrev, xpNext: XP_PER_LEVEL, pct, xpLeft };
 }
 
 /* ══════════════════════════════════════════════
@@ -488,4 +498,5 @@ window.TITLES = TITLES;
 window.calcLevel = calcLevel;
 window.calcTier = calcTier;
 window.checkBadgeUnlock = checkBadgeUnlock;
+window.getXPProgress = getXPProgress;
 window.resetLevelCache = resetLevelCache;
