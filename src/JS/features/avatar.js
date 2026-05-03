@@ -272,7 +272,7 @@ function _refreshAvatarUI() {
 
   const profInner = document.getElementById("prof-avatar-inner");
   if (profInner) {
-    profInner.innerHTML = `<img src="${url}" alt="Avatar">`;
+    profInner.innerHTML = `<img src="${url}" alt="Avatar" onerror="this.style.display='none'">`;
   }
 
   const navAvatar = document.querySelector("#bottom-navbar .bnav-avatar-img");
@@ -489,10 +489,14 @@ export function uploadCustomAvatar() {
 }
 
 async function _saveCustomAvatar(blob) {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return;
+  // 1. Ground Truth User ID
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) {
+    showToast("Sesi habis, silakan login kembali", "err");
+    return;
+  }
 
-  // Preview instan pakai Object URL (Hemat memori dibanding Base64)
+  // Preview instan
   const previewUrl = URL.createObjectURL(blob);
   _customAvatarUrl = previewUrl;
   _refreshAvatarUI();
@@ -500,59 +504,67 @@ async function _saveCustomAvatar(blob) {
 
   try {
     const ext = "jpg";
-    // Gunakan timestamp agar nama file selalu unik (Anti-RLS Update Issue)
     const fileName = `avatar_${Date.now()}.${ext}`;
-    const filePath = `${currentUser.id}/${fileName}`;
+    const filePath = `${user.id}/${fileName}`;
 
+    // 2. Upload Storage
     const { error: uploadError } = await supa.storage
       .from("avatars")
       .upload(filePath, blob, { upsert: true, contentType: "image/jpeg" });
 
     if (uploadError) {
-      console.error("[Avatar] Upload error:", uploadError);
-      throw new Error(`Upload gagal: ${uploadError.message || "Izin ditolak atau bucket tidak ditemukan"}`);
+      console.error("[Avatar] Storage Error:", uploadError);
+      throw new Error(`Upload gagal: ${uploadError.message}`);
     }
 
-    // Coba ambil Public URL dulu (lebih stabil daripada Signed URL jika bucket publik)
-    const { data: publicData } = supa.storage
+    // 3. Selalu gunakan Signed URL (Kunci Digital) agar tembus di semua kondisi (Private/Public)
+    const { data: signedData, error: signedError } = await supa.storage
       .from("avatars")
-      .getPublicUrl(filePath);
-    
-    let finalUrl = publicData?.publicUrl;
+      .createSignedUrl(filePath, 60 * 60 * 24 * 365); // Berlaku 1 tahun
 
-    // Jika tidak dapat public URL, baru pakai Signed URL
-    if (!finalUrl) {
-      const { data: signedData, error: signedError } = await supa.storage
-        .from("avatars")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
-      if (signedError) throw signedError;
-      finalUrl = signedData.signedUrl;
+    if (signedError) {
+      console.error("[Avatar] Signed URL Error:", signedError);
+      throw new Error(`Gagal membuat akses foto: ${signedError.message}`);
     }
 
-    const { error: profileError } = await supa
-      .from("user_profile")
-      .update({
-        custom_avatar_url: finalUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", currentUser.id);
+    const finalUrl = signedData.signedUrl;
 
-    if (profileError) {
-      console.error("[Avatar] Profile update error:", profileError);
-      throw new Error(`Gagal sinkronisasi profil: ${profileError.message}`);
+    // 4. Update Database (Cek Eksistensi)
+    const { data: existing } = await supa
+      .from("user_profile")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    let dbError;
+    if (existing) {
+      ({ error: dbError } = await supa
+        .from("user_profile")
+        .update({ custom_avatar_url: finalUrl, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id));
+    } else {
+      ({ error: dbError } = await supa
+        .from("user_profile")
+        .insert({ 
+          user_id: user.id, 
+          custom_avatar_url: finalUrl, 
+          display_name: user.email?.split("@")[0] || "Pelajar",
+          updated_at: new Date().toISOString() 
+        }));
+    }
+
+    if (dbError) {
+      console.error("[Avatar] DB Error:", dbError);
+      throw new Error(`Gagal simpan profil: ${dbError.message}`);
     }
 
     _customAvatarUrl = finalUrl;
     _refreshAvatarUI();
-
-    if (window._profileCache) {
-      window._profileCache.custom_avatar_url = finalUrl;
-    }
-
+    if (window._profileCache) window._profileCache.custom_avatar_url = finalUrl;
     showToast("Foto berhasil diupdate! ✨", "ok");
+
   } catch (e) {
-    console.error("_saveCustomAvatar error detail:", e);
-    // Tampilkan pesan error spesifik ke user biar kita tau kenapa gagalnya
+    console.error("[Avatar] Save error:", e);
     showToast(e.message || "Gagal upload foto", "err");
     _customAvatarUrl = null;
     _refreshAvatarUI();
