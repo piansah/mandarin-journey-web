@@ -183,9 +183,11 @@ function _triggerLayerRender(id) {
   };
 
   if (!run()) {
-    setTimeout(() => {
-      run();
-    }, 300);
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (run() || attempts > 5) clearInterval(interval);
+    }, 200);
   }
 }
 
@@ -291,14 +293,7 @@ export function showScreen(id) {
   setFabVisible(id === "dash");
   _syncNavbar();
   _triggerScreenInit(id);
-  if (id === "search-screen") {
-    setTimeout(() => {
-      const searchInput = document.querySelector(
-        "#search-screen input, #search-screen .search-input",
-      );
-      if (searchInput) searchInput.focus();
-    }, 100);
-  }
+  // Auto-focus removed as per user request to avoid auto-active keyboard
 }
 
 export function backToDash() {

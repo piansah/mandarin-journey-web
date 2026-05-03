@@ -23,23 +23,30 @@ export async function saveSearchHistory(query) {
   filtered.unshift({ query: cleanQuery, created_at: new Date().toISOString() });
   lsSet(LS_HISTORY_KEY, filtered.slice(0, 10));
 
-  // 3. Supabase (Anti-Duplikat)
+  // 3. Supabase (Anti-Duplikat Total)
   const user = getCurrentUser();
   if (user) {
     try {
-      // Cek apakah kueri yang sama sudah pernah ada
+      // Cari semua entri lama dengan kueri yang sama (siapa tahu ada duplikat dari bug lama)
       const { data: existing } = await supa
         .from("user_search_history")
         .select("id")
         .eq("user_id", user.id)
-        .eq("query", cleanQuery)
-        .limit(1);
+        .eq("query", cleanQuery);
 
       if (existing && existing.length > 0) {
-        // Jika sudah ada, update created_at-nya saja biar jadi yang terbaru (naik ke atas)
+        // Update waktu entri pertama jadi terbaru
         await supa.from("user_search_history")
           .update({ created_at: new Date().toISOString() })
           .eq("id", existing[0].id);
+        
+        // Hapus sisa duplikatnya (jika ada lebih dari 1)
+        if (existing.length > 1) {
+          const idsToDelete = existing.slice(1).map(item => item.id);
+          await supa.from("user_search_history")
+            .delete()
+            .in("id", idsToDelete);
+        }
       } else {
         // Jika benar-benar baru, baru di-insert
         await supa.from("user_search_history").insert({

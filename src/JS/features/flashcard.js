@@ -1150,40 +1150,32 @@ export function openKosvok() {
     const wrap = getWrap();
     if (!wrap) return;
 
-    wrap.addEventListener(
-      "touchstart",
-      (e) => {
-        handleStart(e.touches[0].clientX, e.touches[0].clientY);
-      },
-      { passive: true },
-    );
-    wrap.addEventListener(
-      "touchmove",
-      (e) => {
-        if (!dragging || !isFC()) return;
-        const dx = e.touches[0].clientX - sx,
-          dy = e.touches[0].clientY - sy;
-        if (Math.abs(dx) > Math.abs(dy) + 5) e.preventDefault();
-        handleMove(e.touches[0].clientX, e.touches[0].clientY);
-      },
-      { passive: false },
-    );
-    wrap.addEventListener(
-      "touchend",
-      (e) => {
-        _lastTouchEnd = Date.now();
-        handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-      },
-      { passive: true },
-    );
-    wrap.addEventListener(
-      "touchcancel",
-      () => {
-        dragging = false;
-        resetCardPos();
-      },
-      { passive: true },
-    );
+    // Gunakan fungsi named agar bisa dihapus
+    const _fcTouchStart = (e) => handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    const _fcTouchMove = (e) => {
+      if (!dragging || !isFC()) return;
+      const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) + 5) e.preventDefault();
+      handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+    const _fcTouchEnd = (e) => {
+      _lastTouchEnd = Date.now();
+      handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    };
+    const _fcTouchCancel = () => {
+      dragging = false;
+      resetCardPos();
+    };
+
+    wrap.removeEventListener("touchstart", _fcTouchStart);
+    wrap.removeEventListener("touchmove", _fcTouchMove);
+    wrap.removeEventListener("touchend", _fcTouchEnd);
+    wrap.removeEventListener("touchcancel", _fcTouchCancel);
+
+    wrap.addEventListener("touchstart", _fcTouchStart, { passive: true });
+    wrap.addEventListener("touchmove", _fcTouchMove, { passive: false });
+    wrap.addEventListener("touchend", _fcTouchEnd, { passive: true });
+    wrap.addEventListener("touchcancel", _fcTouchCancel, { passive: true });
   }
 
   function _fcMouseDown(e) {

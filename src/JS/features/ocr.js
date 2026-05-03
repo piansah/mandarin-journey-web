@@ -85,7 +85,11 @@ async function _startCamera() {
     }
   } catch (err) {
     console.error("Camera Error:", err);
-    alert("Gagal mengakses kamera.");
+    if (typeof showToast === "function") {
+      showToast("Gagal mengakses kamera. Pastikan izin diberikan.");
+    } else {
+      alert("Gagal mengakses kamera.");
+    }
     closeOCRScanner();
   }
 }
@@ -326,6 +330,9 @@ window.closeOCRScanner = closeOCRScanner;
    EVENT LISTENERS (Delegated)
 ══════════════════════════════════════════════════════════════ */
 document.addEventListener("click", e => {
+  const ocrLayer = document.getElementById("layer-ocr");
+  if (!ocrLayer || !ocrLayer.classList.contains("active")) return;
+
   // Tombol shutter
   if (e.target.closest("#ocr-capture-btn")) {
     _captureAndProcess();

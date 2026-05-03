@@ -166,8 +166,8 @@ export function _isIndonesianQuery(raw) {
  */
 export function _solidifyHanzi(text) {
   if (!text) return "";
-  // Regex untuk mendeteksi karakter Mandarin
-  return text.replace(/([\u4e00-\u9fff\u3400-\u4dbf]+)/g, (match) => {
+  // Bungkus setiap karakter Mandarin secara individual (karakter demi karakter)
+  return text.replace(/([\u4e00-\u9fff\u3400-\u4dbf])/g, (match) => {
     return `<span class="clickable-hz">${match}</span>`;
   });
 }
