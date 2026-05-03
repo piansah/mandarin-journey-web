@@ -428,6 +428,20 @@ function _initSearchFilters() {
       _runKosGlobalSearch();
     });
   });
+
+  const searchInput = document.getElementById("kos-global-search");
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const val = searchInput.value.trim();
+        if (!val) return;
+        const isSentence = val.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(val);
+        if (isSentence && typeof window.openSegmentedView === "function") {
+          window.openSegmentedView(val);
+        }
+      }
+    });
+  }
 }
 
 export async function performSmartSearch(raw, filter = "all") {

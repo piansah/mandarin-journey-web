@@ -861,35 +861,6 @@ export async function addCard(card, row) {
     _isSaving = false;
   }
 }
-  const btn = row?.querySelector(".pd-search-add");
-  if (btn) btn.disabled = true;
-
-  const { error } = await supa.from("personal_cards").insert({
-    deck_id: activeDeck.id,
-    hanzi: card.hanzi,
-    pinyin: card.pinyin || "",
-    arti: card.arti || "",
-    word_class: card.word_class || null,
-    catatan: card.catatan || null,
-    added_by: user.id,
-  });
-  if (error) {
-    showToast(
-      error.code === "23505" ? "Kata sudah ada di deck" : "Gagal menambah kata",
-      "err",
-    );
-    if (btn) btn.disabled = false;
-    return;
-  }
-  if (btn) {
-    btn.textContent = "Hapus";
-    btn.classList.add("is-added");
-    btn.disabled = false;
-  }
-  _currentDeckHanzi.add(card.hanzi);
-  showToast("Kata ditambahkan", "ok");
-  renderCards();
-}
 
 export async function removeCardFromSearch(card, row) {
   if (!activeDeck?.id) return;
