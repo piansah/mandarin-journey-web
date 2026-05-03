@@ -9,11 +9,8 @@ export function initHistoryUI() {
   const input = document.getElementById("kos-global-search");
   if (!input) return;
 
-  console.log("[History UI] Initializing listeners...");
-
   // Tampilkan history saat fokus atau klik
   const triggerShow = () => {
-    console.log("[History UI] Input focused/clicked");
     showSearchHistoryDropdown();
   };
 
@@ -30,17 +27,14 @@ export function initHistoryUI() {
 
 export async function showSearchHistoryDropdown() {
   const input = document.getElementById("kos-global-search");
-  // Hanya muncul jika input kosong
   if (!input || input.value.trim().length > 0) return;
 
   const parent = input.parentElement;
   if (!parent) return;
 
-  // Bersihkan yang lama
   hideHistoryDropdown();
 
   const history = await getSearchHistory() || [];
-  console.log("[History UI] History count:", history.length);
   if (history.length === 0) return;
 
   const container = document.createElement("div");
@@ -76,14 +70,20 @@ export function hideHistoryDropdown() {
   if (old) old.remove();
 }
 
-// Global Handlers (Exposed via window for onclick)
+// Global Handlers
 window.useSearchHistory = function(query) {
-  const input = document.getElementById("kos-global-search");
-  if (input) {
-    input.value = query;
+  if (query) {
     hideHistoryDropdown();
-    if (typeof window.onKosGlobalSearch === "function") {
-        window.onKosGlobalSearch();
+    // Gunakan mesin pemecah kata (Segmented View)
+    if (typeof window.openSegmentedView === "function") {
+      window.openSegmentedView(query);
+    } else {
+      // Fallback
+      const input = document.getElementById("kos-global-search");
+      if (input) {
+        input.value = query;
+        if (typeof window.onKosGlobalSearch === "function") window.onKosGlobalSearch();
+      }
     }
   }
 };

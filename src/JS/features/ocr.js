@@ -363,3 +363,11 @@ document.addEventListener("click", e => {
     }, 350);
   }
 });
+
+
+/* --- Global Bridge for History --- */
+window.openSegmentedView = function(text) {
+  if (!text) return;
+  const words = _segmentText(text);
+  _showResultMode(text, words);
+};
