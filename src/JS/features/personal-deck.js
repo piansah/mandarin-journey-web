@@ -44,12 +44,12 @@ function setText(id, value) {
 
 function showModal(id) {
   const el = document.getElementById(id);
-  if (el) el.style.display = "block";
+  if (el) el.classList.add("active");
 }
 
 function hideModal(id) {
   const el = document.getElementById(id);
-  if (el) el.style.display = "none";
+  if (el) el.classList.remove("active");
 }
 
 function bindClick(id, handler) {
@@ -564,15 +564,6 @@ function buildKosItem(card, idx) {
   item.dataset.idx = String(idx);
   item.style.cursor = "pointer";
 
-  const wcLabels = {
-    noun: "N", verb: "V", adj: "Adj", adv: "Adv", pron: "Pron",
-    num: "Num", classifier: "Clas", prep: "Prep", conj: "Conj",
-    particle: "Part", interj: "Interj", onom: "Onom",
-  };
-  const wc = card.word_class
-    ? `<span class="badge-native" style="margin-left:4px;">${esc(wcLabels[card.word_class] || card.word_class)}</span>`
-    : "";
-
   item.innerHTML = `
     <div class="kos-hz">${esc(card.hanzi)}</div>
     <div class="kos-info">
@@ -580,7 +571,6 @@ function buildKosItem(card, idx) {
       <div class="kos-arti">${esc(card.arti || "")}</div>
     </div>
     <div class="kos-meta">
-      ${wc}
       <span class="kos-no">#${idx + 1}</span>
     </div>`;
   return item;
@@ -604,28 +594,25 @@ export async function deleteCard(cardId, hanzi) {
 export function pdShowAddCardModal() {
   const input = document.getElementById("pd-card-search");
   const results = document.getElementById("pd-card-search-results");
-  if (input) input.value = "";
-  if (results) results.innerHTML = "";
-  const cloned = input?.cloneNode(true);
-  if (input && cloned) {
-    input.parentNode.replaceChild(cloned, input);
-    cloned.addEventListener("input", () => {
+  if (input) {
+    input.value = "";
+    input.oninput = () => {
       clearTimeout(searchTimer);
-      const q = cloned.value.trim();
+      const q = input.value.trim();
       if (!q) {
-        const box = document.getElementById("pd-card-search-results");
-        if (box) box.innerHTML = "";
+        if (results) results.innerHTML = "";
         return;
       }
       searchTimer = setTimeout(() => pdSearchCards(q), 300);
-    });
+    };
   }
-  showModal("pd-add-card-modal");
-  setTimeout(() => document.getElementById("pd-card-search")?.focus(), 80);
+  if (results) results.innerHTML = "";
+  openLayer("layer-pd-add-card");
+  setTimeout(() => input?.focus(), 300);
 }
 
 export function pdHideAddCardModal() {
-  hideModal("pd-add-card-modal");
+  backToLayer("layer-personal-cards");
 }
 
 export async function pdSearchCards(query) {
