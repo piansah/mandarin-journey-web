@@ -5,13 +5,13 @@
 
 .search-history-container {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 56px); /* Di bawah filter */
     left: 0;
     right: 0;
     background: var(--sur2);
     border: 1px solid var(--gold);
     border-radius: 12px;
-    margin-top: 8px;
+    /* margin-top: 8px; dihapus */
     z-index: 999999 !important;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     overflow: hidden;

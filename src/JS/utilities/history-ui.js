@@ -10,12 +10,18 @@ export function initHistoryUI() {
   if (!input) return;
 
   // Tampilkan history saat fokus atau klik
-  const triggerShow = () => {
-    showSearchHistoryDropdown();
-  };
-
+  const triggerShow = () => showSearchHistoryDropdown();
   input.addEventListener("focus", triggerShow);
   input.addEventListener("click", triggerShow);
+
+  // Auto-hide saat mulai mengetik
+  input.addEventListener("input", () => {
+    if (input.value.trim().length > 0) {
+      hideHistoryDropdown();
+    } else {
+      showSearchHistoryDropdown();
+    }
+  });
 
   // Sembunyikan history saat klik di luar
   document.addEventListener("click", (e) => {
@@ -70,20 +76,11 @@ export function hideHistoryDropdown() {
   if (old) old.remove();
 }
 
-// Global Handlers
 window.useSearchHistory = function(query) {
   if (query) {
     hideHistoryDropdown();
-    // Gunakan mesin pemecah kata (Segmented View)
-    if (typeof window.openSegmentedView === "function") {
-      window.openSegmentedView(query);
-    } else {
-      // Fallback
-      const input = document.getElementById("kos-global-search");
-      if (input) {
-        input.value = query;
-        if (typeof window.onKosGlobalSearch === "function") window.onKosGlobalSearch();
-      }
+    if (typeof window.showSegmentedInSearch === "function") {
+      window.showSegmentedInSearch(query);
     }
   }
 };
@@ -95,7 +92,6 @@ window.handleHistoryAction = async function(id) {
   }
 };
 
-// Auto Init
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initHistoryUI);
 } else {

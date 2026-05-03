@@ -5,53 +5,58 @@
 
 import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
-import { showToast, lsGet, lsSet } from "../utilities/helpers.js";
+import { lsGet, lsSet } from "./helpers.js";
 
 const LS_HISTORY_KEY = "hsk_search_history_v1";
 
-/**
- * Menyimpan riwayat pencarian (Text atau OCR)
- * @param {string} query - Kalimat atau kata yang dicari
- */
 export async function saveSearchHistory(query) {
   if (!query || query.trim().length === 0) return;
   const cleanQuery = query.trim();
 
-  // 1. Simpan ke Local Storage untuk akses cepat (max 10 item)
+  // 1. VALIDASI: Hanya simpan jika mengandung karakter Mandarin (Hanzi)
+  const hasHanzi = /[\u4E00-\u9FFF\u3400-\u4DBF]/.test(cleanQuery);
+  if (!hasHanzi) return;
+
+  // 2. Local Storage (De-duplication sederhana)
   const localHistory = lsGet(LS_HISTORY_KEY, []);
   const filtered = localHistory.filter(h => h.query !== cleanQuery);
   filtered.unshift({ query: cleanQuery, created_at: new Date().toISOString() });
   lsSet(LS_HISTORY_KEY, filtered.slice(0, 10));
 
-  // 2. Simpan ke Supabase jika login
+  // 3. Supabase (Anti-Duplikat)
   const user = getCurrentUser();
   if (user) {
     try {
-      const { error } = await supa.from("user_search_history").insert({
-        user_id: user.id,
-        query: cleanQuery,
-        is_archived: false
-      });
-      if (error) {
-        console.warn("[History] Supabase Insert Error (Normal if Duplicate):", error.message);
+      // Cek apakah kueri yang sama sudah pernah ada
+      const { data: existing } = await supa
+        .from("user_search_history")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("query", cleanQuery)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        // Jika sudah ada, update created_at-nya saja biar jadi yang terbaru (naik ke atas)
+        await supa.from("user_search_history")
+          .update({ created_at: new Date().toISOString() })
+          .eq("id", existing[0].id);
+      } else {
+        // Jika benar-benar baru, baru di-insert
+        await supa.from("user_search_history").insert({
+          user_id: user.id,
+          query: cleanQuery,
+          is_archived: false
+        });
       }
     } catch (err) {
-      console.error("[History] Gagal simpan ke database:", err);
+      console.error("[History] Gagal sinkronisasi database:", err);
     }
   }
 }
 
-/**
- * Mengambil riwayat pencarian
- * @param {boolean} includeArchived - Apakah menyertakan arsip
- */
 export async function getSearchHistory(includeArchived = false) {
   const user = getCurrentUser();
-  
-  // Jika offline/tidak login, ambil dari Local Storage
-  if (!user) {
-    return lsGet(LS_HISTORY_KEY, []);
-  }
+  if (!user) return lsGet(LS_HISTORY_KEY, []);
 
   try {
     let q = supa
@@ -60,9 +65,7 @@ export async function getSearchHistory(includeArchived = false) {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (!includeArchived) {
-      q = q.eq("is_archived", false);
-    }
+    if (!includeArchived) q = q.eq("is_archived", false);
 
     const { data, error } = await q;
     if (error) throw error;
@@ -73,9 +76,6 @@ export async function getSearchHistory(includeArchived = false) {
   }
 }
 
-/**
- * Menghapus atau Mengarsipkan riwayat
- */
 export async function updateHistoryStatus(id, status = 'delete') {
   const user = getCurrentUser();
   if (!user) return;
@@ -88,11 +88,9 @@ export async function updateHistoryStatus(id, status = 'delete') {
     }
   } catch (err) {
     console.error("[History] Gagal update status:", err);
-    showToast("Gagal mengubah riwayat", "err");
   }
 }
 
-// Global exposure
 window.saveSearchHistory = saveSearchHistory;
 window.getSearchHistory = getSearchHistory;
 window.updateHistoryStatus = updateHistoryStatus;
