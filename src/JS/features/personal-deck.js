@@ -241,8 +241,8 @@ export async function renderThemes() {
       <div class="pd-theme-icon">${esc(theme.icon || "📚")}</div>
       <div class="pd-theme-name">${esc(theme.name)}</div>
       <div class="pd-theme-count">${theme.personal_decks?.[0]?.count || 0} deck</div>`;
-    card.addEventListener("click", () => openTheme(theme.id, theme));
-    bindLongPress(card, () => pdShowThemeOptions(theme));
+    
+    bindLongPress(card, () => pdShowThemeOptions(theme), () => openTheme(theme.id, theme));
     grid.appendChild(card);
   });
 }
