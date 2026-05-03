@@ -26,7 +26,7 @@ let _renderCardsId = 0;
 let _searchRequestId = 0;
 
 // Helper: Timeout agar tidak stuck skeleton
-async function _withPdTimeout(promise, ms = 12000) {
+async function _withPdTimeout(promise, ms = 15000) {
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error("Timeout")), ms);
@@ -219,7 +219,7 @@ export async function renderFavorites() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      12000
+      15000
     );
 
     if (reqId !== _renderFavoritesId) return;
@@ -285,7 +285,7 @@ export async function renderThemes() {
         .select("*, personal_decks(count)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      12000
+      15000
     );
 
     if (reqId !== _renderThemesId) return;
@@ -420,7 +420,7 @@ export async function renderDecks(themeId = activeTheme?.id) {
         .select("*, personal_cards(count)")
         .eq("theme_id", themeId)
         .order("created_at", { ascending: true }),
-      12000
+      15000
     );
 
     if (reqId !== _renderDecksId) return;
@@ -560,7 +560,7 @@ export async function renderCards(deckId = activeDeck?.id) {
         .select("*")
         .eq("deck_id", deckId)
         .order("created_at", { ascending: true }),
-      12000
+      15000
     );
 
     if (reqId !== _renderCardsId) return;

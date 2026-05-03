@@ -33,25 +33,15 @@ let _profFollowCounts = { followers: 0, following: 0 };
    ENTRY POINT
 ══════════════════════════════════════════ */
 export async function initProfileScreen() {
-  // Bug #6: Allow re-init if screen was navigated away and came back
-  const profScreen = document.getElementById("profile-screen");
-  const isScreenActive = profScreen?.classList.contains("active");
-  if (_profInitInProgress && !isScreenActive) return;
+  if (_profInitInProgress) return;
   _profInitInProgress = true;
 
-  // Tunggu app init selesai agar auth & keys siap
-  try {
-    if (window.appReadyPromise) {
-      // Timeout 10 detik untuk app ready
-      await Promise.race([
-        window.appReadyPromise,
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("App Ready Timeout")), 10000),
-        ),
-      ]);
-    }
-  } catch (e) {
-    console.error("Profile: App ready timeout/error", e);
+  // Cek sederhana: jika app belum siap, tunggu max 2 detik saja
+  if (window.appReadyPromise) {
+    await Promise.race([
+      window.appReadyPromise,
+      new Promise(r => setTimeout(r, 2000))
+    ]).catch(() => {});
   }
 
   _profSetHeaderLogoutBtn();
@@ -65,7 +55,6 @@ export async function initProfileScreen() {
   _renderProfileSkeleton();
 
   try {
-    // Gunakan timeout untuk keseluruhan fetch agar tidak stuck skeleton
     await Promise.race([
       Promise.all([
         _loadProfileData(),
@@ -74,7 +63,7 @@ export async function initProfileScreen() {
         initAvatarSystem(),
       ]),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Fetch Timeout")), 12000),
+        setTimeout(() => reject(new Error("Fetch Timeout")), 15000),
       ),
     ]);
     _profInitInProgress = false;

@@ -172,22 +172,14 @@ function _isFollowing(userId) {
    ENTRY POINT
 ══════════════════════════════════════════════════════════════ */
 export async function initSosialScreen() {
-  // Bug #6: Allow re-init if screen was navigated away and came back
-  const sosialScreen = document.getElementById("sosial-screen");
-  const isScreenActive = sosialScreen?.classList.contains("active");
-  if (_sosialInitInProgress && !isScreenActive) return;
+  if (_sosialInitInProgress) return;
   _sosialInitInProgress = true;
 
-  // Tunggu app init selesai
-  try {
-    if (window.appReadyPromise) {
-      await Promise.race([
-        window.appReadyPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error("App Ready Timeout")), 10000))
-      ]);
-    }
-  } catch (e) {
-    console.error("Sosial: App ready timeout/error", e);
+  if (window.appReadyPromise) {
+    await Promise.race([
+      window.appReadyPromise,
+      new Promise(r => setTimeout(r, 2000))
+    ]).catch(() => {});
   }
 
   const currentUser = getCurrentUser();
@@ -206,13 +198,13 @@ export async function initSosialScreen() {
     _ensureXPDOM();
     _renderSkeleton();
 
-    // Jalankan fetch dengan timeout
+    // Jalankan fetch dengan timeout 15 detik
     await Promise.race([
       (async () => {
         await _loadMyFollowing();
         await _loadXPLeaderboard(_activePeriod);
       })(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 12000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 15000))
     ]);
   } catch (e) {
     console.error("initSosialScreen error:", e);
