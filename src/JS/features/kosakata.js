@@ -269,6 +269,7 @@ function _applyKosDeckFilter() {
 let _globalSearchCache = null;
 let _globalSearchTimer = null;
 let _initGlobalSearchCachePromise = null;
+let _globalSearchRequestId = 0;
 
 window.searchAndOpenWord = async (hanzi) => {
   if (!hanzi) return;
@@ -517,6 +518,7 @@ export async function performSmartSearch(raw, filter = "all") {
 }
 
 export async function _runKosGlobalSearch() {
+  const requestId = ++_globalSearchRequestId;
   const input = document.getElementById("kos-global-search");
   const resultsEl = document.getElementById("kos-global-results");
   const deckSection = document.getElementById("kos-deck-section");
@@ -539,8 +541,9 @@ export async function _runKosGlobalSearch() {
 
   resultsEl.innerHTML =
     '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat kosakata...</div>';
-
+  
   const results = await performSmartSearch(raw);
+  if (requestId !== _globalSearchRequestId) return;
 
   if (results.length === 0) {
     resultsEl.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">🔍</div><div>Tidak ditemukan untuk "<strong style="color:var(--txt);">${raw}</strong>"</div></div>`;

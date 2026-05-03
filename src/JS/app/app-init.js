@@ -44,6 +44,13 @@ async function _initAppWrapped() {
     
     // Background cache initialization
     window.warmUpGlobalSearchCache?.();
+
+    // Warm up OCR AI in background
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => window.warmUpOCR?.());
+    } else {
+      setTimeout(() => window.warmUpOCR?.(), 2000);
+    }
   } catch (err) {
     console.error("Critical Init Error:", err);
   } finally {

@@ -24,6 +24,7 @@ let _renderThemesId = 0;
 let _renderDecksId = 0;
 let _renderCardsId = 0;
 let _searchRequestId = 0;
+let _isSaving = false;
 
 // Helper: Timeout agar tidak stuck skeleton
 async function _withPdTimeout(promise, ms = 15000) {
@@ -336,6 +337,7 @@ export function pdHideAddThemeModal() {
 }
 
 async function saveTheme() {
+  if (_isSaving) return;
   const user = userOrLogin();
   if (!user) return;
   const name = document.getElementById("pd-theme-name")?.value.trim();
@@ -344,17 +346,23 @@ async function saveTheme() {
     showToast("Nama tema tidak boleh kosong", "warn");
     return;
   }
-  const query = editingThemeId
-    ? supa.from("personal_themes").update({ name, icon }).eq("id", editingThemeId)
-    : supa.from("personal_themes").insert({ user_id: user.id, name, icon });
-  const { error } = await query;
-  if (error) {
-    showToast("Gagal menyimpan tema", "err");
-    return;
+  
+  _isSaving = true;
+  try {
+    const query = editingThemeId
+      ? supa.from("personal_themes").update({ name, icon }).eq("id", editingThemeId)
+      : supa.from("personal_themes").insert({ user_id: user.id, name, icon });
+    const { error } = await query;
+    if (error) {
+      showToast("Gagal menyimpan tema", "err");
+      return;
+    }
+    pdHideAddThemeModal();
+    showToast(editingThemeId ? "Tema diperbarui" : "Tema ditambahkan", "ok");
+    renderThemes();
+  } finally {
+    _isSaving = false;
   }
-  pdHideAddThemeModal();
-  showToast(editingThemeId ? "Tema diperbarui" : "Tema ditambahkan", "ok");
-  renderThemes();
 }
 
 export function pdShowThemeOptions(theme) {
@@ -482,6 +490,7 @@ export function pdHideAddDeckModal() {
 }
 
 async function saveDeck() {
+  if (_isSaving) return;
   const user = userOrLogin();
   if (!user || !activeTheme?.id) return;
   const title = document.getElementById("pd-deck-title-input")?.value.trim();
@@ -490,18 +499,24 @@ async function saveDeck() {
     showToast("Judul deck tidak boleh kosong", "warn");
     return;
   }
-  const payload = { title, description };
-  const query = editingDeckId
-    ? supa.from("personal_decks").update(payload).eq("id", editingDeckId)
-    : supa.from("personal_decks").insert({ ...payload, theme_id: activeTheme.id, created_by: user.id });
-  const { error } = await query;
-  if (error) {
-    showToast("Gagal menyimpan deck", "err");
-    return;
+
+  _isSaving = true;
+  try {
+    const payload = { title, description };
+    const query = editingDeckId
+      ? supa.from("personal_decks").update(payload).eq("id", editingDeckId)
+      : supa.from("personal_decks").insert({ ...payload, theme_id: activeTheme.id, created_by: user.id });
+    const { error } = await query;
+    if (error) {
+      showToast("Gagal menyimpan deck", "err");
+      return;
+    }
+    pdHideAddDeckModal();
+    showToast(editingDeckId ? "Deck diperbarui" : "Deck ditambahkan", "ok");
+    renderDecks();
+  } finally {
+    _isSaving = false;
   }
-  pdHideAddDeckModal();
-  showToast(editingDeckId ? "Deck diperbarui" : "Deck ditambahkan", "ok");
-  renderDecks();
 }
 
 export function pdShowDeckOptions(deck) {
@@ -681,14 +696,20 @@ function buildKosItem(card, idx) {
 
 export async function deleteCard(cardId, hanzi) {
   showConfirm("Hapus Kata?", `Hapus "${hanzi}" dari deck ini?`, async () => {
-    const { error } = await supa.from("personal_cards").delete().eq("id", cardId);
-    if (error) {
-      showToast("Gagal menghapus kata", "err");
-      return;
+    if (_isSaving) return;
+    _isSaving = true;
+    try {
+      const { error } = await supa.from("personal_cards").delete().eq("id", cardId);
+      if (error) {
+        showToast("Gagal menghapus kata", "err");
+        return;
+      }
+      showToast("Kata dihapus");
+      closeKosDelModal();
+      renderCards();
+    } finally {
+      _isSaving = false;
     }
-    showToast("Kata dihapus");
-    closeKosDelModal();
-    renderCards();
   });
 }
 
@@ -796,8 +817,50 @@ export async function pdSearchCardsV2(query) {
 }
 
 export async function addCard(card, row) {
+  if (_isSaving) return;
   const user = userOrLogin();
   if (!user || !activeDeck?.id) return;
+
+  const btn = row?.querySelector(".pd-search-add");
+  if (btn) {
+    btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;"></span>';
+    btn.disabled = true;
+  }
+
+  _isSaving = true;
+  try {
+    const { error } = await supa.from("personal_cards").insert({
+      user_id: user.id,
+      deck_id: activeDeck.id,
+      hanzi: card.hanzi,
+      pinyin: card.pinyin || "",
+      arti: card.arti || "",
+      word_class: card.word_class || null,
+      source: card.source || (card.set_id ? "hsk" : "compound"),
+      source_id: card.id || null,
+    });
+
+    if (error) {
+      showToast("Gagal menambah kata", "err");
+      if (btn) {
+        btn.innerHTML = "+ Tambah";
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    _currentDeckHanzi.add(card.hanzi);
+    if (btn) {
+      btn.innerHTML = "Hapus";
+      btn.classList.add("is-added");
+      btn.disabled = false;
+    }
+    showToast(`"${card.hanzi}" ditambahkan ke deck`, "ok");
+    renderCards();
+  } finally {
+    _isSaving = false;
+  }
+}
   const btn = row?.querySelector(".pd-search-add");
   if (btn) btn.disabled = true;
 

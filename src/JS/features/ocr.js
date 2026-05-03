@@ -104,9 +104,9 @@ async function _initWorker() {
       corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
     });
     
-    // Tuning parameter untuk akurasi
+    // Tuning parameter untuk akurasi & speed
     await _ocrWorker.setParameters({
-      tessedit_pageseg_mode: '11', // PSM 11: Sparse text. Finds as much text as possible in no particular order.
+      tessedit_pageseg_mode: '6', // PSM 6: Assume a single uniform block of text. (Faster for scan boxes)
       tessjs_create_hocr: '0',
       tessjs_create_tsv: '0',
     });
@@ -170,9 +170,9 @@ async function _captureAndProcess() {
   const sw = boxRect.width * scaleX;
   const sh = boxRect.height * scaleY;
 
-  // Upscale 3x untuk akurasi lebih tinggi
-  canvas.width = sw * 3;
-  canvas.height = sh * 3;
+  // Upscale 2x (Optimal balance between speed & accuracy for CJK)
+  canvas.width = sw * 2;
+  canvas.height = sh * 2;
 
   // Filter awal
   ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
@@ -333,6 +333,7 @@ function _showResultMode(rawText, words) {
 ══════════════════════════════════════════════════════════════ */
 window.openOCRScanner = openOCRScanner;
 window.closeOCRScanner = closeOCRScanner;
+window.warmUpOCR = _initWorker;
 
 /* ══════════════════════════════════════════════════════════════
    EVENT LISTENERS (Delegated)

@@ -24,6 +24,7 @@ let _selectedTier = "all";
 let _userProfilePrevScreen = "sosial-screen";
 let _sosialInitInProgress = false; // guard: cegah concurrent init
 let _leaderboardRequestId = 0;
+let _userPopupRequestId = 0;
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
@@ -746,6 +747,7 @@ function _renderSkeleton() {
    USER PROFILE SCREEN
 ══════════════════════════════════════════════════════════════ */
 async function _openUserPopup(userId) {
+  const requestId = ++_userPopupRequestId;
   const currentUser = getCurrentUser();
   if (!userId || userId === currentUser?.id) return;
 
@@ -786,7 +788,7 @@ async function _openUserPopup(userId) {
 
   try {
     const [
-      { data: prof },
+      { data: prof, error: profErr },
       { data: scores },
       { data: streakRows },
       { count: kosakataCount },

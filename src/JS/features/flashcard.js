@@ -71,7 +71,7 @@ async function _getUser() {
 /* ══════════════════════════════════════════════════════════════
    RESET STATE (BARU)
 ══════════════════════════════════════════════════════════════ */
-export function resetFCState({ clearPending = false } = {}) {
+export function resetFCState() {
   fcCards = [];
   fcIdx = 0;
   fcFlipState = 0;
@@ -79,7 +79,7 @@ export function resetFCState({ clearPending = false } = {}) {
   _fcHafal = 0;
   _fcLupa = 0;
   _fcLupaIds.clear();
-  if (clearPending) _fcPendingReviews.clear();
+  _fcPendingReviews.clear();
   _fcPrevSessionXP = 0;
   _fcScoresFresh = false;
   _fcDoneShown = false;
