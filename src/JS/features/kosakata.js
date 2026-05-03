@@ -7,6 +7,15 @@ import { supa } from "../core/config.js";
 import { getCurrentUser } from "../core/auth.js";
 import {
   SVG_CHECK_DUOLINGO_LARGE,
+  SVG_HEART_OUTLINE,
+  SVG_HEART_FILLED,
+  SVG_FLAG,
+  SVG_PLAY,
+  SVG_PAUSE,
+  SVG_CHEVRON_LEFT,
+  SVG_CHEVRON_RIGHT,
+  SVG_LOCK,
+  SVG_UNLOCK,
 } from "../../assets/icon.js";
 import {
   showScreen,
@@ -250,11 +259,28 @@ export async function initGlobalSearchCache(forceRefresh = false) {
       from += PAGE;
     }
 
-    if (allCards.length) {
-      _globalSearchCache = allCards.map((c) => ({
+    let allCompounds = [];
+    try {
+      const { data: compData, error: e3 } = await supa
+        .from("word_compounds")
+        .select("id, hanzi, pinyin, arti, badge")
+        .order("id", { ascending: true });
+      if (!e3 && compData) allCompounds = compData;
+    } catch (e) {
+      console.error("[Kosakata] Fetch word_compounds failed:", e);
+    }
+
+    if (allCards.length || allCompounds.length) {
+      const hskMapped = allCards.map((c) => ({
         ...c,
+        source: "hsk",
         hsk_level: setHskMap[c.set_id] || 1,
       }));
+      const compMapped = allCompounds.map((c) => ({
+        ...c,
+        source: "compound",
+      }));
+      _globalSearchCache = [...hskMapped, ...compMapped];
       // Simpan ke Local Storage
       lsSet(cacheKey, _globalSearchCache);
     }
@@ -368,11 +394,11 @@ export async function performSmartSearch(raw, filter = "all") {
 
   let merged = [
     ...hskResults.map((r) => ({ ...r, source: "hsk", source_id: r.id })),
-    ...extraResults.map((r) => ({
       ...r,
       source: "compound",
       source_id: r.id,
-      word_class: r.badge || null,
+      // Jangan timpa word_class dengan badge jika badge hanya berisi 'common'/'native'
+      word_class: r.word_class || null, 
     })),
   ];
 
@@ -1315,13 +1341,24 @@ function _renderHero() {
     onom: "Onomatope · 拟声词 (nǐshēngcí)",
   };
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
-  const SVG_FAV_OUTLINE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-  const SVG_FAV_FILLED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+  const SVG_FAV_OUTLINE = SVG_HEART_OUTLINE;
+  const SVG_FAV_FILLED = SVG_HEART_FILLED;
+
+  let badgeHtml = "";
+  if (card.badge === "common" || card.badge === "native") {
+    const label = card.badge === "common" ? "Common" : "Native";
+    badgeHtml = `<div class="badge-${card.badge}" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px;">${label}</div>`;
+  } else if (card.hsk_level) {
+    badgeHtml = `<div class="badge-hsk" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px;">HSK ${card.hsk_level}</div>`;
+  }
 
   container.innerHTML = `
     <div style="position: relative;">
+      <div style="position: absolute; top: 10px; left: 10px; z-index: 4;">
+        ${badgeHtml}
+      </div>
       <div style="position: absolute; top: 10px; right: 10px; z-index: 4; display: flex; gap: 8px;">
-        <button class="kwd-report-btn" title="Laporkan Kesalahan" onclick="window.openBugReportModal('Kesalahan Data Kata','Ditemukan kesalahan pada kata: ${card.hanzi} (${card.pinyin}). Mohon perbaiki bagian: [Arti / Pinyin / Kelas Kata / Catatan]', 'content', '${card.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></button>
+        <button class="kwd-report-btn" title="Laporkan Kesalahan" onclick="window.openBugReportModal('Kesalahan Data Kata','Ditemukan kesalahan pada kata: ${card.hanzi} (${card.pinyin}). Mohon perbaiki bagian: [Arti / Pinyin / Kelas Kata / Catatan]', 'content', '${card.id}')" style="color: var(--dim2);">${SVG_FLAG}</button>
         <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button" style="position: relative; top: 0; right: 0; color:var(--dim2); border-color:var(--bdr); background:var(--sur2);">${SVG_FAV_OUTLINE}</button>
       </div>
       <div class="kwd-hero" id="kwd-hero-main" style="cursor:pointer; padding-top: 24px;">
@@ -1446,27 +1483,17 @@ function _renderStrokeTab() {
     <div class="kwd-stroke-bottom" id="kwd-stroke-bottom" style="padding: 10px 0; background: transparent; position: relative;">
       <div class="kwd-sb-controls" style="background: none; box-shadow: none; border: none; display: flex; justify-content: center; align-items: center; gap: 45px; width: 100%;">
         <button class="kwd-sb-btn" id="kwd-sb-prev-btn" onclick="window._strokePrev()" title="Stroke sebelumnya" style="background:none; border:none; box-shadow:none; padding:0; color:var(--txt); width:auto; height:auto;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
+          ${SVG_CHEVRON_LEFT}
         </button>
         <button class="kwd-sb-btn" id="kwd-sb-play-btn" onclick="window._strokePlayPause()" title="Play / Pause" style="background:none; border:none; box-shadow:none; padding:0; color:var(--gold); width:auto; height:auto;">
-          <svg id="kwd-sb-play-icon" width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
+          <span id="kwd-sb-play-icon-container">${SVG_PLAY}</span>
         </button>
         <button class="kwd-sb-btn" id="kwd-sb-next-btn" onclick="window._strokeNext()" title="Stroke berikutnya" style="background:none; border:none; box-shadow:none; padding:0; color:var(--txt); width:auto; height:auto;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          ${SVG_CHEVRON_RIGHT}
         </button>
         
-        <!-- Lock button di pojok kanan -->
         <button class="kwd-sb-btn" id="kwd-sb-lock-btn" onclick="window._strokeToggleLock()" title="Lock / Unlock slide" style="position: absolute; right: 20px; background:none; border:none; box-shadow:none; padding:0; color:var(--dim); width:auto; height:auto;">
-          <svg id="kwd-sb-lock-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
+          <span id="kwd-sb-lock-icon-container">${SVG_LOCK}</span>
         </button>
       </div>
     </div>`;
@@ -1756,11 +1783,9 @@ window._strokeToggleLock = () => {
   const lockBtn = document.getElementById("kwd-sb-lock-btn");
   if (slider) slider.style.overflowY = _strokeLocked ? "hidden" : "scroll";
   if (lockBtn) lockBtn.classList.toggle("active", _strokeLocked);
-  const lockIcon = document.getElementById("kwd-sb-lock-icon");
-  if (lockIcon) {
-    lockIcon.innerHTML = _strokeLocked
-      ? `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`
-      : `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>`;
+  const container = document.getElementById("kwd-sb-lock-icon-container");
+  if (container) {
+    container.innerHTML = _strokeLocked ? SVG_LOCK : SVG_UNLOCK;
   }
 };
 
@@ -1771,13 +1796,9 @@ function _syncCharDots(activeIdx) {
 }
 
 function _updatePlayIcon(isPlaying) {
-  const icon = document.getElementById("kwd-sb-play-icon");
-  if (!icon) return;
-  if (isPlaying) {
-    icon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
-  } else {
-    icon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"/>`;
-  }
+  const container = document.getElementById("kwd-sb-play-icon-container");
+  if (!container) return;
+  container.innerHTML = isPlaying ? SVG_PAUSE : SVG_PLAY;
 }
 
 function _updateStrokeUI() {
@@ -2160,7 +2181,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
           <div class="kwd-ex-id">${h.arti}</div>
         </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')">${SVG_FLAG}</div>
       </div>
     </div>`;
   });
@@ -2185,7 +2206,7 @@ function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
           ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
         </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
+        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')">${SVG_FLAG}</div>
       </div>
       ${actions}
     </div>`;
@@ -2218,7 +2239,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           ontouchstart="event.stopPropagation()" 
           ontouchend="event.stopPropagation()" 
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"
-          style="position:absolute; top:10px; right:10px; z-index:11;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
+          style="position:absolute; top:10px; right:10px; z-index:11; color: var(--dim2);">${SVG_FLAG}</div>
         <div>
           <div class="kwd-ex-hz">${_solidifyHanzi(h.hanzi)}</div>
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
@@ -2249,7 +2270,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           ontouchstart="event.stopPropagation()" 
           ontouchend="event.stopPropagation()" 
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')"
-          style="position:absolute; top:10px; right:10px; z-index:11;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
+          style="position:absolute; top:10px; right:10px; z-index:11; color: var(--dim2);">${SVG_FLAG}</div>
         <div>
           ${u.hanzi ? `<div class="kwd-ex-hz">${_solidifyHanzi(u.hanzi)}</div>` : ""}
           ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}

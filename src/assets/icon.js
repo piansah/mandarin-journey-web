@@ -19,6 +19,27 @@ export const SVG_CHECK_DUOLINGO_LARGE = `<svg width="32" height="32" viewBox="0 
 export const SVG_NODE_BOOK = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 22 Q4 21 5 21 L15 21 Q15.5 21.3 16 21.5 Q16.5 21.3 17 21 L27 21 Q28 21 28 22 L28 27 Q28 28 27 28 L17 28 Q16.5 28.3 16 28.5 Q15.5 28.3 15 28 L5 28 Q4 28 4 27 Z" fill="#8A8A8A"/><path d="M4.5 21.5 Q4.5 20.5 5.5 20.5 L15 20.5 Q15.5 20.8 16 21 Q16.5 20.8 17 20.5 L26.5 20.5 Q27.5 20.5 27.5 21.5 L27.5 26.5 Q27.5 27.5 26.5 27.5 L17 27.5 Q16.5 27.8 16 28 Q15.5 27.8 15 27.5 L5.5 27.5 Q4.5 27.5 4.5 26.5 Z" fill="#C8C8C8"/><path d="M5 6 Q5 4 7 4 Q10 3.5 14 5 Q15.5 5.5 16 6 L16 26 Q13 25.5 9 25.5 Q6 25.5 5 26 Z" fill="white"/><path d="M27 6 Q27 4 25 4 Q22 3.5 18 5 Q16.5 5.5 16 6 L16 26 Q19 25.5 23 25.5 Q26 25.5 27 26 Z" fill="#F2F2F2"/><path d="M15.5 6 Q15.8 16 15.5 26" stroke="#DCDCDC" stroke-width="0.5" stroke-linecap="round" fill="none"/><path d="M16.5 6 Q16.2 16 16.5 26" stroke="#DCDCDC" stroke-width="0.5" stroke-linecap="round" fill="none"/><path d="M14 26.2 Q16 27.2 18 26.2" stroke="#AAAAAA" stroke-width="1" stroke-linecap="round" fill="none"/></svg>`;
 export const SVG_NODE_RANK = `<svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 7H22V17C22 20.3 19.3 23 16 23C12.7 23 10 20.3 10 17V7Z" fill="#C8C8C8"/><path d="M16 7H22V17C22 20.3 19.3 23 16 23V7Z" fill="#8A8A8A"/><path d="M7 9H10V15C10 15 8 14 7 12V9Z" fill="#F2F2F2"/><path d="M25 9H22V15C22 15 24 14 25 12V9Z" fill="#C8C8C8"/><rect x="13" y="23" width="6" height="3" fill="#8A8A8A"/><rect x="11" y="26" width="10" height="2" rx="1" fill="#6A6A6A"/></svg>`;
 
+// New icons
+export const SVG_HEART_OUTLINE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+export const SVG_HEART_FILLED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+export const SVG_FLAG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`;
+export const SVG_PLAY = `<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+export const SVG_PAUSE = `<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+export const SVG_CHEVRON_LEFT = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+export const SVG_CHEVRON_RIGHT = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+export const SVG_LOCK = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+export const SVG_UNLOCK = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+export const SVG_TORCH = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8H7z"/></svg>`;
+export const SVG_GOOGLE = `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>`;
+export const SVG_CLOSE = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+export const SVG_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+export const SVG_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+export const SVG_PLUS = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+export const SVG_SEARCH = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+export const SVG_DASHBOARD = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" /><rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" /></svg>`;
+export const SVG_CHART = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9" rx="1" /><rect x="10" y="7" width="4" height="14" rx="1" /><rect x="17" y="4" width="4" height="17" rx="1" /></svg>`;
+export const SVG_USER = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`;
+
 export function svgMapIcon(mapColor, pinColor) {
   return `<svg width="52" height="52" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><style>@keyframes _ll_unfold{0%{transform:scaleX(0.4) scaleY(0.6);opacity:0}60%{transform:scaleX(1.08) scaleY(1.04);opacity:1}80%{transform:scaleX(0.97) scaleY(0.98)}100%{transform:scaleX(1) scaleY(1)}}@keyframes _ll_pinBnc{0%{transform:translateY(-6px);opacity:0}60%{transform:translateY(2px);opacity:1}80%{transform:translateY(-1px)}100%{transform:translateY(0)}}@keyframes _ll_pathDraw{from{stroke-dashoffset:40;opacity:0}to{stroke-dashoffset:0;opacity:1}}._lm{animation:_ll_unfold 0.55s cubic-bezier(.34,1.4,.64,1) 0.15s both;transform-origin:12px 12px;}._lp{animation:_ll_pinBnc 0.45s cubic-bezier(.34,1.56,.64,1) 0.6s both;transform-origin:17px 9px;}._ll{stroke-dasharray:40;animation:_ll_pathDraw 0.6s ease 0.75s both;}</style><g class="_lm"><path d="M3 6.5L9 4L15 7L21 4.5V17.5L15 20L9 17L3 19.5V6.5Z" fill="${mapColor}" fill-opacity="0.18" stroke="${mapColor}" stroke-width="1.6" stroke-linejoin="round"/><line x1="9" y1="4" x2="9" y2="17" stroke="${mapColor}" stroke-width="1.1" stroke-dasharray="2 1.5" opacity="0.55"/><line x1="15" y1="7" x2="15" y2="20" stroke="${mapColor}" stroke-width="1.1" stroke-dasharray="2 1.5" opacity="0.55"/></g><g class="_ll"><path d="M5 16 Q7 12 10 13 Q13 14 14 11 Q15 9 17 9" stroke="${pinColor}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g class="_lp"><circle cx="17" cy="8.5" r="2.2" fill="${pinColor}"/><line x1="17" y1="10.7" x2="17" y2="13" stroke="${pinColor}" stroke-width="1.4" stroke-linecap="round"/></g></svg>`;
 }
@@ -40,5 +61,24 @@ window.SVG_TARGET = SVG_TARGET;
 window.SVG_RANK = SVG_RANK;
 window.SVG_LOGOUT = SVG_LOGOUT;
 window.svgMapIcon = svgMapIcon;
+window.SVG_HEART_OUTLINE = SVG_HEART_OUTLINE;
+window.SVG_HEART_FILLED = SVG_HEART_FILLED;
+window.SVG_FLAG = SVG_FLAG;
+window.SVG_PLAY = SVG_PLAY;
+window.SVG_PAUSE = SVG_PAUSE;
+window.SVG_CHEVRON_LEFT = SVG_CHEVRON_LEFT;
+window.SVG_CHEVRON_RIGHT = SVG_CHEVRON_RIGHT;
+window.SVG_LOCK = SVG_LOCK;
+window.SVG_UNLOCK = SVG_UNLOCK;
+window.SVG_TORCH = SVG_TORCH;
+window.SVG_GOOGLE = SVG_GOOGLE;
+window.SVG_CLOSE = SVG_CLOSE;
+window.SVG_TRASH = SVG_TRASH;
+window.SVG_EDIT = SVG_EDIT;
+window.SVG_PLUS = SVG_PLUS;
+window.SVG_SEARCH = SVG_SEARCH;
+window.SVG_DASHBOARD = SVG_DASHBOARD;
+window.SVG_CHART = SVG_CHART;
+window.SVG_USER = SVG_USER;
 
 //⭐

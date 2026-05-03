@@ -213,6 +213,7 @@ function _segmentText(text) {
           pinyin: wordData.pinyin || "",
           arti: wordData.arti || "",
           hsk: wordData.hsk_level || null,
+          badge: wordData.badge || null,
           found: true
         });
         i += len;
@@ -228,6 +229,7 @@ function _segmentText(text) {
         pinyin: "",
         arti: "",
         hsk: null,
+        badge: null,
         found: false
       });
       i++;
