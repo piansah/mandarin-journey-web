@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <!-- © 2026 Piansah — Mandarin Journey. All rights reserved. -->
 <html lang="id">
   <head>
@@ -2637,6 +2637,12 @@
           >
         </div>
       </div>
+      <div class="search-filters-wrap" id="kos-search-filters">
+        <div class="search-filter-btn active" data-filter="all">Semua</div>
+        <div class="search-filter-btn" data-filter="hsk">HSK</div>
+        <div class="search-filter-btn" data-filter="common">Common</div>
+        <div class="search-filter-btn" data-filter="native">Native</div>
+      </div>
       <div class="search-results" id="kos-global-results">
         <div class="search-empty"></div>
       </div>
@@ -2903,7 +2909,7 @@
     >
       <div class="modal-wrap" style="position: relative; max-width: 360px">
         <div class="modal-close" onclick="window.closeKosDelModal()">✕</div>
-        <div class="modal-title" style="color: #f87171">Hapus Kata?</div>
+        <div class="modal-title" id="kos-del-title" style="color: #f87171">Hapus?</div>
         <div
           class="modal-sub"
           id="kos-del-desc"

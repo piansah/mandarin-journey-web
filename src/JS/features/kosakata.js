@@ -30,6 +30,7 @@ import {
   _matchPinyinTokens,
   _stripTones,
   _getPinyinRegex,
+  _isIndonesianQuery,
 } from "../utilities/pinyin.js";
 import { _injectBgCards } from "../utilities/bg-cards.js";
 import { startFC } from "./flashcard.js";
@@ -235,12 +236,8 @@ export function warmUpGlobalSearchCache() {
   });
 }
 
-function _isIndonesianQuery(raw) {
-  if (/[\u4e00-\u9fff]/.test(raw)) return false;
-  if (/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(raw)) return false;
-  if (/[a-z]+[1-5]/i.test(raw)) return false;
-  return true;
-}
+
+let _globalSearchFilter = "all";
 
 export async function onKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
@@ -250,39 +247,30 @@ export async function onKosGlobalSearch() {
   _globalSearchTimer = setTimeout(() => _runKosGlobalSearch(), 200);
 }
 
-export async function _runKosGlobalSearch() {
-  const input = document.getElementById("kos-global-search");
-  const resultsEl = document.getElementById("kos-global-results");
-  const deckSection = document.getElementById("kos-deck-section");
-  const hskFilter = document.getElementById("hsk-filter-kos");
+function _initSearchFilters() {
+  const container = document.getElementById("kos-search-filters");
+  if (!container) return;
+  const btns = container.querySelectorAll(".search-filter-btn");
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      _globalSearchFilter = btn.dataset.filter;
+      _runKosGlobalSearch();
+    });
+  });
+}
 
-  if (!input || !resultsEl) return;
-  const raw = input.value.trim();
-
-  if (!raw) {
-    resultsEl.style.display = "none";
-    if (deckSection) deckSection.style.display = "";
-    if (hskFilter) hskFilter.style.display = "";
-    return;
-  }
-
-  if (deckSection) deckSection.style.display = "none";
-  if (hskFilter) hskFilter.style.display = "none";
-  resultsEl.style.display = "";
+export async function performSmartSearch(raw) {
+  if (!raw) return [];
+  const q = raw.trim().toLowerCase();
+  if (!q) return [];
 
   if (!_globalSearchCache) {
-    resultsEl.innerHTML =
-      '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat kosakata...</div>';
     await initGlobalSearchCache();
   }
+  if (!_globalSearchCache) return [];
 
-  if (!_globalSearchCache) {
-    resultsEl.innerHTML =
-      '<div style="text-align:center;padding:32px;color:var(--dim);">Gagal memuat data.</div>';
-    return;
-  }
-
-  const q = raw.toLowerCase();
   const queryTokens = _buildQueryTokens(raw);
   const hasTone = queryTokens.some((t) => t.toned !== null);
   const isID = _isIndonesianQuery(raw);
@@ -321,16 +309,15 @@ export async function _runKosGlobalSearch() {
     return arti.includes(q);
   });
 
-  // 2. Cari di word_compounds (Extra)
   let extraResults = [];
   try {
     const pyRegex = _getPinyinRegex(raw);
     const { data } = await supa
       .from("word_compounds")
-      .select("hanzi, pinyin, arti, badge")
+      .select("id, hanzi, pinyin, arti, badge")
       .or(`hanzi.ilike.%${q}%,arti.ilike.%${q}%,pinyin.imatch."${pyRegex}"`)
       .order("frequency", { ascending: false })
-      .limit(30);
+      .limit(50); // Increased limit for better filtering
     if (data) {
       const hskHanziSet = new Set(hskResults.map((r) => r.hanzi));
       extraResults = data.filter((w) => !hskHanziSet.has(w.hanzi));
@@ -339,8 +326,53 @@ export async function _runKosGlobalSearch() {
     console.error("[Kosakata] Extra search error:", e);
   }
 
-  const totalCount = hskResults.length + extraResults.length;
-  if (totalCount === 0) {
+  let merged = [
+    ...hskResults.map((r) => ({ ...r, source: "hsk", source_id: r.id })),
+    ...extraResults.map((r) => ({
+      ...r,
+      source: "compound",
+      source_id: r.id,
+      word_class: r.badge || null,
+    })),
+  ];
+
+  if (_globalSearchFilter === "hsk") {
+    merged = merged.filter((r) => r.source === "hsk");
+  } else if (_globalSearchFilter === "common") {
+    merged = merged.filter((r) => r.badge === "common");
+  } else if (_globalSearchFilter === "native") {
+    merged = merged.filter((r) => r.badge === "native");
+  }
+
+  return merged;
+}
+
+export async function _runKosGlobalSearch() {
+  const input = document.getElementById("kos-global-search");
+  const resultsEl = document.getElementById("kos-global-results");
+  const deckSection = document.getElementById("kos-deck-section");
+  const hskFilter = document.getElementById("hsk-filter-kos");
+
+  if (!input || !resultsEl) return;
+  const raw = input.value.trim();
+
+  if (!raw) {
+    resultsEl.style.display = "none";
+    if (deckSection) deckSection.style.display = "";
+    if (hskFilter) hskFilter.style.display = "";
+    return;
+  }
+
+  if (deckSection) deckSection.style.display = "none";
+  if (hskFilter) hskFilter.style.display = "none";
+  resultsEl.style.display = "";
+
+  resultsEl.innerHTML =
+    '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat kosakata...</div>';
+
+  const results = await performSmartSearch(raw);
+
+  if (results.length === 0) {
     resultsEl.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">🔍</div><div>Tidak ditemukan untuk "<strong style="color:var(--txt);">${raw}</strong>"</div></div>`;
     return;
   }
@@ -351,19 +383,15 @@ export async function _runKosGlobalSearch() {
       deckMap[s.id] = s.badge || s.title;
     });
 
-  resultsEl.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${totalCount} kata ditemukan</div><div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;"></div>`;
+  resultsEl.innerHTML = `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${results.length} kata ditemukan</div><div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;"></div>`;
 
   const listEl = document.getElementById("kos-global-list");
-  const mergedResults = [
-    ...hskResults.map((r) => ({ ...r, type: "hsk" })),
-    ...extraResults.map((r) => ({ ...r, type: "extra" })),
-  ];
-  window._globalResults = mergedResults;
+  window._globalResults = results;
 
   const frag = document.createDocumentFragment();
-  mergedResults.forEach((c, idx) => {
+  results.forEach((c, idx) => {
     let badgeHtml = "";
-    if (c.type === "hsk") {
+    if (c.source === "hsk") {
       const label = deckMap[c.set_id] || `HSK ${c.hsk_level}`;
       badgeHtml = `<span class="badge-hsk">${label}</span>`;
     } else {
@@ -965,7 +993,7 @@ export function renderKosItems() {
 
     let delBtnHtml = "";
     if (isPersonal) {
-      delBtnHtml = `<button class="kos-deck-del" style="opacity:1;position:static;margin-bottom:4px;" onclick="event.stopPropagation(); window._deleteCardFromDeck(${c.id}, '${(c.hanzi || "").replace(/'/g, "\\'")}')">✕</button>`;
+      delBtnHtml = `<button class="kos-deck-del" style="opacity:1;position:static;margin-bottom:4px;" onclick="event.stopPropagation(); window.deleteCardFromDeck(${c.id}, '${(c.hanzi || "").replace(/'/g, "\\'")}')">✕</button>`;
     }
 
     const dueHtml = c._isDue
@@ -992,10 +1020,39 @@ export function renderKosItems() {
   listEl.appendChild(frag);
 }
 
-window._deleteCardFromDeck = async (cardId, hanzi) => {
-  if (!confirm(`Hapus "${hanzi}" dari deck ini?`)) return;
+export function showConfirm(title, message, onConfirm) {
+  const modal = document.getElementById("kos-del-modal");
+  const titleEl = document.getElementById("kos-del-title");
+  const desc = document.getElementById("kos-del-desc");
+  const confirmBtn = document.getElementById("kos-del-confirm");
+  if (!modal || !desc || !confirmBtn) return;
 
-  try {
+  if (titleEl) titleEl.textContent = title;
+  desc.textContent = message;
+  modal.classList.add("active");
+
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner"></span>Hapus...';
+    try {
+      await onConfirm();
+      closeKosDelModal();
+    } catch (err) {
+      console.error(err);
+      showToast("Gagal hapus", "err");
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Hapus";
+    }
+  };
+}
+
+export function closeKosDelModal() {
+  document.getElementById("kos-del-modal")?.classList.remove("active");
+}
+
+export async function deleteCardFromDeck(cardId, hanzi) {
+  showConfirm("Hapus Kata?", `Hapus "${hanzi}" dari deck ini?`, async () => {
     const { error } = await supa
       .from("flashcard_cards")
       .delete()
@@ -1006,11 +1063,8 @@ window._deleteCardFromDeck = async (cardId, hanzi) => {
     // Update local state
     kosAllData = kosAllData.filter((c) => c.id !== cardId);
     filterKos();
-  } catch (e) {
-    console.error("_deleteCardFromDeck:", e);
-    showToast("Gagal menghapus kata", "err");
-  }
-};
+  });
+}
 
 /** Helper: cek lock. Return true = locked (sudah show toast). */
 function _checkKosLock() {
@@ -1155,7 +1209,12 @@ export async function openKosWord(card) {
 
   if (typeof window.openLayer === "function")
     window.openLayer("layer-kos-word");
-  document.getElementById("layer-kos-word")?.classList.add("active");
+  const kwdLayer = document.getElementById("layer-kos-word");
+  if (kwdLayer) {
+    document.body.appendChild(kwdLayer);
+    kwdLayer.classList.add("active");
+    kwdLayer.style.zIndex = "99999";
+  }
 
   _switchTab("kalimat", true);
   _kwdHeroTapReadyAt = performance.now() + 650;
@@ -1188,15 +1247,21 @@ function _renderHero() {
     onom: "Onomatope · 拟声词 (nǐshēngcí)",
   };
   const wcLabel = _WORD_CLASS_LABEL[card.word_class] || "";
+  const SVG_FAV_OUTLINE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+  const SVG_FAV_FILLED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
 
   container.innerHTML = `
-    <div class="kwd-hero" id="kwd-hero-main" style="position:relative; cursor:pointer;">
-      <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button">🤍</button>
-      <div class="kwd-hz">${card.hanzi || ""}</div>
-      <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
-      <div class="kwd-arti">${card.arti || ""}</div>
-      ${wcLabel ? `<div class="kwd-word-class">${wcLabel}</div>` : ""}
-      ${card.catatan ? `<div class="kwd-catatan">📝 ${card.catatan}</div>` : ""}
+    <div style="position: relative;">
+      <div style="position: absolute; top: 10px; right: 10px; z-index: 4;">
+        <button id="kos-fav-btn" class="kos-fav-btn" aria-label="Favorit" type="button" style="position: relative; top: 0; right: 0; color:var(--dim2); border-color:var(--bdr); background:var(--sur2);">${SVG_FAV_OUTLINE}</button>
+      </div>
+      <div class="kwd-hero" id="kwd-hero-main" style="cursor:pointer; padding-top: 24px;">
+        <div class="kwd-hz">${card.hanzi || ""}</div>
+        <div class="kwd-py">${colorPy(card.pinyin || "")}</div>
+        <div class="kwd-arti">${card.arti || ""}</div>
+        ${wcLabel ? `<div class="kwd-word-class">${wcLabel}</div>` : ""}
+        ${card.catatan ? `<div class="kwd-catatan" style="margin-top:12px;">📝 ${card.catatan}</div>` : ""}
+      </div>
     </div>`;
 
   const heroEl = document.getElementById("kwd-hero-main");
@@ -1209,14 +1274,20 @@ function _renderHero() {
 
   const favBtn = document.getElementById("kos-fav-btn");
   if (favBtn) {
+    const updateFavUI = (faved) => {
+      favBtn.innerHTML = faved ? SVG_FAV_FILLED : SVG_FAV_OUTLINE;
+      favBtn.style.color = faved ? "#ff6b6b" : "var(--dim2)";
+      favBtn.style.borderColor = faved ? "rgba(255, 107, 107, 0.3)" : "var(--bdr)";
+      favBtn.style.background = faved ? "rgba(255, 107, 107, 0.08)" : "var(--sur2)";
+    };
+
     favBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const faved = await toggleFavorite(card);
-      favBtn.textContent = faved ? "❤️" : "🤍";
+      updateFavUI(faved);
     });
     isFavorited(card.hanzi).then((faved) => {
-      const btn = document.getElementById("kos-fav-btn");
-      if (btn) btn.textContent = faved ? "❤️" : "🤍";
+      updateFavUI(faved);
     });
   }
 }
@@ -2141,21 +2212,19 @@ export async function saveContoh() {
 export async function deleteContoh(id) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
-  if (!confirm("Hapus contoh kalimat ini?")) return;
-
-  const { error } = await supa
-    .from("word_examples")
-    .delete()
-    .eq("id", id)
-    .eq("added_by", currentUser.id);
-  if (error) {
-    showToast("Gagal hapus. Coba lagi.", "err");
-    return;
-  }
-  await _loadKosWordExamples(_currentKosWord?.hanzi);
+  showConfirm("Hapus Contoh?", "Hapus contoh kalimat ini?", async () => {
+    const { error } = await supa
+      .from("word_examples")
+      .delete()
+      .eq("id", id)
+      .eq("added_by", currentUser.id);
+    if (error) throw error;
+    await _loadKosWordExamples(_currentKosWord?.hanzi);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  _initSearchFilters();
   const observer = new MutationObserver(() => {
     const screen = document.getElementById("search-screen");
     if (screen?.classList.contains("active")) {
@@ -2199,6 +2268,8 @@ window.closeContohForm = closeContohForm;
 window.saveContoh = saveContoh;
 window._renderCharTab = _renderCharTab;
 window.deleteContoh = deleteContoh;
+window.deleteCardFromDeck = deleteCardFromDeck;
+window.closeKosDelModal = closeKosDelModal;
 window.initGlobalSearchCache = initGlobalSearchCache;
 window.toggleKosTooltip = toggleKosTooltip;
 window.closeKosTooltip = closeKosTooltip;

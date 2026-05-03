@@ -196,20 +196,9 @@ export async function startFCDue() {
   if (hzEl) hzEl.innerHTML = '<span class="spinner"></span>';
 
   document.body.style.overflow = "";
-  document
-    .querySelectorAll(".screen")
-    .forEach((s) => s.classList.remove("active"));
-  const fcScreen = document.getElementById("fc-screen");
-  if (fcScreen) fcScreen.classList.add("active");
-
-  updateNavbar("fc-screen");
-
+  showScreen("fc-screen");
   if (typeof window._fcAttachDocListeners === "function")
     window._fcAttachDocListeners();
-  if (typeof _navStack !== "undefined")
-    setNavStack([{ type: "screen", id: "fc-screen" }]);
-  if (typeof _pushAppHistory === "function") _pushAppHistory();
-  setFabVisible(false);
 
   const cardEl = document.getElementById("fc-card");
   if (cardEl) {
@@ -336,12 +325,6 @@ export async function startFC(key, setId, _meta) {
   currentFCReturnLayer =
     _meta?.returnLayer || (sourceType === "personal" ? "layer-personal-cards" : "layer-kos-deck");
 
-  if (typeof window.closeLayer === "function") {
-    window.closeLayer("layer-kos-deck", true);
-    window.closeLayer("layer-personal-cards", true);
-    window.closeLayer("layer-kos", true);
-  }
-
   const titleEl = document.getElementById("fc-title");
   const subEl = document.getElementById("fc-sub");
   if (titleEl)
@@ -357,20 +340,11 @@ export async function startFC(key, setId, _meta) {
   if (doneWrap) doneWrap.style.display = "none";
   if (hzEl) hzEl.innerHTML = '<span class="spinner"></span>';
 
-  document
-    .querySelectorAll(".screen")
-    .forEach((s) => s.classList.remove("active"));
-  const fcScreen = document.getElementById("fc-screen");
-  if (fcScreen) fcScreen.classList.add("active");
-
-  updateNavbar("fc-screen");
+  document.body.style.overflow = "";
+  showScreen("fc-screen");
 
   if (typeof window._fcAttachDocListeners === "function")
     window._fcAttachDocListeners();
-  if (typeof _navStack !== "undefined")
-    setNavStack([{ type: "screen", id: "fc-screen" }]);
-  if (typeof _pushAppHistory === "function") _pushAppHistory();
-  setFabVisible(false);
 
   const cardEl = document.getElementById("fc-card");
   if (cardEl) {
@@ -419,7 +393,7 @@ export async function startFC(key, setId, _meta) {
   }
 
   const cardIds = data.map((c) => c.id);
-  const srsMap = await srsFetchProgress(cardIds);
+  const srsMap = sourceType === "personal" ? new Map() : await srsFetchProgress(cardIds);
   const today = _todayStr();
 
   const allCards = data.map((c) => ({
@@ -670,6 +644,13 @@ export function fcNavLupa() {
 async function _doFlushPendingReviews() {
   if (_fcPendingReviews.size === 0) return;
 
+  // Jika ini dari personal deck, kita sama sekali tidak menyimpan progres/SRS ke database.
+  // Hapus semua antrean dan langsung keluar.
+  if (String(currentFCKey).startsWith("pd")) {
+    _fcPendingReviews.clear();
+    return;
+  }
+
   const entries = Array.from(_fcPendingReviews.entries());
 
   // Gunakan _fcPrevSessionXP yang sudah dihitung saat showFCDone
@@ -774,6 +755,7 @@ export async function showFCDone() {
   if (hint) hint.style.display = "none";
 
   // 1. HITUNG XP SECARA SINKRON (Agar _fcPrevSessionXP terisi untuk _renderDoneStats)
+  const isPersonal = String(currentFCKey).startsWith("pd");
   const entries = Array.from(_fcPendingReviews.entries());
   const xpEntries = [];
   for (const [cardId, quality] of entries) {
@@ -782,7 +764,7 @@ export async function showFCDone() {
       xpEntries.push({ isMature: card?._srs?.interval_days >= 21 });
     }
   }
-  _fcPrevSessionXP = Math.min(calcXPFCSession(xpEntries), XP.SESSION_CAP);
+  _fcPrevSessionXP = isPersonal ? 0 : Math.min(calcXPFCSession(xpEntries), XP.SESSION_CAP);
 
   // 2. TAMPILKAN TOAST XP
   if (_fcPrevSessionXP > 0) {

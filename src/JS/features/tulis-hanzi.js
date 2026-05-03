@@ -23,6 +23,7 @@ let _hintOn = false; // apakah panduan hanzi transparan ditampilkan
 let _quizActive = false; // apakah quiz stroke sedang berjalan
 let _sourceScreen = null; // screen asal sebelum buka tulis hanzi
 let _deckTitle = "";
+let _tulisIsPersonal = false;
 
 /* ── Ukuran canvas — responsif ── */
 function _canvasSize() {
@@ -62,7 +63,7 @@ function _clearProgress() {
    OPEN / CLOSE
    Dipanggil dari kosakata.js via: window.startTulisHanzi(cards, title, fromScreen)
 ══════════════════════════════════════════════════════════════ */
-export function startTulisHanzi(cards, title, fromScreen = "layer-kos-deck") {
+export function startTulisHanzi(cards, title, fromScreen = "layer-kos-deck", isPersonal = false) {
   if (!cards || cards.length === 0) {
     showToast("Tidak ada karakter untuk dilatih.", "err");
     return;
@@ -99,6 +100,7 @@ export function startTulisHanzi(cards, title, fromScreen = "layer-kos-deck") {
   _hintOn = false;
   _quizActive = false;
   _sourceScreen = fromScreen;
+  _tulisIsPersonal = isPersonal;
 
   // Pastikan bottom bar tampil kembali jika dari done state sebelumnya
   const bottom = document.querySelector(".tulis-bottom");
@@ -408,7 +410,7 @@ async function _showDone() {
     correct: _cards.length,
     wrong: 0,
     total: _cards.length,
-    xp: XP.TULIS_SELESAI,
+    xp: _tulisIsPersonal ? 0 : XP.TULIS_SELESAI,
     btnMainLabel: "Ulangi",
     btnMainFn: "window._tulisUlangi",
     btnSecLabel: "Kembali",
@@ -419,6 +421,8 @@ async function _showDone() {
 }
 
 async function _saveScore() {
+  if (_tulisIsPersonal) return; // Tidak ada penyimpanan atau toast XP untuk deck personal
+
   const currentUser = getCurrentUser();
   if (!currentUser) return;
 

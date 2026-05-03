@@ -18,6 +18,7 @@ let _nadaCorrect = 0;
 let _nadaWrong = 0;
 let _nadaAnswered = false;
 let _nadaTitle = "";
+let _nadaIsPersonal = false;
 
 /* ── Adaptive: cache history per kata (key = hz) ──
    Format: { [hz]: { correct: N, wrong: N } }
@@ -281,6 +282,8 @@ function _nadaSaveWordResult(hz, isCorrect) {
 
 
 async function _nadaSaveSession(pct) {
+  if (_nadaIsPersonal) return; // Tidak ada penyimpanan atau toast XP untuk deck personal
+  
   const currentUser = getCurrentUser();
   if (!currentUser) return;
 
@@ -342,10 +345,11 @@ function _nadaShowHeader(visible) {
 }
 
 /* ── Entry Point ── */
-export async function startNadaLatihan(cards, title) {
+export async function startNadaLatihan(cards, title, isPersonal = false) {
   _nadaShowHeader(true);
 
   _nadaTitle = title || "Latihan Nada";
+  _nadaIsPersonal = isPersonal;
   _nadaSourceCards = cards;
   _nadaIdx = 0;
   _nadaCorrect = 0;
@@ -519,7 +523,7 @@ function _nadaNext() {
 async function _nadaShowDone() {
   const pct =
     _nadaTotal > 0 ? Math.round((_nadaCorrect / _nadaTotal) * 100) : 0;
-  const xp = calcXPNada(_nadaCorrect);
+  const xp = _nadaIsPersonal ? 0 : calcXPNada(_nadaCorrect);
 
   _nadaShowHeader(false);
 

@@ -152,3 +152,10 @@ export function _getPinyinRegex(query) {
   }
   return re;
 }
+
+export function _isIndonesianQuery(raw) {
+  if (/[\u4e00-\u9fff]/.test(raw)) return false;
+  if (/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/i.test(raw)) return false;
+  if (/[a-z]+[1-5]/i.test(raw)) return false;
+  return true;
+}
