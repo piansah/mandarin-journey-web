@@ -2382,10 +2382,8 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     // Hold & Tap pada kata untuk Detail & TTS (Segmentasi Cerdas)
     card.querySelectorAll(".segmented-hz, .clickable-hz").forEach((hz) => {
       const match = hz.dataset.hanzi || hz.textContent;
-      _attachLongPressTTS(hz, null, 
-        () => { // Tap -> TTS
-          speakMandarin(match);
-        }, 
+      // Pass null pada onTap (argumen ke-3) agar klik "nembus" ke parent card (TTS kalimat)
+      _attachLongPressTTS(hz, null, null, 
         () => { // Hold -> Detail
           if (window.searchAndOpenWord) window.searchAndOpenWord(match);
         }
