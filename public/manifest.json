@@ -1,10 +1,13 @@
 {
   "name": "Mandarin Journey",
   "short_name": "Mandarin Journey",
-  "description": "Program Intensif Belajar Mandarin",
+  "description": "Ada peribahasa, Tuntutlah ilmu sampai ke negeri China",
   "start_url": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "orientation": "portrait",
   "background_color": "#0a0a0d",
   "theme_color": "#0a0a0d",
