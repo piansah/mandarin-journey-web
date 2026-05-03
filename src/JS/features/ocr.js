@@ -119,21 +119,47 @@ async function _captureAndProcess() {
 
   const ctx = canvas.getContext("2d");
 
-  // Crop berdasarkan posisi scan-box di layar
+  // ── Crop berdasarkan scan-box, memperhitungkan object-fit:cover ──
   const scanBox = document.querySelector(".ocr-scan-box");
   const boxRect = scanBox.getBoundingClientRect();
   const videoRect = video.getBoundingClientRect();
 
-  const scale = video.videoWidth / video.clientWidth;
-  const sx = (boxRect.left - videoRect.left) * scale;
-  const sy = (boxRect.top - videoRect.top) * scale;
-  const sw = boxRect.width * scale;
-  const sh = boxRect.height * scale;
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const cw = video.clientWidth;
+  const ch = video.clientHeight;
 
-  canvas.width = sw * 1.5;
-  canvas.height = sh * 1.5;
+  const videoAspect = vw / vh;
+  const containerAspect = cw / ch;
 
-  ctx.filter = "grayscale(100%) contrast(160%) brightness(110%)";
+  let renderW, renderH, offsetX, offsetY;
+  if (videoAspect > containerAspect) {
+    // Video lebih lebar → sisi kiri/kanan terpotong
+    renderH = ch;
+    renderW = ch * videoAspect;
+    offsetX = (renderW - cw) / 2;
+    offsetY = 0;
+  } else {
+    // Video lebih tinggi → atas/bawah terpotong
+    renderW = cw;
+    renderH = cw / videoAspect;
+    offsetX = 0;
+    offsetY = (renderH - ch) / 2;
+  }
+
+  const scaleX = vw / renderW;
+  const scaleY = vh / renderH;
+
+  const sx = (boxRect.left - videoRect.left + offsetX) * scaleX;
+  const sy = (boxRect.top - videoRect.top + offsetY) * scaleY;
+  const sw = boxRect.width * scaleX;
+  const sh = boxRect.height * scaleY;
+
+  // Upscale 2x untuk akurasi OCR
+  canvas.width = sw * 2;
+  canvas.height = sh * 2;
+
+  ctx.filter = "grayscale(100%) contrast(180%) brightness(120%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
   try {
@@ -233,12 +259,15 @@ function _showResultMode(rawText, words) {
   // Teks asli
   let html = `<div class="ocr-raw-text">${rawText}</div>`;
 
+  // Simpan hasil ke variabel global agar bisa diakses saat tap
+  window._ocrResults = words;
+
   // Daftar kata
   html += `<div class="ocr-word-list">`;
   words.forEach((w, idx) => {
     if (w.found) {
       html += `
-        <div class="ocr-word-item" onclick="window._ocrTapWord('${w.hanzi}')">
+        <div class="ocr-word-item" data-idx="${idx}">
           <span class="ocr-w-hanzi">${w.hanzi}</span>
           <span class="ocr-w-pinyin">${w.pinyin}</span>
           <span class="ocr-w-arti">${w.arti}</span>
@@ -256,7 +285,7 @@ function _showResultMode(rawText, words) {
 
   // Tombol scan ulang
   html += `
-    <button id="ocr-rescan-btn" class="ocr-btn-rescan" onclick="window._ocrRescan()">
+    <button id="ocr-rescan-btn" class="ocr-btn-rescan">
       Scan Ulang
     </button>`;
 
@@ -266,26 +295,40 @@ function _showResultMode(rawText, words) {
 /* ══════════════════════════════════════════════════════════════
    WINDOW FUNCTIONS
 ══════════════════════════════════════════════════════════════ */
-window._ocrTapWord = (hanzi) => {
-  closeOCRScanner();
-  // Pakai searchAndOpenWord yang sudah handle HSK + compound
-  if (typeof window.searchAndOpenWord === "function") {
-    window.searchAndOpenWord(hanzi);
-  }
-};
-
-window._ocrRescan = () => {
-  _showCameraMode();
-};
-
 window.openOCRScanner = openOCRScanner;
 window.closeOCRScanner = closeOCRScanner;
 
 /* ══════════════════════════════════════════════════════════════
-   EVENT LISTENERS
+   EVENT LISTENERS (Delegated)
 ══════════════════════════════════════════════════════════════ */
 document.addEventListener("click", e => {
+  // Tombol shutter
   if (e.target.closest("#ocr-capture-btn")) {
     _captureAndProcess();
+    return;
+  }
+
+  // Tombol scan ulang
+  if (e.target.closest("#ocr-rescan-btn")) {
+    _showCameraMode();
+    return;
+  }
+
+  // Tap kata pada hasil
+  const wordItem = e.target.closest(".ocr-word-item[data-idx]");
+  if (wordItem) {
+    const idx = parseInt(wordItem.dataset.idx, 10);
+    const word = window._ocrResults?.[idx];
+    if (!word || !word.found) return;
+
+    const hanzi = word.hanzi;
+
+    // Tutup OCR dulu, lalu buka detail setelah animasi selesai
+    closeOCRScanner();
+    setTimeout(() => {
+      if (typeof window.searchAndOpenWord === "function") {
+        window.searchAndOpenWord(hanzi);
+      }
+    }, 350);
   }
 });
