@@ -1624,38 +1624,56 @@ window.startVoiceSearch = () => {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = "zh-CN"; // Prioritas Mandarin
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  recognition.lang = "zh-CN"; 
+  recognition.continuous = false;
+  recognition.interimResults = true; // Biar dapet teks pas lagi ngomong
 
   const micBtn = document.getElementById("kos-global-mic");
   const searchInput = document.getElementById("kos-global-search");
 
+  if (!micBtn || !searchInput) return;
+
   recognition.onstart = () => {
-    if (micBtn) micBtn.style.color = "var(--red)"; // Indikator merekam
-    if (searchInput) searchInput.placeholder = "Mendengarkan...";
+    micBtn.style.color = "var(--red)";
+    micBtn.classList.add("listening-pulse"); // Tambah efek denyut
+    searchInput.value = "";
+    searchInput.placeholder = "Mendengarkan...";
   };
 
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    if (searchInput) {
-      searchInput.value = transcript;
-      // Trigger search
-      if (typeof window.onKosGlobalSearch === "function") {
+    let interimTranscript = "";
+    let finalTranscript = "";
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    const result = finalTranscript || interimTranscript;
+    if (result) {
+      searchInput.value = result;
+      if (finalTranscript && typeof window.onKosGlobalSearch === "function") {
         window.onKosGlobalSearch();
       }
     }
   };
 
   recognition.onerror = (event) => {
-    console.error("SpeechRecognition error:", event.error);
-    if (micBtn) micBtn.style.color = "var(--gold)";
-    if (searchInput) searchInput.placeholder = "Cari Hanzi, Pinyin, atau Arti...";
+    console.error("Speech Error:", event.error);
+    if (event.error === 'no-speech') {
+      searchInput.placeholder = "Tidak ada suara terdeteksi...";
+    } else {
+      searchInput.placeholder = "Error: " + event.error;
+    }
   };
 
   recognition.onend = () => {
-    if (micBtn) micBtn.style.color = "var(--gold)";
-    if (searchInput && !searchInput.value) {
+    micBtn.style.color = "var(--gold)";
+    micBtn.classList.remove("listening-pulse");
+    if (!searchInput.value) {
       searchInput.placeholder = "Cari Hanzi, Pinyin, atau Arti...";
     }
   };
@@ -1663,7 +1681,7 @@ window.startVoiceSearch = () => {
   try {
     recognition.start();
   } catch (e) {
-    console.error(e);
+    console.error("Start Error:", e);
   }
 };
 

@@ -1604,6 +1604,38 @@
       </div>
     </div>
 
+    <!-- Layer: OCR Scanner -->
+    <div class="layer" id="layer-ocr">
+      <div class="ocr-camera-wrap">
+        <video id="ocr-video" autoplay playsinline></video>
+        <canvas id="ocr-canvas" style="display:none"></canvas>
+        
+        <!-- Viewfinder Overlay -->
+        <div class="ocr-overlay">
+          <div class="ocr-header">
+            <div class="ocr-close" onclick="window.closeOCRScanner()">✕</div>
+            <div class="ocr-title">Arahkan ke Hanzi</div>
+          </div>
+          
+          <div class="ocr-scan-area">
+            <div class="ocr-scan-box">
+              <div class="ocr-corner tl"></div>
+              <div class="ocr-corner tr"></div>
+              <div class="ocr-corner bl"></div>
+              <div class="ocr-corner br"></div>
+            </div>
+          </div>
+          
+          <div class="ocr-footer">
+            <div id="ocr-result-preview" class="ocr-result-p">Menunggu...</div>
+            <button id="ocr-capture-btn" class="ocr-btn-shutter">
+              <div class="ocr-shutter-inner"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Layer: Deck per Tema -->
     <div class="layer" id="layer-personal-decks">
       <div class="layer-hd">

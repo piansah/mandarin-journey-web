@@ -32,6 +32,7 @@ import "./CSS/personal-deck.css";
 import "./CSS/app-init.css";
 import "./CSS/report.css";
 import "./CSS/statistic.css";
+import "./CSS/ocr.css";
 /* ── Icons ── */
 import "/src/assets/icon.js";
 /* ── JS: Core (config harus paling pertama) ── */
@@ -66,6 +67,7 @@ import "./JS/features/personal-deck.js";
 import "./JS/features/profile.js";
 import "./JS/features/statistic.js";
 import "./JS/features/sosial.js";
+import "./JS/features/ocr.js";
 import { initBugReportFAB } from "./JS/features/report.js";
 /* ── JS: App Screens ── */
 import "./JS/app/onboarding.js";
