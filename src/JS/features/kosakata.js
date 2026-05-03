@@ -200,7 +200,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
 
   _initGlobalSearchCachePromise = (async () => {
     // Cek Local Storage dulu
-    const cacheKey = "hsk_global_search_cache_v1";
+    const cacheKey = "hsk_global_search_cache_v2";
     if (!forceRefresh) {
       const saved = lsGet(cacheKey);
       if (saved && Array.isArray(saved) && saved.length > 0) {
@@ -233,8 +233,6 @@ export async function initGlobalSearchCache(forceRefresh = false) {
       }
     }
 
-    if (!sets.length) return;
-
     const setHskMap = {};
     sets.forEach((s) => {
       setHskMap[s.id] = s.hsk_level || 1;
@@ -245,18 +243,20 @@ export async function initGlobalSearchCache(forceRefresh = false) {
     let from = 0;
     let allCards = [];
 
-    while (true) {
-      const { data, error } = await supa
-        .from("flashcard_cards")
-        .select(FC_CARD_COLS)
-        .in("set_id", setIds)
-        .order("set_id", { ascending: true })
-        .order("id", { ascending: true })
-        .range(from, from + PAGE - 1);
-      if (error || !data || data.length === 0) break;
-      allCards = allCards.concat(data);
-      if (data.length < PAGE) break;
-      from += PAGE;
+    if (setIds.length > 0) {
+      while (true) {
+        const { data, error } = await supa
+          .from("flashcard_cards")
+          .select(FC_CARD_COLS)
+          .in("set_id", setIds)
+          .order("set_id", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error || !data || data.length === 0) break;
+        allCards = allCards.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
     }
 
     let allCompounds = [];
@@ -394,11 +394,12 @@ export async function performSmartSearch(raw, filter = "all") {
 
   let merged = [
     ...hskResults.map((r) => ({ ...r, source: "hsk", source_id: r.id })),
+    ...extraResults.map((r) => ({
       ...r,
       source: "compound",
       source_id: r.id,
       // Jangan timpa word_class dengan badge jika badge hanya berisi 'common'/'native'
-      word_class: r.word_class || null, 
+      word_class: r.word_class || null,
     })),
   ];
 

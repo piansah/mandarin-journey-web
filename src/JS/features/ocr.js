@@ -95,7 +95,18 @@ async function _initWorker() {
   if (status) status.textContent = "Menginisialisasi AI...";
 
   try {
-    _ocrWorker = await createWorker('chi_sim');
+    _ocrWorker = await createWorker('chi_sim', 1, {
+      workerPath: 'https://unpkg.com/tesseract.js@v5.0.0/dist/worker.min.js',
+      corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
+    });
+    
+    // Tuning parameter untuk akurasi
+    await _ocrWorker.setParameters({
+      tessedit_pageseg_mode: '11', // PSM 11: Sparse text. Finds as much text as possible in no particular order.
+      tessjs_create_hocr: '0',
+      tessjs_create_tsv: '0',
+    });
+
     if (status) status.textContent = "Siap memindai";
   } catch (err) {
     console.error("Worker Error:", err);
@@ -155,15 +166,30 @@ async function _captureAndProcess() {
   const sw = boxRect.width * scaleX;
   const sh = boxRect.height * scaleY;
 
-  // Upscale 2x untuk akurasi OCR
-  canvas.width = sw * 2;
-  canvas.height = sh * 2;
+  // Upscale 3x untuk akurasi lebih tinggi
+  canvas.width = sw * 3;
+  canvas.height = sh * 3;
 
-  ctx.filter = "grayscale(100%) contrast(180%) brightness(120%)";
+  // Filter awal
+  ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
+  // --- Manual Thresholding & Sharpening (Booster) ---
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  // Sederhananya: Jika lebih gelap dari abu-abu tengah, jadikan hitam pekat. Jika lebih terang, jadikan putih.
+  for (let i = 0; i < data.length; i += 4) {
+    const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+    const val = avg < 120 ? 0 : 255; 
+    data[i] = data[i+1] = data[i+2] = val;
+  }
+  ctx.putImageData(imageData, 0, 0);
+
   try {
-    const { data: { text } } = await _ocrWorker.recognize(canvas);
+    const { data: { text, confidence } } = await _ocrWorker.recognize(canvas);
+    console.log(`[OCR] Result: "${text.trim()}" | Confidence: ${confidence}%`);
+    
     // Filter hanya karakter CJK
     const hanziOnly = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF]/g, '');
 
