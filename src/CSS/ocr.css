@@ -54,6 +54,26 @@
   cursor: pointer;
 }
 
+.ocr-torch-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s;
+}
+
+.ocr-torch-btn.active {
+  background: var(--gold);
+  color: #000;
+  box-shadow: 0 0 15px rgba(232, 201, 109, 0.5);
+}
+
 .ocr-title {
   color: #fff;
   font-weight: 600;
@@ -112,17 +132,48 @@
 .ocr-result-p {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
   color: #fff;
   font-size: 14px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: 90%;
-  text-align: center;
-  min-height: 44px;
+  width: 90%;
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.ocr-result-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.ocr-text-found {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ocr-btn-go {
+  background: var(--gold);
+  color: #000;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(232, 201, 109, 0.3);
 }
 
 .ocr-btn-shutter {

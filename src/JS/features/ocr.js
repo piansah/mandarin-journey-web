@@ -41,6 +41,29 @@ export function closeOCRScanner() {
 /* ══════════════════════════════════════════════════════════════
    INTERNAL: CAMERA LOGIC
 ══════════════════════════════════════════════════════════════ */
+let _isTorchOn = false;
+
+/* ── Toggle Senter (Torch) ── */
+window._toggleTorch = async () => {
+  if (!_ocrStream) return;
+  const track = _ocrStream.getVideoTracks()[0];
+  const capabilities = track.getCapabilities();
+
+  if (capabilities.torch) {
+    _isTorchOn = !_isTorchOn;
+    try {
+      await track.applyConstraints({
+        advanced: [{ torch: _isTorchOn }]
+      });
+      document.getElementById("ocr-torch-btn").classList.toggle("active", _isTorchOn);
+    } catch (err) {
+      console.error("Torch error:", err);
+    }
+  } else {
+    alert("Perangkat Anda tidak mendukung fitur Flash/Senter di browser.");
+  }
+};
+
 async function _startCamera() {
   const video = document.getElementById("ocr-video");
   if (!video) return;
@@ -48,13 +71,21 @@ async function _startCamera() {
   try {
     const constraints = {
       video: {
-        facingMode: "environment", // Kamera belakang
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        facingMode: "environment",
+        width: { ideal: 1920 }, // Minta resolusi tinggi
+        height: { ideal: 1080 },
+        focusMode: "continuous" // Minta fokus otomatis berkelanjutan
       }
     };
     _ocrStream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = _ocrStream;
+    
+    // Set focus mode jika didukung setelah track aktif
+    const track = _ocrStream.getVideoTracks()[0];
+    const caps = track.getCapabilities();
+    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+      await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+    }
   } catch (err) {
     console.error("OCR Camera Error:", err);
     alert("Gagal mengakses kamera. Pastikan izin kamera diberikan.");
@@ -88,59 +119,55 @@ async function _captureAndProcess() {
 
   _isOcrProcessing = true;
   preview.innerHTML = '<span class="spinner"></span> Memproses...';
+  _lastOcrResult = "";
 
-  // 1. Capture Frame & Crop to Scan Box
   const ctx = canvas.getContext("2d");
   
-  // Tentukan area potong (Scan Box)
-  // Di CSS, scan box ukurannya 280x120
-  const boxW = 280;
-  const boxH = 120;
+  // 1. Ambil resolusi asli vs dimensi tampilan
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const cw = video.clientWidth;
+  const ch = video.clientHeight;
   
-  // Kita sesuaikan dengan resolusi video asli
-  const videoW = video.videoWidth;
-  const videoH = video.videoHeight;
-  const rect = video.getBoundingClientRect();
-  
-  // Rasio antara video asli vs elemen video di layar
-  const scaleX = videoW / rect.width;
-  const scaleY = videoH / rect.height;
-  
-  canvas.width = boxW * scaleX;
-  canvas.height = boxH * scaleY;
-  
-  // Posisi tengah
-  const sx = (videoW - canvas.width) / 2;
-  const sy = (videoH - canvas.height) / 2;
+  // Ambil posisi scan box secara visual di layar
+  const scanBox = document.querySelector(".ocr-scan-box");
+  const boxRect = scanBox.getBoundingClientRect();
+  const videoRect = video.getBoundingClientRect();
 
-  ctx.drawImage(video, sx, sy, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+  // Hitung rasio & posisi potong yang presisi
+  const scale = vw / cw;
+  const sx = (boxRect.left - videoRect.left) * scale;
+  const sy = (boxRect.top - videoRect.top) * scale;
+  const sw = boxRect.width * scale;
+  const sh = boxRect.height * scale;
 
-  // 2. Run OCR
+  // Set ukuran canvas (Upscale biar tajam)
+  canvas.width = sw * 1.5;
+  canvas.height = sh * 1.5;
+
+  // 2. Pre-processing Gambar
+  ctx.filter = "grayscale(100%) contrast(160%) brightness(110%)";
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+  // 3. Run OCR
   try {
     const { data: { text } } = await _ocrWorker.recognize(canvas);
-    const cleanedText = text.replace(/\s+/g, '').trim(); // Hapus spasi
+    const cleanedText = text.replace(/\s+/g, '').trim(); 
     
-    if (cleanedText) {
-      preview.textContent = cleanedText;
-      
-      // Jika ada teks, coba cari di dictionary aplikasi (global function)
-      if (typeof window.onKosGlobalSearch === "function") {
-        // Kita bisa langsung cari atau kasih tombol
-        preview.innerHTML = `
-          <div style="display:flex; flex-direction:column; gap:4px">
-            <div style="font-size:18px; color:var(--gold)">${cleanedText}</div>
-            <div style="font-size:10px; opacity:0.7">Tap Shutter untuk cari</div>
-          </div>`;
-        
-        // Simpan hasil terakhir untuk dicari
-        _lastOcrResult = cleanedText;
-      }
+    if (cleanedText && cleanedText.length > 0) {
+      _lastOcrResult = cleanedText;
+      preview.innerHTML = `
+        <div class="ocr-result-content" onclick="window._confirmOCRSearch()">
+          <span class="ocr-text-found">${cleanedText}</span>
+          <span class="ocr-btn-go">Cari ❯</span>
+        </div>
+      `;
     } else {
-      preview.textContent = "Teks tidak terdeteksi";
+      preview.textContent = "Tidak terbaca, coba lagi";
     }
   } catch (err) {
     console.error("OCR Process Error:", err);
-    preview.textContent = "Error memproses gambar";
+    preview.textContent = "Error memproses";
   } finally {
     _isOcrProcessing = false;
   }
@@ -148,23 +175,29 @@ async function _captureAndProcess() {
 
 let _lastOcrResult = "";
 
+/* ── Fungsi Konfirmasi Search ── */
+window._confirmOCRSearch = () => {
+  if (!_lastOcrResult) return;
+  const textToSearch = _lastOcrResult;
+  closeOCRScanner();
+  
+  const searchInput = document.getElementById("kos-global-search");
+  if (searchInput) {
+    searchInput.value = textToSearch;
+    if (typeof window.onKosGlobalSearch === "function") {
+      window.onKosGlobalSearch();
+    }
+  }
+  _lastOcrResult = "";
+};
+
 /* ══════════════════════════════════════════════════════════════
    EVENT LISTENERS
 ══════════════════════════════════════════════════════════════ */
 document.addEventListener("click", e => {
+  // Tombol shutter SELALU buat foto/scan ulang
   if (e.target.closest("#ocr-capture-btn")) {
-    if (_lastOcrResult && !_isOcrProcessing) {
-      // Jika sudah ada hasil, buka pencarian
-      window.closeOCRScanner();
-      const searchInput = document.getElementById("kos-global-search");
-      if (searchInput) {
-        searchInput.value = _lastOcrResult;
-        window.onKosGlobalSearch();
-      }
-      _lastOcrResult = "";
-    } else {
-      _captureAndProcess();
-    }
+    _captureAndProcess();
   }
 });
 
