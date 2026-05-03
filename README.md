@@ -33,7 +33,4 @@ Problem: Statistik kita sekarang masih fokus ke "Berapa banyak yang sudah dipela
 Analisis: Anki hebat karena dia kasih tahu "Memory Health". Kita belum punya visualisasi yang kasih tahu: "Ada 50 kata yang kritis (hampir lupa) dalam 24 jam ke depan".
 Saran: Tambahkan grafik "Forgetting Curve" atau "Retention Rate" di statistic.js. Kasih lihat ke user persentase keberhasilan mereka menjawab kartu di pertemuan pertama vs pertemuan ke-X.
 
-Hanzi Feedback Loop (Hanzi.js)
-Problem: Saat latihan menulis Hanzi (tulis-hanzi.js), sistem kita sangat "pemaaf".
-Analisis: Di Pleco, ada mode "Test Mode" di mana garis panduannya hilang total. Kita sekarang masih terlalu banyak kasih "bantuan" visual.
-Saran: Tambahkan "Strict Mode" di latihan menulis. User harus bener-bener hafal urutan stroke tanpa bayangan abu-abu di bawahnya.
+

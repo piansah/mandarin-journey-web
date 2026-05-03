@@ -24,6 +24,7 @@ let _quizActive = false; // apakah quiz stroke sedang berjalan
 let _sourceScreen = null; // screen asal sebelum buka tulis hanzi
 let _deckTitle = "";
 let _tulisIsPersonal = false;
+let _strictMode = false; // Jika true, sembunyikan outline (Test Mode)
 
 /* ── Ukuran canvas — responsif ── */
 function _canvasSize() {
@@ -218,7 +219,7 @@ function _initWriter(character) {
     outlineColor: "#2a2a3e",
     drawingColor: "#e8c96d",
     drawingWidth: Math.max(4, Math.floor(size * 0.045)),
-    showOutline: true,
+    showOutline: !_strictMode, // Sembunyikan jika Strict Mode aktif
     showCharacter: false,
     highlightOnComplete: true,
     highlightColor: "#65df4d",
@@ -298,13 +299,28 @@ export function toggleTulisHint() {
       hintBtn.textContent = "⏳ Animasi berjalan...";
       hintBtn.classList.add("active");
     }
-  } else {
-    _writer.hideCharacter({ duration: 200 });
-    if (hintBtn) {
-      hintBtn.textContent = "👀 Tampilkan Panduan";
-      hintBtn.classList.remove("active");
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STRICT MODE (Test Mode ala Pleco)
+══════════════════════════════════════════════════════════════ */
+export function toggleTulisStrictMode() {
+  _strictMode = !_strictMode;
+  const btn = document.getElementById("tulis-strict-btn");
+  if (btn) {
+    if (_strictMode) {
+      btn.classList.add("active");
+      btn.innerHTML = `<span>🔒 Strict On</span>`;
+    } else {
+      btn.classList.remove("active");
+      btn.innerHTML = `<span>🔓 Strict Off</span>`;
     }
   }
+  
+  // Re-init writer agar setting showOutline berubah
+  const card = _cards[_idx];
+  if (card) _initWriter(card.hanzi);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -463,3 +479,4 @@ window.tulisHanziClear = tulisHanziClear;
 window.tulisHanziReset = tulisHanziReset;
 window.tulisHanziNext = tulisHanziNext;
 window._tulisUlangi = _tulisUlangi;
+window.toggleTulisStrictMode = toggleTulisStrictMode;
