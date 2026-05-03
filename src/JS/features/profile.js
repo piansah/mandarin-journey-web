@@ -288,10 +288,10 @@ function _renderProfileFull() {
     </div>
 
     <div class="prof-stats-grid">
-      <div class="prof-stat-cell" style="cursor:pointer" onclick="window.openStatDetail('streak')"><div class="prof-stat-icon">${SVG_STREAK}</div><div class="prof-stat-num">${streak}</div><div class="prof-stat-lbl">Hari Streak</div></div>
-      <div class="prof-stat-cell" style="cursor:pointer" onclick="window.openStatDetail('kosakata')"><div class="prof-stat-icon">${SVG_BOOK}</div><div class="prof-stat-num blue">${kosakataCount}</div><div class="prof-stat-lbl">Kosakata</div></div>
-      <div class="prof-stat-cell" style="cursor:pointer" onclick="window.openStatDetail('sesi')"><div class="prof-stat-icon">${SVG_TROPHY}</div><div class="prof-stat-num">${sesiCount}</div><div class="prof-stat-lbl">Sesi Belajar</div></div>
-      <div class="prof-stat-cell" style="cursor:pointer" onclick="window.openStatDetail('peringkat')"><div class="prof-stat-icon">${SVG_RANK}</div><div class="prof-stat-num">${rank}</div><div class="prof-stat-lbl">Peringkat</div></div>
+      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG_STREAK}</div><div class="prof-stat-num">${streak}</div><div class="prof-stat-lbl">Hari Streak</div></div>
+      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG_BOOK}</div><div class="prof-stat-num blue">${kosakataCount}</div><div class="prof-stat-lbl">Kosakata</div></div>
+      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG_TROPHY}</div><div class="prof-stat-num">${sesiCount}</div><div class="prof-stat-lbl">Sesi Belajar</div></div>
+      <div class="prof-stat-cell"><div class="prof-stat-icon">${SVG_RANK}</div><div class="prof-stat-num">${rank}</div><div class="prof-stat-lbl">Peringkat</div></div>
     </div>
 
     ${renderKoleksiSection()}

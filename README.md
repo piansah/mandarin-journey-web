@@ -21,16 +21,9 @@ Aplikasi belajar Mandarin berbasis web (mandarin-journey.vercel.app) yang diranc
 ## 🗺️ Rencana Pengembangan (Roadmap)
 
 ### 🧠 Spaced Repetition (SRS) Enhancement
-- **Simple Gradiasi (Hafal / Lupa)**: Mempertahankan sistem 2 tombol untuk memudahkan pengambilan keputusan cepat.
-- **Statistik Retensi (Memory Health)**: Visualisasi kesehatan ingatan user (contoh: "500 Kata Matang", "100 Kata Rentan/Hampir Lupa").
 - **Import/Export Personal Deck**: Memungkinkan user pro untuk mengelola database kata mereka sendiri via CSV.
 - **Deep Audio Recognition**: Upgrade engine pengenalan suara untuk latihan speaking agar lebih akurat dan tidak hanya bergantung pada bot bawaan browser.
 - **Audio/Image Assets**: Dukungan untuk menambahkan gambar atau audio kustom pada kartu di Personal Deck.
 
-
-Statistik Retensi & "Memory Health" (Ala Anki/Pleco)
-Problem: Statistik kita sekarang masih fokus ke "Berapa banyak yang sudah dipelajari" dan "XP/Level".
-Analisis: Anki hebat karena dia kasih tahu "Memory Health". Kita belum punya visualisasi yang kasih tahu: "Ada 50 kata yang kritis (hampir lupa) dalam 24 jam ke depan".
-Saran: Tambahkan grafik "Forgetting Curve" atau "Retention Rate" di statistic.js. Kasih lihat ke user persentase keberhasilan mereka menjawab kartu di pertemuan pertama vs pertemuan ke-X.
 
 
