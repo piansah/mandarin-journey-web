@@ -102,13 +102,26 @@ async function _initWorker() {
     _ocrWorker = await createWorker('chi_sim', 1, {
       workerPath: 'https://unpkg.com/tesseract.js@v5.0.0/dist/worker.min.js',
       corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
+      // Tambahkan logger untuk progress tracking
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const pct = Math.round(m.progress * 100);
+          const statusEl = document.getElementById("ocr-status");
+          if (statusEl) statusEl.textContent = `Memindai ${pct}%...`;
+        }
+      }
     });
     
-    // Tuning parameter untuk akurasi & speed
+    // Tuning parameter untuk akurasi & speed (EXTREME SPEED MODE)
     await _ocrWorker.setParameters({
-      tessedit_pageseg_mode: '6', // PSM 6: Assume a single uniform block of text. (Faster for scan boxes)
+      tessedit_pageseg_mode: '6', 
       tessjs_create_hocr: '0',
       tessjs_create_tsv: '0',
+      tessjs_create_box: '0',
+      tessjs_create_unlv: '0',
+      tessjs_create_osd: '0',
+      // Tambahkan penalty untuk karakter non-Hanzi agar lebih fokus
+      tessedit_char_whitelist: '0123456789\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F\uFF00-\uFFEF'
     });
 
     if (status) status.textContent = "Siap memindai";
@@ -130,9 +143,9 @@ async function _captureAndProcess() {
   if (!video || !canvas) return;
 
   _isOcrProcessing = true;
-  if (status) status.textContent = "Memproses...";
+  if (status) status.textContent = "Menangkap gambar...";
 
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: false }); // Disable alpha for better perf
 
   // ── Crop berdasarkan scan-box, memperhitungkan object-fit:cover ──
   const scanBox = document.querySelector(".ocr-scan-box");
@@ -170,29 +183,30 @@ async function _captureAndProcess() {
   const sw = boxRect.width * scaleX;
   const sh = boxRect.height * scaleY;
 
-  // Upscale 2x (Optimal balance between speed & accuracy for CJK)
-  canvas.width = sw * 2;
-  canvas.height = sh * 2;
+  // Optimized scaling (1.5x is usually enough for CJK if lighting is good)
+  canvas.width = sw * 1.5;
+  canvas.height = sh * 1.5;
 
-  // Filter awal
-  ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
+  // Enhance contrast & brightness for OCR
+  ctx.filter = "grayscale(100%) contrast(180%) brightness(120%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-  // --- Optimized Thresholding (Booster Speed) ---
+  // --- Faster Thresholding using TypedArrays ---
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const buf = new Uint32Array(imageData.data.buffer);
+  const data = imageData.data;
   
-  for (let i = 0; i < buf.length; i++) {
-    const pixel = buf[i];
-    const r = pixel & 0xFF;
-    const g = (pixel >> 8) & 0xFF;
-    const b = (pixel >> 16) & 0xFF;
-    const avg = (r + g + b) / 3;
-    buf[i] = avg < 128 ? 0xFF000000 : 0xFFFFFFFF; 
+  for (let i = 0; i < data.length; i += 4) {
+    // Fast grayscale: (R+G+B)/3 or just G if we want extreme speed
+    // but weighted is better for accuracy
+    const gray = (data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114);
+    const val = gray < 130 ? 0 : 255; 
+    data[i] = data[i+1] = data[i+2] = val;
+    data[i+3] = 255; // Fully opaque
   }
   ctx.putImageData(imageData, 0, 0);
 
   try {
+    if (status) status.textContent = "Memulai pengenalan...";
     const { data: { text, confidence } } = await _ocrWorker.recognize(canvas);
     console.log(`[OCR] Result: "${text.trim()}" | Confidence: ${confidence}%`);
     

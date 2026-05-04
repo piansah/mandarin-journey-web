@@ -103,8 +103,8 @@ export function showToast(msg, type = "info") {
     background:${c.bg}; border:1px solid ${c.border}; border-radius:12px;
     padding:12px 20px; display:flex; align-items:center; gap:10px;
     font-family:'Poppins',sans-serif; font-size:13px; color:var(--txt);
-    box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:9999; max-width:320px;
-    opacity:0; transition:opacity 0.2s ease, transform 0.2s ease; white-space:nowrap;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:9999; width:max-content; max-width:320px;
+    opacity:0; transition:opacity 0.2s ease, transform 0.2s ease; white-space:normal; line-height:1.4;
   `;
   toast.innerHTML = `<span style="font-size:16px;flex-shrink:0">${c.icon}</span><span>${msg}</span>`;
   document.body.appendChild(toast);

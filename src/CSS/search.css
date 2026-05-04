@@ -20,7 +20,8 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 64px 12px 16px; /* Tambah padding kanan untuk mic */
+  padding: 12px 64px 12px 16px;
+  /* Tambah padding kanan untuk mic */
   background: var(--sur2);
   border: 1px solid var(--bdr);
   border-radius: 12px;
@@ -35,7 +36,8 @@
 
 .search-clear-btn {
   position: absolute;
-  right: 40px; /* Geser ke kiri sedikit agar tidak tumpuk dengan mic */
+  right: 40px;
+  /* Geser ke kiri sedikit agar tidak tumpuk dengan mic */
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
@@ -67,41 +69,54 @@
 }
 
 @keyframes micPulse {
-  0% { transform: translateY(-50%) scale(1); opacity: 1; }
-  50% { transform: translateY(-50%) scale(1.3); opacity: 0.7; }
-  100% { transform: translateY(-50%) scale(1); opacity: 1; }
+  0% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-50%) scale(1.3);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
 }
 
 /* ── OCR FAB ── */
 #search-screen .search-ocr-fab {
-  position: fixed; /* Gunakan fixed agar posisi stabil terhadap layar */
+  position: fixed;
+  /* Gunakan fixed agar posisi stabil terhadap layar */
   bottom: 85px;
-  right: 20px;
+  right: 18px;
   z-index: 1000;
-  width: 48px;
-  height: 48px;
-  background: var(--sur);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  width: 40px;
+  height: 40px;
+  background: var(--sur2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--txt);
-  border: 1px solid var(--bdr);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 #search-screen .search-ocr-fab:active {
   transform: scale(0.9);
-  background: var(--sur2);
+  background: rgba(45, 45, 50, 0.9);
 }
 
 #search-screen .search-ocr-fab svg {
   color: var(--txt);
-  opacity: 0.8;
+  width: 18px;
+  height: 18px;
 }
 
 .search-filters-wrap {
@@ -110,6 +125,7 @@
   padding: 4px 16px 16px;
   justify-content: center;
 }
+
 .search-filters-wrap::-webkit-scrollbar {
   display: none;
 }
@@ -217,13 +233,16 @@
 }
 
 @keyframes bgCardFloat {
+
   0%,
   100% {
     translate: 0px 0px;
   }
+
   25% {
     translate: 2px -5px;
   }
+
   75% {
     translate: -2px 5px;
   }
