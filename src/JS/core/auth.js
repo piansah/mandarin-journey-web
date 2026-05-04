@@ -114,7 +114,7 @@ async function _backgroundLoad() {
   if (now - _lastBackgroundLoad < 5_000 || _isBackgroundLoading) return;
   _lastBackgroundLoad = now;
   _isBackgroundLoading = true;
-  
+
   try {
     // Sequenced loading to avoid request storm
     console.log("[Auth] Starting background data load...");
@@ -550,7 +550,7 @@ export async function doLogout() {
   window.resetAvatarCache?.();
   window.resetProfileCache?.();
   window.resetGlobalSearchCache?.();
-  
+
   // Bersihkan IndexedDB Cache
   await dbDel("hsk_global_search_cache_v3");
 

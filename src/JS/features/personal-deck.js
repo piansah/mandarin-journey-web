@@ -898,30 +898,36 @@ export async function addCard(card, row) {
 }
 
 export async function removeCardFromSearch(card, row) {
-  if (!activeDeck?.id) return;
+  if (_isSaving || !activeDeck?.id) return;
   const btn = row?.querySelector(".pd-search-add");
   if (btn) btn.disabled = true;
 
-  const { error } = await supa
-    .from("personal_cards")
-    .delete()
-    .eq("deck_id", activeDeck.id)
-    .eq("hanzi", card.hanzi);
+  _isSaving = true;
+  try {
+    const { error } = await supa
+      .from("personal_cards")
+      .delete()
+      .eq("deck_id", activeDeck.id)
+      .eq("hanzi", card.hanzi);
 
-  if (error) {
-    showToast("Gagal menghapus", "err");
+    if (error) {
+      showToast("Gagal menghapus", "err");
+      return;
+    }
+
+    if (btn) {
+      btn.textContent = "+ Tambah";
+      btn.classList.remove("is-added");
+    }
+    _currentDeckHanzi.delete(card.hanzi);
+    showToast("Kata dihapus", "ok");
+    renderCards();
+  } catch (err) {
+    console.error("removeCardFromSearch failed:", err);
+  } finally {
+    _isSaving = false;
     if (btn) btn.disabled = false;
-    return;
   }
-
-  if (btn) {
-    btn.textContent = "+ Tambah";
-    btn.classList.remove("is-added");
-    btn.disabled = false;
-  }
-  _currentDeckHanzi.delete(card.hanzi);
-  showToast("Kata dihapus", "ok");
-  renderCards();
 }
 
 // ─── Latihan ──────────────────────────────────────────────────────────────────

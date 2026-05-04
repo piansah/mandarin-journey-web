@@ -77,14 +77,14 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
     pressTimer = setTimeout(() => {
       isLongPress = true;
       if (window.navigator.vibrate) window.navigator.vibrate(50);
-      
+
       // Jika ada callback long press, jalankan. Jika tidak, fallback ke TTS.
       if (typeof onLongPress === "function") {
         onLongPress();
       } else if (typeof window.speakTTS === "function" && hanzi) {
         window.speakTTS(hanzi);
       }
-      
+
       el.style.transform = "scale(0.95)";
       setTimeout(() => { el.style.transform = ""; }, 200);
     }, 600);
@@ -115,7 +115,7 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
  */
 function _segmentifyHanzi(text) {
   if (!text) return "";
-  
+
   // 1. Ambil data dari cache global (HSK + Compounds)
   if (!_globalSearchCache && typeof initGlobalSearchCache === "function") {
     initGlobalSearchCache();
@@ -243,7 +243,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
 
   _initGlobalSearchCachePromise = (async () => {
     const cacheKey = "hsk_global_search_cache_v4";
-    
+
     if (!forceRefresh) {
       // 1. Cek IndexedDB (Mesin Baru)
       const saved = await dbGet(cacheKey);
@@ -323,7 +323,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
           .select("id, hanzi, pinyin, arti, badge")
           .order("id", { ascending: true })
           .range(cFrom, cFrom + C_PAGE - 1);
-        
+
         if (e3 || !compData || compData.length === 0) break;
         allCompounds = allCompounds.concat(compData);
         if (compData.length < C_PAGE) break;
@@ -343,7 +343,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
         ...c,
         source: "compound",
       }));
-      
+
       // Gabungkan semua data (HSK + Compounds) tanpa batasan
       _globalSearchCache = [...hskMapped, ...compMapped];
 
@@ -366,7 +366,7 @@ export function warmUpGlobalSearchCache() {
     });
   }
   // Prefetch dictionary map untuk tab Char agar instan
-  _loadDictMap().catch(() => {});
+  _loadDictMap().catch(() => { });
 }
 
 
@@ -517,7 +517,7 @@ export async function _runKosGlobalSearch() {
 
   resultsEl.innerHTML =
     '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
-  
+
   const isSentence = raw.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(raw);
   let results = [];
   let sentenceWords = [];
@@ -556,7 +556,7 @@ export async function _runKosGlobalSearch() {
     });
 
   let html = "";
-  
+
   // Tampilkan Konteks Kalimat jika mode kalimat
   if (isSentence) {
     html += `
@@ -579,7 +579,7 @@ export async function _runKosGlobalSearch() {
   const frag = document.createDocumentFragment();
   filtered.forEach((c, idx) => {
     let badgeHtml = "";
-    
+
     // Robust Badge Logic
     const isHSK = c.source === "hsk" || !!c.hsk || !!c.hsk_level;
     if (isHSK) {
@@ -595,7 +595,7 @@ export async function _runKosGlobalSearch() {
     const item = document.createElement("div");
     item.className = "kos-item";
     if (isHSK) item.classList.add("hsk");
-    
+
     item.dataset.gidx = idx;
     item.style.cursor = "pointer";
     item.innerHTML = `
@@ -655,7 +655,7 @@ function _updateKosProgress(sets) {
   const defaultSets = sets.filter((s) => s.is_default);
   const total = defaultSets.length; // Hanya hitung total deck (1 latihan per deck)
   if (total === 0) return;
-  
+
   const fcScores = window.fcScores || {};
 
   let doneCount = 0;
@@ -738,7 +738,7 @@ async function _loadKosDueMap(sets) {
   if (!_globalSearchCache) {
     await initGlobalSearchCache();
   }
-  
+
   if (_globalSearchCache) {
     const setIdsSet = new Set(setIds);
     allCards = _globalSearchCache.filter((c) => setIdsSet.has(c.set_id));
@@ -789,37 +789,53 @@ export async function refreshKosDashboardProgress() {
 /* ══════════════════════════════════════════════════════════════
    LEVEL 1 — DECK GRID
 ══════════════════════════════════════════════════════════════ */
+
 export async function renderKosDeckGrid() {
   const grid = document.getElementById("kos-deck-grid");
   if (!grid) return;
 
-  await _withKosTimeout(loadUnlockedTiers(), 2500);
-  await _withKosTimeout(loadTierStartDecks("flashcard_sets"), 2500);
+  const requestId = ++_renderKosDeckGridId;
 
-  if (kosSetsCache && kosSetsCache.length > 0) {
-    const dueMap = await _withKosTimeout(
-      _loadKosDueMap(kosSetsCache),
-      3500,
-      new Map(),
-    );
-    buildKosDeckGrid(kosSetsCache, dueMap);
-    _updateKosProgress(kosSetsCache);
-    return;
-  }
+  try {
+    await _withKosTimeout(loadUnlockedTiers(), 2500);
+    await _withKosTimeout(loadTierStartDecks("flashcard_sets"), 2500);
 
-  grid.innerHTML =
-    '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
-  await refreshKosDashboardProgress();
-  if (kosSetsCache && kosSetsCache.length > 0) {
-    const dueMap = await _withKosTimeout(
-      _loadKosDueMap(kosSetsCache),
-      3500,
-      new Map(),
-    );
-    buildKosDeckGrid(kosSetsCache, dueMap);
-  } else {
-    // Bug #7: Fallback saat fetch gagal agar spinner tidak stuck
-    grid.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">⚠️</div><div>Gagal memuat deck. Periksa koneksi internet.</div></div>';
+    if (requestId !== _renderKosDeckGridId) return;
+
+    if (kosSetsCache && kosSetsCache.length > 0) {
+      const dueMap = await _withKosTimeout(
+        _loadKosDueMap(kosSetsCache),
+        3500,
+        new Map(),
+      );
+      if (requestId !== _renderKosDeckGridId) return;
+      buildKosDeckGrid(kosSetsCache, dueMap);
+      _updateKosProgress(kosSetsCache);
+      return;
+    }
+
+    grid.innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
+    await refreshKosDashboardProgress();
+    if (requestId !== _renderKosDeckGridId) return;
+
+    if (kosSetsCache && kosSetsCache.length > 0) {
+      const dueMap = await _withKosTimeout(
+        _loadKosDueMap(kosSetsCache),
+        3500,
+        new Map(),
+      );
+      if (requestId !== _renderKosDeckGridId) return;
+      buildKosDeckGrid(kosSetsCache, dueMap);
+    } else {
+      // Bug #7: Fallback saat fetch gagal agar spinner tidak stuck
+      grid.innerHTML = '<div style="text-align:center;padding:48px 24px;color:var(--dim);"><div style="font-size:32px;margin-bottom:10px;">⚠️</div><div>Gagal memuat deck. Periksa koneksi internet.</div></div>';
+    }
+  } catch (err) {
+    console.error("renderKosDeckGrid failed:", err);
+    if (requestId === _renderKosDeckGridId) {
+      grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);">Terjadi kesalahan pemuatan.</div>';
+    }
   }
 }
 
@@ -840,7 +856,7 @@ function buildKosDeckGrid(sets, dueMap = new Map()) {
     const wordCount = s.flashcard_cards?.[0]?.count ?? 20;
     const badge = s.badge || `HSK ${hskNum}`;
     const dueCount = dueMap.get(s.id) ?? 0;
-    
+
     // Hanya Flashcard yang menentukan status "Selesai" di grid
     const fcDone = fcScores[`fc${s.id}`] !== undefined;
     const statusTxt = fcDone ? "Selesai" : "Belum";
@@ -1330,7 +1346,7 @@ export function refreshKosPersonal() {
   filterKos();
 }
 
-export function invalidateKosLockCache() {}
+export function invalidateKosLockCache() { }
 
 /* ══════════════════════════════════════════════════════════════
    KOSAKATA PERSONAL
@@ -1594,11 +1610,11 @@ function _renderStrokeTab() {
     _strokeChars.length > 1
       ? `<div class="kwd-sb-char-dots" id="kwd-sb-char-dots">
           ${_strokeChars
-            .map(
-              (_, i) =>
-                `<div class="kwd-sb-char-dot ${i === 0 ? "active" : ""}" data-idx="${i}" onclick="window._strokeGoToChar(${i})"></div>`,
-            )
-            .join("")}
+        .map(
+          (_, i) =>
+            `<div class="kwd-sb-char-dot ${i === 0 ? "active" : ""}" data-idx="${i}" onclick="window._strokeGoToChar(${i})"></div>`,
+        )
+        .join("")}
         </div>`
       : "";
 
@@ -1606,14 +1622,14 @@ function _renderStrokeTab() {
     <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;">
       <div id="kwd-stroke-slider" class="kwd-stroke-slider">
         ${_strokeChars
-          .map(
-            (char, i) => `
+      .map(
+        (char, i) => `
           <div class="kwd-stroke-slide" data-index="${i}">
             <div id="stroke-target-${i}" class="kwd-stroke-target"></div>
           </div>
         `,
-          )
-          .join("")}
+      )
+      .join("")}
       </div>
       ${charDotsHtml}
     </div>
@@ -1788,7 +1804,7 @@ window.startVoiceSearch = () => {
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = "zh-CN"; 
+  recognition.lang = "zh-CN";
   recognition.continuous = false;
   recognition.interimResults = true; // Biar dapet teks pas lagi ngomong
 
@@ -2095,57 +2111,57 @@ async function _renderCharTab() {
     if (myId !== _kosWordLoadId) return;
 
 
-  const IDS_LABEL = {
-    "⿰": "kiri · kanan",
-    "⿱": "atas · bawah",
-    "⿲": "kiri · tengah · kanan",
-    "⿳": "atas · tengah · bawah",
-    "⿴": "luar · dalam",
-    "⿵": "atas terbuka · dalam",
-    "⿶": "bawah terbuka · dalam",
-    "⿷": "kiri terbuka · dalam",
-    "⿸": "kiri atas · dalam",
-    "⿹": "kanan atas · dalam",
-    "⿺": "kiri bawah · dalam",
-    "⿻": "bertumpang",
-  };
+    const IDS_LABEL = {
+      "⿰": "kiri · kanan",
+      "⿱": "atas · bawah",
+      "⿲": "kiri · tengah · kanan",
+      "⿳": "atas · tengah · bawah",
+      "⿴": "luar · dalam",
+      "⿵": "atas terbuka · dalam",
+      "⿶": "bawah terbuka · dalam",
+      "⿷": "kiri terbuka · dalam",
+      "⿸": "kiri atas · dalam",
+      "⿹": "kanan atas · dalam",
+      "⿺": "kiri bawah · dalam",
+      "⿻": "bertumpang",
+    };
 
-  // Ambil pinyin+arti dari cache atau dict
-  function _getCompInfo(char) {
-    const cached = _globalSearchCache?.find((h) => h.hanzi === char);
-    if (cached) return { pinyin: cached.pinyin || "", arti: cached.arti || "" };
-    const d = dict[char];
-    if (d) {
-      const py = d.pinyin?.join(", ") || "";
-      const def = d.definition || "";
-      return { pinyin: py, arti: def };
+    // Ambil pinyin+arti dari cache atau dict
+    function _getCompInfo(char) {
+      const cached = _globalSearchCache?.find((h) => h.hanzi === char);
+      if (cached) return { pinyin: cached.pinyin || "", arti: cached.arti || "" };
+      const d = dict[char];
+      if (d) {
+        const py = d.pinyin?.join(", ") || "";
+        const def = d.definition || "";
+        return { pinyin: py, arti: def };
+      }
+      return { pinyin: "", arti: "" };
     }
-    return { pinyin: "", arti: "" };
-  }
 
-  let html = "";
+    let html = "";
 
-  for (const char of chars) {
-    const entry = dict[char];
-    const rawDecomp = entry?.decomposition || "";
-    const idsChar = rawDecomp?.[0] || "";
-    const structLabel = IDS_LABEL[idsChar] || "";
-    const charInfo = _getCompInfo(char);
+    for (const char of chars) {
+      const entry = dict[char];
+      const rawDecomp = entry?.decomposition || "";
+      const idsChar = rawDecomp?.[0] || "";
+      const structLabel = IDS_LABEL[idsChar] || "";
+      const charInfo = _getCompInfo(char);
 
-    const components = rawDecomp
-      ? [...rawDecomp].filter(
+      const components = rawDecomp
+        ? [...rawDecomp].filter(
           (c) =>
             c !== idsChar &&
             c !== "？" &&
             !/^[⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻]$/.test(c),
         )
-      : [];
+        : [];
 
-    html += `<div class="kwd-char-block">`;
+      html += `<div class="kwd-char-block">`;
 
-    // Header karakter utama
-    const etym = entry?.etymology;
-    html += `
+      // Header karakter utama
+      const etym = entry?.etymology;
+      html += `
       <div class="kwd-char-main">
         <div class="kwd-char-header">
           <div class="kwd-char-hz" onclick="window.searchAndOpenWord('${char}')" style="cursor:pointer">${char}</div>
@@ -2158,28 +2174,28 @@ async function _renderCharTab() {
         ${etym && etym.hint ? `<div class="kwd-char-etym">${etym.hint}</div>` : ""}
       </div>`;
 
-    if (components.length === 0) {
-      html += `<div class="kwd-char-no-decomp">Tidak ada data komponen.</div>`;
-    } else {
-      html += `<div class="kwd-char-arrow">↓ komponen</div>`;
-      html += `<div class="kwd-char-components">`;
+      if (components.length === 0) {
+        html += `<div class="kwd-char-no-decomp">Tidak ada data komponen.</div>`;
+      } else {
+        html += `<div class="kwd-char-arrow">↓ komponen</div>`;
+        html += `<div class="kwd-char-components">`;
 
-      for (const comp of components) {
-        const compEntry = dict[comp];
-        const compRaw = compEntry?.decomposition || "";
-        const compIds = compRaw?.[0] || "";
-        const subComps = compRaw
-          ? [...compRaw].filter(
+        for (const comp of components) {
+          const compEntry = dict[comp];
+          const compRaw = compEntry?.decomposition || "";
+          const compIds = compRaw?.[0] || "";
+          const subComps = compRaw
+            ? [...compRaw].filter(
               (c) =>
                 c !== compIds &&
                 c !== "？" &&
                 !/^[⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻]$/.test(c),
             )
-          : [];
-        const compInfo = _getCompInfo(comp);
+            : [];
+          const compInfo = _getCompInfo(comp);
 
-        const compEtym = compEntry?.etymology;
-        html += `
+          const compEtym = compEntry?.etymology;
+          html += `
           <div class="kwd-char-comp" onclick="window.searchAndOpenWord('${comp}')">
             <div class="kwd-char-comp-header">
               <div class="kwd-char-comp-hz">${comp}</div>
@@ -2191,13 +2207,13 @@ async function _renderCharTab() {
             ${compEtym && compEtym.hint ? `<div class="kwd-char-comp-etym">${compEtym.hint}</div>` : ""}
             ${subComps.length > 0 ? `<div class="kwd-char-comp-sub">${subComps.join(" · ")}</div>` : ""}
           </div>`;
+        }
+
+        html += `</div>`;
       }
 
       html += `</div>`;
     }
-
-    html += `</div>`;
-  }
 
     container.innerHTML =
       html ||
@@ -2311,63 +2327,7 @@ async function _loadKosWordExamples(hanzi) {
 }
 
 
-function _renderKosWordExamplesUnsafe(listEl, hanziItems, userExamples) {
-  let html = "";
-  const allItems = [];
-  window._kosExampleEditRows = [];
 
-  hanziItems.forEach((h, idx) => {
-    allItems.push(h.hanzi || "");
-    html += `<div class="kwd-example-card" data-speak-idx="${idx}" style="cursor:pointer;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-        <div style="flex:1;">
-          <div class="kwd-ex-hz">${_segmentifyHanzi(h.hanzi)}</div>
-          <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
-          <div class="kwd-ex-id">${h.arti}</div>
-        </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')">${SVG_FLAG}</div>
-      </div>
-    </div>`;
-  });
-
-  const baseIdx = allItems.length;
-  const currentUser = getCurrentUser();
-  userExamples.forEach((u, idx) => {
-    const isOwner = currentUser && u.added_by === currentUser.id;
-    const editIdx = window._kosExampleEditRows.length;
-    window._kosExampleEditRows.push(u);
-    allItems.push(u.hanzi || "");
-    const actions = isOwner
-      ? `<div class="kwd-ex-actions">
-          <button class="kwd-ex-btn" onclick="event.stopPropagation();window.openContohEdit(${u.id},'${(u.hanzi || "").replace(/'/g, "\\'")}','${(u.pinyin || "").replace(/'/g, "\\'")}','${(u.arti || "").replace(/'/g, "\\'")}')">✏️ Edit</button>
-          <button class="kwd-ex-btn del" onclick="event.stopPropagation();window.deleteContoh(${u.id})">✕</button>
-        </div>`
-      : "";
-    html += `<div class="kwd-example-card" data-speak-idx="${baseIdx + idx}" style="cursor:pointer;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-        <div style="flex:1;">
-          ${u.hanzi ? `<div class="kwd-ex-hz">${_segmentifyHanzi(u.hanzi)}</div>` : ""}
-          ${u.pinyin ? `<div class="kwd-ex-py">${colorPy(u.pinyin)}</div>` : ""}
-          ${u.arti ? `<div class="kwd-ex-id">${u.arti}</div>` : ""}
-        </div>
-        <div class="kwd-ex-report-btn" title="Laporkan kesalahan" onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(u.hanzi || "").replace(/'/g, "\\'")} (${(u.pinyin || "").replace(/'/g, "\\'")})', 'content', '${u.id}')">${SVG_FLAG}</div>
-      </div>
-      ${actions}
-    </div>`;
-  });
-
-  if (!html) {
-    html = `<div class="kwd-empty">Belum ada contoh kalimat.<br>Klik <strong>+ Tambah</strong> untuk menambahkan.</div>`;
-  }
-
-  listEl.innerHTML = html;
-
-  listEl.querySelectorAll(".kwd-example-card[data-speak-idx]").forEach((card) => {
-    const idx = parseInt(card.dataset.speakIdx);
-    const text = allItems[idx];
-    _attachLongPressTTS(card, text, () => speakMandarin(text));
-  });
-}
 
 function _renderKosWordExamples(listEl, hanziItems, userExamples) {
   let html = "";
@@ -2433,7 +2393,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
   listEl.querySelectorAll(".kwd-example-card").forEach((card) => {
     const idx = parseInt(card.dataset.speakIdx);
     const text = allItems[idx];
-    
+
     // Kembali ke behavior lama: Tap/Hold kartu untuk suara kalimat
     _attachLongPressTTS(card, text, () => speakMandarin(text));
 
@@ -2441,7 +2401,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     card.querySelectorAll(".segmented-hz, .clickable-hz").forEach((hz) => {
       const match = hz.dataset.hanzi || hz.textContent;
       // Pass null pada onTap (argumen ke-3) agar klik "nembus" ke parent card (TTS kalimat)
-      _attachLongPressTTS(hz, null, null, 
+      _attachLongPressTTS(hz, null, null,
         () => { // Hold -> Detail
           if (window.searchAndOpenWord) window.searchAndOpenWord(match);
         }
@@ -2696,7 +2656,7 @@ export function destroyKosakata() {
 }
 window.destroyKosakata = destroyKosakata;
 /* ── Bottom Modal Opsi Cetak untuk Deck HSK (muncul saat long press) ── */
-window.openHskPrintOptions = function(setId, title) {
+window.openHskPrintOptions = function (setId, title) {
   const modal = document.getElementById("pd-deck-options-modal");
   const container = modal?.querySelector(".pd-modal-content");
   if (!modal || !container) return;
