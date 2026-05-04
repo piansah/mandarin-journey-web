@@ -27,9 +27,9 @@ export function showSegmentedInSearch(query) {
     window._globalResults = words; // Untuk click handler jika dibutuhkan
 
     let html = `
-      <div style="padding: 16px; background: var(--sur3); border-radius: 12px; margin: 0 16px 20px; border: 1px solid var(--bdr); animation: fadeIn 0.3s ease-out">
-        <div style="font-size: 10px; color: var(--dim2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px">Konteks Kalimat</div>
-        <div style="font-size: 18px; color: var(--gold); font-weight: 600; line-height: 1.4">${query}</div>
+      <div class="search-sentence-context" onclick="window.speakMandarin('${query.replace(/'/g, "\\'")}')" style="animation: fadeIn 0.3s ease-out">
+        <div class="ssc-label">KONTEKS KALIMAT</div>
+        <div class="ssc-text">${query}</div>
       </div>
       <div style="font-size: 11px; color: var(--dim); margin-bottom: 12px; padding-left: 20px">KOSAKATA DITEMUKAN:</div>
       <div id="kos-global-list" style="display:flex;flex-direction:column;gap:6px;padding:0 16px 80px;">
@@ -41,7 +41,8 @@ export function showSegmentedInSearch(query) {
 
     words.forEach((w, idx) => {
       if (w.found) {
-        const badgeLabel = w.badge === "common" ? "Common" : (w.badge === "native" ? "Native" : (w.hsk ? `HSK ${w.hsk}` : ""));
+        const hskVal = w.hsk_level || w.hsk || 1;
+        const badgeLabel = w.badge === "common" ? "Common" : (w.badge === "native" ? "Native" : `HSK ${hskVal}`);
         const badgeClass = w.badge === "common" ? "badge-common" : (w.badge === "native" ? "badge-native" : "badge-hsk");
         
         html += `
