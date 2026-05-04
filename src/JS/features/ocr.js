@@ -181,24 +181,27 @@ async function _captureAndProcess() {
   const sw = boxRect.width * scaleX;
   const sh = boxRect.height * scaleY;
 
-  // Balikin ke 2x — Hanzi butuh resolusi tinggi
-  canvas.width = sw * 2;
-  canvas.height = sh * 2;
+  // Tambahkan padding agar Tesseract tidak bingung dengan teks mepet pinggir
+  const padding = 40; 
+  canvas.width = (sw * 2) + (padding * 2);
+  canvas.height = (sh * 2) + (padding * 2);
 
-  // Filter kontras tinggi standar
-  ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
-  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  // Background putih untuk padding
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // --- Optimized Thresholding ---
+  // Filter kontras tinggi + sedikit penajaman
+  ctx.filter = "grayscale(100%) contrast(220%) brightness(110%)";
+  ctx.drawImage(video, sx, sy, sw, sh, padding, padding, sw * 2, sh * 2);
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   
   for (let i = 0; i < data.length; i += 4) {
     const gray = (data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114);
-    // Ambang batas standar (128)
     const val = gray < 128 ? 0 : 255; 
     data[i] = data[i+1] = data[i+2] = val;
-    data[i+3] = 255; 
+    data[i+3] = 255;
   }
   ctx.putImageData(imageData, 0, 0);
 
@@ -206,6 +209,13 @@ async function _captureAndProcess() {
     if (status) status.textContent = "Memulai pengenalan...";
     const { data: { text, confidence } } = await _ocrWorker.recognize(canvas);
     console.log(`[OCR] Result: "${text.trim()}" | Confidence: ${confidence}%`);
+    
+    // Jika confidence terlalu rendah (< 35%), anggap gagal baca untuk ngurangin halu parah
+    if (confidence < 35) {
+       if (status) status.textContent = "Hasil kurang yakin, coba fokuskan lagi";
+       _isOcrProcessing = false;
+       return;
+    }
     
     // Filter karakter CJK + Tanda Baca Mandarin (Full-width)
     // Range: \u3000-\u303F (Symbols/Punct), \uFF00-\uFFEF (Half/Full-width forms)
