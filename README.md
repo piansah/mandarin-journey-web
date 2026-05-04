@@ -31,15 +31,7 @@ A premium web-based Mandarin learning application ([mandarin-journey.vercel.app]
 - **Deep Audio Recognition**: Upgrade the voice recognition engine for more accurate speaking practice beyond native browser bots.
 - **Audio/Image Assets**: Support for custom media (images/audio) on cards within Personal Decks.
 
-### 🖨️ Printable PDF Writing Sheet Generator
-- **Concept**: Automatically generate handwriting practice sheets (Tianzige/Mizige) from Personal Decks or specific themes.
-- **Main Features**: 
-    - **Auto-populate**: Hanzi, Pinyin, and Definitions.
-    - **Stroke Order Diagrams**: Display step-by-step stroke sequences (using SVG data) as a guide on every line.
-    - **A4 Optimized**: Precision layouts designed for A4 printing via CSS Print Media.
-    - **Smart Selection**: Option to focus printing on "Critical Words" (words frequently missed in SRS).
-- **Workflow**: Select Theme -> Click "Print" -> New tab opens with print-ready layout -> Save as PDF or Print.
+
 
 ---
 © 2026 Piansah — Mandarin Journey. All rights reserved.
-

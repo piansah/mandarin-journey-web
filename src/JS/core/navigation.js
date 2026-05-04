@@ -72,6 +72,7 @@ function _cleanupCurrentScreen() {
       window.destroyKosakata();
     if (lid === "layer-grammar" && window.destroyGrammar) window.destroyGrammar();
     if (lid === "layer-cerita" && window.destroyCerita) window.destroyCerita();
+    if (lid === "layer-ocr" && window.closeOCRScanner) window.closeOCRScanner();
   });
 
   if (!active) return;
@@ -82,17 +83,10 @@ function _cleanupCurrentScreen() {
   if (sid === "dash" && window.destroyDashboard) window.destroyDashboard();
   if (sid === "quiz-screen" && window.destroyQuiz) window.destroyQuiz();
   if (sid === "kalimat-screen" && window.destroyKalimat) window.destroyKalimat();
-  if (sid === "cerita-screen" && window.destroyCerita) window.destroyCerita();
-  if (sid === "nada-screen" && window.destroyNada) window.destroyNada();
-  if (sid === "hanzi-screen" && window.destroyHanzi) window.destroyHanzi();
-  if (sid === "grammar-screen" && window.destroyGrammar) window.destroyGrammar();
-  if (sid === "flashcard-screen" && window.destroyFlashcard) window.destroyFlashcard();
-  if (sid === "tulis-hanzi-screen" && window.destroyTulisHanzi) window.destroyTulisHanzi();
-  if (sid === "search-screen" && window.destroyKosakata) window.destroyKosakata();
-  if (sid === "hanzi-speaking-screen" && window.destroyHanzi) window.destroyHanzi();
-
-  // 3. Global Cleanup
-  if (window.destroySpeaking) window.destroySpeaking();
+  if (sid === "cerita-screen" && (window.destroyCerita || window._ceritaStopAll)) {
+    window.destroyCerita?.();
+    window._ceritaStopAll?.();
+  }
   const speakingDone = document.getElementById("speaking-done-screen");
   if (speakingDone) speakingDone.style.display = "none";
 }
