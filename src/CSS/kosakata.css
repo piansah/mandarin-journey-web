@@ -341,6 +341,25 @@
   gap: 10px;
 }
 
+.kos-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--sur2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px;
+  padding: 18px 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kos-item:active {
+  transform: scale(0.97);
+  background: var(--sur3);
+  border-color: var(--gold);
+}
+
 .kos-tooltip-btn {
   flex: 1;
   display: flex;
