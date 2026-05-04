@@ -102,7 +102,7 @@ async function _initWorker() {
     _ocrWorker = await createWorker('chi_sim', 1, {
       workerPath: 'https://unpkg.com/tesseract.js@v5.0.0/dist/worker.min.js',
       corePath: 'https://unpkg.com/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
-      // Tambahkan logger untuk progress tracking
+      // Tetap gunakan logger untuk feedback visual
       logger: m => {
         if (m.status === 'recognizing text') {
           const pct = Math.round(m.progress * 100);
@@ -112,7 +112,7 @@ async function _initWorker() {
       }
     });
     
-    // Tuning parameter untuk akurasi & speed (EXTREME SPEED MODE)
+    // Gunakan parameter standar untuk stabilitas maksimal
     await _ocrWorker.setParameters({
       tessedit_pageseg_mode: '6', 
       tessjs_create_hocr: '0',
@@ -120,8 +120,6 @@ async function _initWorker() {
       tessjs_create_box: '0',
       tessjs_create_unlv: '0',
       tessjs_create_osd: '0',
-      // Tambahkan penalty untuk karakter non-Hanzi agar lebih fokus
-      tessedit_char_whitelist: '0123456789\u4E00-\u9FFF\u3400-\u4DBF\u3000-\u303F\uFF00-\uFFEF'
     });
 
     if (status) status.textContent = "Siap memindai";
@@ -183,25 +181,24 @@ async function _captureAndProcess() {
   const sw = boxRect.width * scaleX;
   const sh = boxRect.height * scaleY;
 
-  // Optimized scaling (1.5x is usually enough for CJK if lighting is good)
-  canvas.width = sw * 1.5;
-  canvas.height = sh * 1.5;
+  // Balikin ke 2x — Hanzi butuh resolusi tinggi
+  canvas.width = sw * 2;
+  canvas.height = sh * 2;
 
-  // Enhance contrast & brightness for OCR
-  ctx.filter = "grayscale(100%) contrast(180%) brightness(120%)";
+  // Filter kontras tinggi standar
+  ctx.filter = "grayscale(100%) contrast(200%) brightness(110%)";
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-  // --- Faster Thresholding using TypedArrays ---
+  // --- Optimized Thresholding ---
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   
   for (let i = 0; i < data.length; i += 4) {
-    // Fast grayscale: (R+G+B)/3 or just G if we want extreme speed
-    // but weighted is better for accuracy
     const gray = (data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114);
-    const val = gray < 130 ? 0 : 255; 
+    // Ambang batas standar (128)
+    const val = gray < 128 ? 0 : 255; 
     data[i] = data[i+1] = data[i+2] = val;
-    data[i+3] = 255; // Fully opaque
+    data[i+3] = 255; 
   }
   ctx.putImageData(imageData, 0, 0);
 
