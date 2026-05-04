@@ -9,11 +9,6 @@ export function initHistoryUI() {
   const input = document.getElementById("kos-global-search");
   if (!input) return;
 
-  // Tampilkan history saat fokus atau klik
-  const triggerShow = () => showSearchHistoryDropdown();
-  input.addEventListener("focus", triggerShow);
-  input.addEventListener("click", triggerShow);
-
   // Auto-hide saat mulai mengetik
   input.addEventListener("input", () => {
     if (input.value.trim().length > 0) {
@@ -25,7 +20,11 @@ export function initHistoryUI() {
 
   // Sembunyikan history saat klik di luar
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".search-history-container") && e.target !== input) {
+    if (
+      !e.target.closest(".search-history-container") && 
+      !e.target.closest(".search-history-trigger") &&
+      e.target !== input
+    ) {
       hideHistoryDropdown();
     }
   });
@@ -57,7 +56,9 @@ export async function showSearchHistoryDropdown() {
     const safeQuery = (item.query || "").replace(/'/g, "\\'");
     html += `
       <div class="history-item" onclick="window.useSearchHistory('${safeQuery}')">
-        <div class="history-icon">🕒</div>
+        <div class="history-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
         <div class="history-text">${item.query}</div>
         <div class="history-actions">
           <button class="h-action-btn del" onclick="event.stopPropagation(); window.handleHistoryAction('${item.id}')">✕</button>
@@ -91,6 +92,9 @@ window.handleHistoryAction = async function(id) {
     showSearchHistoryDropdown();
   }
 };
+
+/* ── Expose to window ── */
+window.showSearchHistoryDropdown = showSearchHistoryDropdown;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initHistoryUI);
