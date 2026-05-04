@@ -73,10 +73,16 @@ let _lastUnlockNotifiedKal = new Set();
 let _lastUnlockNotifiedHan = new Set();
 let _scoresHaveLoaded = false;
 
-// Promise yang di-resolve saat scores selesai dimuat
+// Promise yang di-resolve saat scores selesai dimuat dengan Safety Timeout 5 detik
 let _scoresLoadedResolve = null;
 window.scoresLoaded = new Promise((res) => {
   _scoresLoadedResolve = res;
+  setTimeout(() => {
+    if (_scoresLoadedResolve) {
+      console.warn("[Dashboard] scoresLoaded safety timeout reached.");
+      _resolveScoresLoaded();
+    }
+  }, 5000);
 });
 window._scoresHaveLoaded = false;
 
@@ -90,6 +96,17 @@ function _resolveScoresLoaded() {
   if (typeof window.signalScoresLoaded === "function")
     window.signalScoresLoaded();
 }
+
+/**
+ * CLEANUP LOGIC: destroyDashboard
+ */
+export function destroyDashboard() {
+  // Reset cache jika perlu, atau hentikan proses background
+  _loadScoresPromise = null;
+  _streakLoading = false;
+  // Dashboard biasanya persisten, tapi kita sediakan hook-nya
+}
+window.destroyDashboard = destroyDashboard;
 
 /* ══════════════════════════════════════════════════════════════
    LOCALSTORAGE HELPERS (wrapper)

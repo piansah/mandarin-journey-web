@@ -583,6 +583,17 @@ function _nadaClose(fromPopState = false) {
   if (scr) scr.remove();
 }
 
+/**
+ * CLEANUP LOGIC: destroyNada
+ */
+export function destroyNada() {
+  window.removeEventListener("popstate", _nadaOnPopState);
+  window.speechSynthesis.cancel();
+  const scr = document.getElementById("nada-screen");
+  if (scr) scr.remove();
+}
+window.destroyNada = destroyNada;
+
 function _nadaSandhiNote(q) {
   const syls = q.py.trim().split(/\s+/);
   if (syls.length < 2) return null;

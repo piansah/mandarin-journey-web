@@ -71,9 +71,9 @@ function _ttsShowSpeedBadge(label, rate) {
 export function speakMandarin(text, silent = false) {
   if (!window.speechSynthesis || !text) return;
 
-  // Lock: Jika dipanggil lagi dalam < 150ms, abaikan.
+  // Lock: Jika dipanggil lagi dalam < 300ms, abaikan (mencegah double tap cepat)
   const now = Date.now();
-  if (now - _lastSpeakTime < 150) return;
+  if (now - _lastSpeakTime < 300) return;
   _lastSpeakTime = now;
 
   // Pastikan voices sudah ter-load

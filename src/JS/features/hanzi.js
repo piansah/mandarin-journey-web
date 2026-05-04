@@ -420,6 +420,19 @@ export function _closeHanziDone() {
   history.back();
 }
 
+/**
+ * CLEANUP LOGIC: destroyHanzi
+ */
+export function destroyHanzi() {
+  cancelTTS();
+  _spkStopRec(true);
+  _hspHideFb();
+  const scr = document.getElementById("hanzi-speaking-screen");
+  if (scr) scr.remove();
+  window.removeEventListener("popstate", _onSpeakingPopState);
+}
+window.destroyHanzi = destroyHanzi;
+
 async function _saveHanziProgress() {
   if (typeof window.hanziScores !== "undefined")
     window.hanziScores[currentHanziKey] = 100;

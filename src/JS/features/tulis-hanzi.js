@@ -133,6 +133,15 @@ export function closeTulisHanzi() {
   showScreen(_sourceScreen || "dash");
 }
 
+/**
+ * CLEANUP LOGIC: destroyTulisHanzi
+ */
+export function destroyTulisHanzi() {
+  window.removeEventListener("resize", _handleResize);
+  _destroyWriter();
+}
+window.destroyTulisHanzi = destroyTulisHanzi;
+
 /* ══════════════════════════════════════════════════════════════
    RENDER KARTU
 ══════════════════════════════════════════════════════════════ */

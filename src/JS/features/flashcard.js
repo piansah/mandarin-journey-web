@@ -1238,6 +1238,18 @@ export function openKosvok() {
   else attachListeners();
 })();
 
+/**
+ * CLEANUP LOGIC: destroyFlashcard
+ */
+export function destroyFlashcard() {
+  cancelTTS();
+  if (typeof window._fcDetachDocListeners === "function")
+    window._fcDetachDocListeners();
+  resetFCState();
+  _fcDoneShown = false;
+}
+window.destroyFlashcard = destroyFlashcard;
+
 /* ── Expose ke window untuk dipanggil dari HTML ── */
 window.startFCDue = startFCDue;
 window.startFC = startFC;

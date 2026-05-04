@@ -595,6 +595,19 @@ export function closeKalimat() {
     window.backToLayer("layer-kalimat");
 }
 
+/**
+ * CLEANUP LOGIC: destroyKalimat
+ */
+export function destroyKalimat() {
+  currentKalData = null;
+  currentKalKey = null;
+  kalQ = [];
+  kalAnswered = {};
+  kalCorrect = 0;
+  kalAnsweredN = 0;
+}
+window.destroyKalimat = destroyKalimat;
+
 function _quizDoneCountByHSK(hskLevel) {
   if (!window._quizSetsCache) return 0;
   return window._quizSetsCache.filter(

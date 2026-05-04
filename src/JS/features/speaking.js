@@ -274,3 +274,12 @@ window._spkListen = _spkListen;
 window._spkToggleRec = _spkToggleRec;
 window._spkStopRec = _spkStopRec;
 window._spkSimilarity = _spkSimilarity; // dipakai di mic.js
+
+/**
+ * CLEANUP LOGIC: destroySpeaking
+ */
+export function destroySpeaking() {
+  _spkStopRec();
+  _spkHideFb();
+}
+window.destroySpeaking = destroySpeaking;

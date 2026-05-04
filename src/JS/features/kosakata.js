@@ -175,6 +175,7 @@ let kosCurrentSetId = null;
 let kosCurrentDayNum = null;
 let kosCurrentTitle = "";
 export let kosSetsCache = null;
+let _renderKosDeckGridId = 0;
 let _kosActiveHSK = "all";
 let _kosSrsProgressMap = new Map();
 
@@ -320,10 +321,14 @@ export async function initGlobalSearchCache(forceRefresh = false) {
         ...c,
         source: "compound",
       }));
-      _globalSearchCache = [...hskMapped, ...compMapped];
-      // Simpan ke Local Storage
+      
+      // OPTIMASI: Batasi cache agar tidak meledakkan localStorage (Max 3000 kata terpopuler/penting)
+      const combined = [...hskMapped, ...compMapped];
+      _globalSearchCache = combined.slice(0, 3500); 
+
+      // Simpan ke Local Storage dengan versi untuk paksa refresh jika struktur berubah
       lsSet(cacheKey, _globalSearchCache);
-      console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total.`);
+      console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total (Limited to 3500).`);
     }
   })().catch((err) => {
     console.error("[Kosakata] initGlobalSearchCache failed:", err);
@@ -2656,3 +2661,15 @@ window._switchTab = _switchTab;
 window._openKwdRelated = _openKwdRelated;
 window._currentKosWord = null;
 window._getGlobalSearchCache = () => _globalSearchCache;
+
+/**
+ * CLEANUP LOGIC: destroyKosakata
+ */
+export function destroyKosakata() {
+  _destroyStrokeWriters();
+  // Reset search state jika perlu
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) searchInput.value = "";
+  _renderKosDeckGridId++; // Membatalkan render async yang mungkin sedang berjalan
+}
+window.destroyKosakata = destroyKosakata;

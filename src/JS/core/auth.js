@@ -107,13 +107,16 @@ function _loadGrammarCountsIfNeeded() {
     window.loadGrammarCounts();
 }
 
+let _isBackgroundLoading = false;
 async function _backgroundLoad() {
   const now = Date.now();
-  if (now - _lastBackgroundLoad < 5_000) return;
+  if (now - _lastBackgroundLoad < 5_000 || _isBackgroundLoading) return;
   _lastBackgroundLoad = now;
+  _isBackgroundLoading = true;
   
   try {
     // Sequenced loading to avoid request storm
+    console.log("[Auth] Starting background data load...");
     await window.loadScores?.();
     await window.loadDashboardCounts?.();
     window.loadKosvok?.();
@@ -121,6 +124,8 @@ async function _backgroundLoad() {
     window.updateHanziDashboard?.();
   } catch (e) {
     console.warn("Background load partial fail", e);
+  } finally {
+    _isBackgroundLoading = false;
   }
 }
 

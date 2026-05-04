@@ -684,6 +684,16 @@ export function closeCerita() {
     window.backToLayer("layer-cerita");
 }
 
+/**
+ * CLEANUP LOGIC: destroyCerita
+ */
+export function destroyCerita() {
+  _ceritaStopAll();
+  currentCeritaKey = null;
+  currentCeritaData = null;
+}
+window.destroyCerita = destroyCerita;
+
 /* ── Update Dashboard Card ── */
 let _ceritaTotalCount = null;
 

@@ -296,7 +296,8 @@ export function buildQuiz() {
 export function renderQuiz() {
   const main = document.getElementById("quiz-main");
   if (!main) return;
-  main.innerHTML = "";
+
+  const frag = document.createDocumentFragment();
 
   ["1", "2", "3", "4"].forEach((lbl, si) => {
     const sq = allQ.filter((q) => q.si === si);
@@ -335,8 +336,11 @@ export function renderQuiz() {
       secDiv.appendChild(card);
     });
 
-    main.appendChild(secDiv);
+    frag.appendChild(secDiv);
   });
+
+  main.innerHTML = "";
+  main.appendChild(frag);
 
   Object.keys(answered).forEach((gi) => {
     gi = parseInt(gi);
@@ -608,6 +612,20 @@ export function closeQuiz() {
   if (typeof window.backToLayer === "function")
     window.backToLayer("layer-quiz");
 }
+
+/**
+ * CLEANUP LOGIC: destroyQuiz
+ */
+export function destroyQuiz() {
+  _isRestoringFromRefresh = false;
+  currentQuizData = null;
+  currentQuizKey = null;
+  allQ = [];
+  answered = {};
+  totalCorrect = 0;
+  totalAnswered = 0;
+}
+window.destroyQuiz = destroyQuiz;
 
 let _quizSetsCache = null;
 let _quizListFetchPromise = null;

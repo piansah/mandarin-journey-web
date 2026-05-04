@@ -60,11 +60,39 @@ export function initNavbar() {
 
 function _cleanupCurrentScreen() {
   const active = document.querySelector(".screen.active");
+  const layers = document.querySelectorAll(".layer.active");
+
+  // 1. Cleanup Layers (Feature Lifecycle)
+  layers.forEach((l) => {
+    const lid = l.id;
+    if (lid === "layer-quiz" && window.destroyQuiz) window.destroyQuiz();
+    if (lid === "layer-kalimat" && window.destroyKalimat) window.destroyKalimat();
+    if (lid === "layer-hanzi" && window.destroyHanzi) window.destroyHanzi();
+    if ((lid === "layer-kos" || lid === "layer-kos-deck" || lid === "layer-kos-word") && window.destroyKosakata)
+      window.destroyKosakata();
+    if (lid === "layer-grammar" && window.destroyGrammar) window.destroyGrammar();
+    if (lid === "layer-cerita" && window.destroyCerita) window.destroyCerita();
+  });
+
   if (!active) return;
   cancelTTS();
-  if (active.id === "cerita-screen") {
-    if (typeof window._ceritaStopAll === "function") window._ceritaStopAll();
-  }
+
+  // 2. Cleanup Screens (Main Feature Engine)
+  const sid = active.id;
+  if (sid === "dash" && window.destroyDashboard) window.destroyDashboard();
+  if (sid === "quiz-screen" && window.destroyQuiz) window.destroyQuiz();
+  if (sid === "kalimat-screen" && window.destroyKalimat) window.destroyKalimat();
+  if (sid === "cerita-screen" && window.destroyCerita) window.destroyCerita();
+  if (sid === "nada-screen" && window.destroyNada) window.destroyNada();
+  if (sid === "hanzi-screen" && window.destroyHanzi) window.destroyHanzi();
+  if (sid === "grammar-screen" && window.destroyGrammar) window.destroyGrammar();
+  if (sid === "flashcard-screen" && window.destroyFlashcard) window.destroyFlashcard();
+  if (sid === "tulis-hanzi-screen" && window.destroyTulisHanzi) window.destroyTulisHanzi();
+  if (sid === "search-screen" && window.destroyKosakata) window.destroyKosakata();
+  if (sid === "hanzi-speaking-screen" && window.destroyHanzi) window.destroyHanzi();
+
+  // 3. Global Cleanup
+  if (window.destroySpeaking) window.destroySpeaking();
   const speakingDone = document.getElementById("speaking-done-screen");
   if (speakingDone) speakingDone.style.display = "none";
 }
@@ -182,13 +210,21 @@ function _triggerLayerRender(id) {
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
-      if (run() || attempts > 15) { // Increase to 15 attempts (4.5s total)
+      const success = run();
+      if (success || attempts > 12) { // Max 12 attempts (3.6s)
         clearInterval(interval);
-        if (attempts > 15 && typeof run() !== "boolean") {
-          console.warn(`[navigation] Layer ${id} failed to render after 15 attempts.`);
+        if (!success) {
+          console.warn(`[navigation] Layer ${id} failed to render: function not found in window.`);
+          const target = document.getElementById(id);
+          if (target) {
+            const body = target.querySelector(".layer-body") || target;
+            if (!body.innerHTML.trim() || body.innerHTML.includes("spinner")) {
+               body.innerHTML = '<div style="text-align:center;padding:48px;color:var(--dim);">Gagal memuat konten. Harap muat ulang aplikasi.</div>';
+            }
+          }
         }
       }
-    }, 300); // Increase interval to 300ms
+    }, 300);
   }
 }
 

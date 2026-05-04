@@ -846,10 +846,30 @@ export function gramRestart() {
 
 /* ── Close Grammar Screen ── */
 export function closeGrammar() {
+  currentGramKey = null;
+  currentGramData = null;
+  gramQ = [];
+  gramAnswered = {};
+  gramCorrect = 0;
+  gramAnsweredN = 0;
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   if (typeof window.backToLayer === "function")
     window.backToLayer("layer-grammar");
 }
+
+/**
+ * CLEANUP LOGIC: destroyGrammar
+ */
+export function destroyGrammar() {
+  currentGramKey = null;
+  currentGramData = null;
+  gramQ = [];
+  gramAnswered = {};
+  gramCorrect = 0;
+  gramAnsweredN = 0;
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+window.destroyGrammar = destroyGrammar;
 
 /* ── Update Grammar Progress on Dashboard ── */
 export function updateGrammarDashboard() {

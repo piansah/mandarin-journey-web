@@ -11,11 +11,15 @@ const STATIC_ASSETS = [
   "/icons/icon-512.png",
 ];
 
+const DATA_ASSETS = [
+  "/data/dictionary.json"
+];
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       Promise.allSettled(
-        STATIC_ASSETS.map((url) =>
+        [...STATIC_ASSETS, ...DATA_ASSETS].map((url) =>
           cache.add(url).catch((err) => {
             console.warn("[SW] skip precache:", url, err);
           }),
