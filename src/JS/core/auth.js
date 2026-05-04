@@ -20,6 +20,7 @@ import {
   lsSet,
   lsGetScoped,
   lsRemoveScoped,
+  dbDel,
   showToast,
 } from "../utilities/helpers.js";
 import { loadUnlockedTiers } from "../utilities/tier-unlock.js";
@@ -546,10 +547,13 @@ export async function doLogout() {
     if (obj) Object.keys(obj).forEach((k) => delete obj[k]);
   });
   lsSet(LS_GRAM_STATE, {});
-  window.resetLevelCache?.();
   window.resetAvatarCache?.();
   window.resetProfileCache?.();
   window.resetGlobalSearchCache?.();
+  
+  // Bersihkan IndexedDB Cache
+  await dbDel("hsk_global_search_cache_v3");
+
   await supa.auth.signOut();
 }
 

@@ -30,6 +30,9 @@ import {
   lsGet,
   lsSet,
   lsRemove,
+  dbGet,
+  dbSet,
+  dbDel,
   shuffle,
 } from "../utilities/helpers.js";
 import { speakMandarin, cancelTTS } from "../utilities/tts.js";
@@ -231,13 +234,24 @@ export async function initGlobalSearchCache(forceRefresh = false) {
   if (_initGlobalSearchCachePromise && !forceRefresh) return _initGlobalSearchCachePromise;
 
   _initGlobalSearchCachePromise = (async () => {
-    // Cek Local Storage dulu
     const cacheKey = "hsk_global_search_cache_v3";
+    
     if (!forceRefresh) {
-      const saved = lsGet(cacheKey);
+      // 1. Cek IndexedDB (Mesin Baru)
+      const saved = await dbGet(cacheKey);
       if (saved && Array.isArray(saved) && saved.length > 0) {
         _globalSearchCache = saved;
-        console.log(`[Kosakata] Loaded ${saved.length} words from local cache.`);
+        console.log(`[Kosakata] Loaded ${saved.length} words from IndexedDB.`);
+        return;
+      }
+
+      // 2. Fallback: Cek LocalStorage (Migrasi)
+      const oldSaved = lsGet(cacheKey);
+      if (oldSaved && Array.isArray(oldSaved) && oldSaved.length > 0) {
+        _globalSearchCache = oldSaved;
+        console.log(`[Kosakata] Migrating ${oldSaved.length} words to IndexedDB...`);
+        await dbSet(cacheKey, oldSaved); // Simpan ke IDB
+        lsRemove(cacheKey); // Hapus dari LS
         return;
       }
     }
@@ -326,8 +340,8 @@ export async function initGlobalSearchCache(forceRefresh = false) {
       const combined = [...hskMapped, ...compMapped];
       _globalSearchCache = combined.slice(0, 3500); 
 
-      // Simpan ke Local Storage dengan versi untuk paksa refresh jika struktur berubah
-      lsSet(cacheKey, _globalSearchCache);
+      // Simpan ke IndexedDB (Lebih luas & asinkron)
+      await dbSet(cacheKey, _globalSearchCache);
       console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total (Limited to 3500).`);
     }
   })().catch((err) => {

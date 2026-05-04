@@ -64,6 +64,56 @@ export function withTimeout(promise, ms, fallback = null) {
   ]);
 }
 
+/* ── IndexedDB Helpers (Native Wrapper) ── */
+const DB_NAME = "MandarinJourneyDB";
+const STORE_NAME = "app_cache";
+
+function _getDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore(STORE_NAME);
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+export async function dbSet(key, val) {
+  try {
+    const db = await _getDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(val, key);
+    return new Promise((res, rej) => {
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) {
+    console.error("dbSet error:", e);
+  }
+}
+
+export async function dbGet(key, fallback = null) {
+  try {
+    const db = await _getDB();
+    return new Promise((res) => {
+      const request = db.transaction(STORE_NAME).objectStore(STORE_NAME).get(key);
+      request.onsuccess = () => res(request.result !== undefined ? request.result : fallback);
+      request.onerror = () => res(fallback);
+    });
+  } catch (e) {
+    return fallback;
+  }
+}
+
+export async function dbDel(key) {
+  try {
+    const db = await _getDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(key);
+  } catch (e) {}
+}
+
 let _toastTimer = null;
 
 export function showToast(msg, type = "info") {
