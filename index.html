@@ -2541,16 +2541,6 @@
             spellcheck="false"
             oninput="window.onKosGlobalSearch()"
           />
-          <span
-            id="kos-global-mic"
-            class="search-mic-btn"
-            onclick="window.startVoiceSearch()"
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-            </svg>
-          </span>
         </div>
       </div>
       <div class="search-filters-wrap" id="kos-search-filters">
@@ -2563,13 +2553,21 @@
         <div class="search-empty"></div>
       </div>
       
-      <!-- OCR Camera FAB -->
-      <button id="search-ocr-fab" class="search-ocr-fab" onclick="window.openOCRScanner()" title="Scan Hanzi">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-          <circle cx="12" cy="12" r="3.2"/>
-        </svg>
-      </button>
+      <!-- Voice & OCR FABs -->
+      <div class="search-fabs-wrap">
+        <button id="search-mic-fab" class="search-fab mic" onclick="window.startVoiceSearch?.()" title="Voice Search">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+        <button id="search-ocr-fab" class="search-fab ocr" onclick="window.openOCRScanner()" title="Scan Hanzi">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+            <circle cx="12" cy="12" r="3.2"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- PROFILE SCREEN -->

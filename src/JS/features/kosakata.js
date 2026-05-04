@@ -598,7 +598,7 @@ export async function _runKosGlobalSearch() {
   // Tampilkan Konteks Kalimat jika mode kalimat
   if (isSentence) {
     html += `
-      <div class="search-sentence-context">
+      <div class="search-sentence-context" onclick="window.speakTTS?.('${raw}')">
         <div class="ssc-label">KONTEKS KALIMAT</div>
         <div class="ssc-text">${raw}</div>
       </div>
@@ -1829,7 +1829,7 @@ window.startVoiceSearch = () => {
   recognition.continuous = false;
   recognition.interimResults = true; // Biar dapet teks pas lagi ngomong
 
-  const micBtn = document.getElementById("kos-global-mic");
+  const micBtn = document.getElementById("search-mic-fab") || document.getElementById("kos-global-mic");
   const searchInput = document.getElementById("kos-global-search");
 
   if (!micBtn || !searchInput) return;
