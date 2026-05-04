@@ -598,7 +598,7 @@ export async function _runKosGlobalSearch() {
   // Tampilkan Konteks Kalimat jika mode kalimat
   if (isSentence) {
     html += `
-      <div class="search-sentence-context" onclick="window.speakMandarin('${raw.replace(/'/g, "\\'")}')">
+      <div class="search-sentence-context">
         <div class="ssc-label">KONTEKS KALIMAT</div>
         <div class="ssc-text">${raw}</div>
       </div>
