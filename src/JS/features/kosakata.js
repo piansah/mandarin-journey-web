@@ -57,12 +57,13 @@ import {
 import { isFavorited, toggleFavorite } from "./personal-deck.js";
 
 /**
- * Attach long-press TTS + tap handler ke element.
+ * Attach long-press handler ke element.
  * @param {HTMLElement} el
- * @param {string} hanzi - teks yang diucapkan saat long-press
+ * @param {string} hanzi - teks yang diucapkan saat long-press (opsional)
  * @param {Function} onTap - callback saat tap biasa
+ * @param {Function} onLongPress - callback saat long-press (opsional)
  */
-export function _attachLongPressTTS(el, hanzi, onTap) {
+export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   let pressTimer = null;
   let isLongPress = false;
   let startX = 0, startY = 0;
@@ -76,7 +77,14 @@ export function _attachLongPressTTS(el, hanzi, onTap) {
     pressTimer = setTimeout(() => {
       isLongPress = true;
       if (window.navigator.vibrate) window.navigator.vibrate(50);
-      if (typeof window.speakTTS === "function" && hanzi) window.speakTTS(hanzi);
+      
+      // Jika ada callback long press, jalankan. Jika tidak, fallback ke TTS.
+      if (typeof onLongPress === "function") {
+        onLongPress();
+      } else if (typeof window.speakTTS === "function" && hanzi) {
+        window.speakTTS(hanzi);
+      }
+      
       el.style.transform = "scale(0.95)";
       setTimeout(() => { el.style.transform = ""; }, 200);
     }, 600);
@@ -234,7 +242,7 @@ export async function initGlobalSearchCache(forceRefresh = false) {
   if (_initGlobalSearchCachePromise && !forceRefresh) return _initGlobalSearchCachePromise;
 
   _initGlobalSearchCachePromise = (async () => {
-    const cacheKey = "hsk_global_search_cache_v3";
+    const cacheKey = "hsk_global_search_cache_v4";
     
     if (!forceRefresh) {
       // 1. Cek IndexedDB (Mesin Baru)
@@ -336,13 +344,12 @@ export async function initGlobalSearchCache(forceRefresh = false) {
         source: "compound",
       }));
       
-      // OPTIMASI: Batasi cache agar tidak meledakkan localStorage (Max 3000 kata terpopuler/penting)
-      const combined = [...hskMapped, ...compMapped];
-      _globalSearchCache = combined.slice(0, 3500); 
+      // Gabungkan semua data (HSK + Compounds) tanpa batasan
+      _globalSearchCache = [...hskMapped, ...compMapped];
 
       // Simpan ke IndexedDB (Lebih luas & asinkron)
       await dbSet(cacheKey, _globalSearchCache);
-      console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total (Limited to 3500).`);
+      console.log(`[Kosakata] Cache updated: ${_globalSearchCache.length} words total (All data cached).`);
     }
   })().catch((err) => {
     console.error("[Kosakata] initGlobalSearchCache failed:", err);
@@ -855,11 +862,12 @@ function buildKosDeckGrid(sets, dueMap = new Map()) {
         <button class="btn-open">Buka</button>
       </div>`;
 
-    const openFn = () => openKosDeck(s.id, title, desc);
-    card.addEventListener("click", openFn);
+    // _attachLongPressTTS handle tap (buka deck) dan long press (modal print)
+    _attachLongPressTTS(card, null, () => openKosDeck(s.id, title, desc), () => window.openHskPrintOptions(s.id, title));
+    // Tombol "Buka" tetap langsung buka deck
     card.querySelector(".btn-open").addEventListener("click", (e) => {
       e.stopPropagation();
-      openFn();
+      openKosDeck(s.id, title, desc);
     });
     frag.appendChild(card);
   });
@@ -2687,3 +2695,41 @@ export function destroyKosakata() {
   _renderKosDeckGridId++; // Membatalkan render async yang mungkin sedang berjalan
 }
 window.destroyKosakata = destroyKosakata;
+/* ── Bottom Modal Opsi Cetak untuk Deck HSK (muncul saat long press) ── */
+window.openHskPrintOptions = function(setId, title) {
+  const modal = document.getElementById("pd-deck-options-modal");
+  const container = modal?.querySelector(".pd-modal-content");
+  if (!modal || !container) return;
+
+  // Reset: Sembunyikan semua tombol personal deck
+  const btnEdit = document.getElementById("pd-deck-opt-edit");
+  const btnDel = document.getElementById("pd-deck-opt-delete");
+  const btnBuka = document.getElementById("hsk-opt-open");
+  if (btnEdit) btnEdit.style.display = "none";
+  if (btnDel) btnDel.style.display = "none";
+  if (btnBuka) btnBuka.style.display = "none";
+
+  // Update judul
+  const titleEl = container.querySelector(".pd-modal-label");
+  if (titleEl) titleEl.textContent = "OPSI KOSAKATA HSK";
+
+  // Tombol Cetak PDF
+  let btnPrint = document.getElementById("pd-deck-opt-print");
+  if (!btnPrint) {
+    btnPrint = document.createElement("button");
+    btnPrint.id = "pd-deck-opt-print";
+    btnPrint.className = "pd-modal-btn";
+    container.appendChild(btnPrint);
+  }
+  btnPrint.style.display = "block";
+  btnPrint.style.cssText = "display:block; width:100%; padding:16px; background:transparent; color:var(--gold); border:1.5px solid rgba(232,201,109,0.35); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; text-align:center; margin-bottom:12px; box-sizing:border-box;";
+  btnPrint.textContent = "🖨️ Cetak PDF (Lembar Latihan)";
+  btnPrint.onclick = () => {
+    modal.classList.remove("active");
+    if (typeof window.preparePrintHsk === "function") {
+      window.preparePrintHsk(setId, title);
+    }
+  };
+
+  modal.classList.add("active");
+};

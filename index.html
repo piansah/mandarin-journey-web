@@ -1,684 +1,551 @@
 <!doctype html>
 <!-- © 2026 Piansah — Mandarin Journey. All rights reserved. -->
 <html lang="id">
-  <head>
-    <!-- Anti-FOUC: sembunyikan body sampai CSS siap -->
-    <style>
-      body:not(.app-ready) {
-        visibility: hidden;
-      }
-    </style>
-    <script>
-      /* Failsafe: Paksa aplikasi muncul setelah 4 detik jika init gagal */
-      setTimeout(function() {
-        if (!document.body.classList.contains('app-ready')) {
-          document.body.classList.add('app-ready');
-          document.body.style.visibility = 'visible';
-          console.warn('Failsafe: App forced visible');
-        }
-      }, 4000);
-    </script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mandarin Journey · Tuntutlah Ilmu Sampai ke Negeri China</title>
-    <meta name="description" content="Ada peribahasa, Tuntutlah ilmu sampai ke negeri China" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0d'/><text y='.9em' font-size='72' x='50%' dominant-baseline='auto' text-anchor='middle' font-family='Noto Sans SC,sans-serif' fill='%23e8c96d'>坚</text></svg>"
-    />
 
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta
-      name="theme-color"
-      content="#0a0a0d"
-      media="(prefers-color-scheme: dark)"
-    />
-    <meta
-      name="theme-color"
-      content="#f4f4f8"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Mandarin Journey" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <link rel="stylesheet" href="/src/CSS/personal-deck.css" />
-    <link rel="stylesheet" href="/src/CSS/history.css" />
-    <link rel="stylesheet" href="/src/CSS/search.css" />
-  </head>
-  <body>
-    <!-- ══════════════════════════════════════════════════════════
+<head>
+  <!-- Anti-FOUC: sembunyikan body sampai CSS siap -->
+  <style>
+    body:not(.app-ready) {
+      visibility: hidden;
+    }
+  </style>
+  <script>
+    /* Failsafe: Paksa aplikasi muncul setelah 4 detik jika init gagal */
+    setTimeout(function () {
+      if (!document.body.classList.contains('app-ready')) {
+        document.body.classList.add('app-ready');
+        document.body.style.visibility = 'visible';
+        console.warn('Failsafe: App forced visible');
+      }
+    }, 4000);
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mandarin Journey · Tuntutlah Ilmu Sampai ke Negeri China</title>
+  <meta name="description" content="Ada peribahasa, Tuntutlah ilmu sampai ke negeri China" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a0d'/><text y='.9em' font-size='72' x='50%' dominant-baseline='auto' text-anchor='middle' font-family='Noto Sans SC,sans-serif' fill='%23e8c96d'>坚</text></svg>" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0a0a0d" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f4f4f8" media="(prefers-color-scheme: light)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mandarin Journey" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/src/CSS/personal-deck.css" />
+  <link rel="stylesheet" href="/src/CSS/history.css" />
+  <link rel="stylesheet" href="/src/CSS/search.css" />
+</head>
+
+<body>
+  <!-- ══════════════════════════════════════════════════════════
          ONBOARDING OVERLAY
          ══════════════════════════════════════════════════════════ -->
-    <div id="onboarding-overlay" style="display: none">
-      <!-- Arrow nav — desktop only -->
-      <button
-        class="ob-arrow-nav ob-arrow-prev"
-        id="ob-arrow-prev"
-        onclick="window._obGoTo(_obCur - 1)"
-      >
-        &#8592;
-      </button>
-      <button
-        class="ob-arrow-nav ob-arrow-next"
-        id="ob-arrow-next"
-        onclick="window._obGoTo(_obCur + 1)"
-      >
-        &#8594;
-      </button>
+  <div id="onboarding-overlay" style="display: none">
+    <!-- Arrow nav — desktop only -->
+    <button class="ob-arrow-nav ob-arrow-prev" id="ob-arrow-prev" onclick="window._obGoTo(_obCur - 1)">
+      &#8592;
+    </button>
+    <button class="ob-arrow-nav ob-arrow-next" id="ob-arrow-next" onclick="window._obGoTo(_obCur + 1)">
+      &#8594;
+    </button>
 
-      <div class="ob-track" id="ob-track">
-        <!-- ── Slide 0: Welcome ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-s0-ring2"></div>
-            <div class="ob-s0-ring"></div>
-            <div class="ob-s0-wrap">
-              <div class="ob-s0-hz">坚</div>
-            </div>
+    <div class="ob-track" id="ob-track">
+      <!-- ── Slide 0: Welcome ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-s0-ring2"></div>
+          <div class="ob-s0-ring"></div>
+          <div class="ob-s0-wrap">
+            <div class="ob-s0-hz">坚</div>
           </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Selamat datang di<br />Mandarin Journey</div>
-            <div class="ob-sub">
-              Belajar Mandarin dari nol,<br />terstruktur dan interaktif.
+        </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Selamat datang di<br />Mandarin Journey</div>
+          <div class="ob-sub">
+            Belajar Mandarin dari nol,<br />terstruktur dan interaktif.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Slide 1: Flashcard ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-fc-scene">
+            <div class="ob-fc-card ob-fc-c3"></div>
+            <div class="ob-fc-card ob-fc-c2"></div>
+            <div class="ob-fc-card ob-fc-c1">
+              <div class="ob-fc-hz">学习</div>
+              <div class="ob-fc-py">xuéxí</div>
+              <div class="ob-fc-hint">ketuk untuk ungkap</div>
+            </div>
+            <div class="ob-swipe-row">
+              <span class="ob-arrow">❮❮</span>
+              <span class="ob-arrow lit">❯❯</span>
             </div>
           </div>
         </div>
-
-        <!-- ── Slide 1: Flashcard ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-fc-scene">
-              <div class="ob-fc-card ob-fc-c3"></div>
-              <div class="ob-fc-card ob-fc-c2"></div>
-              <div class="ob-fc-card ob-fc-c1">
-                <div class="ob-fc-hz">学习</div>
-                <div class="ob-fc-py">xuéxí</div>
-                <div class="ob-fc-hint">ketuk untuk ungkap</div>
-              </div>
-              <div class="ob-swipe-row">
-                <span class="ob-arrow">❮❮</span>
-                <span class="ob-arrow lit">❯❯</span>
-              </div>
-            </div>
-          </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Hafal kosakata<br />dengan Flashcard</div>
-            <div class="ob-sub">
-              Geser kartu, hafal atau lupa.<br />SRS otomatis atur jadwal
-              reviewmu.
-            </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Hafal kosakata<br />dengan Flashcard</div>
+          <div class="ob-sub">
+            Geser kartu, hafal atau lupa.<br />SRS otomatis atur jadwal
+            reviewmu.
           </div>
         </div>
+      </div>
 
-        <!-- ── Slide 2: Quiz ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-quiz-wrap">
-              <div class="ob-quiz-q">
-                <div class="ob-quiz-label">Apa artinya?</div>
-                <div class="ob-quiz-hz">我喜欢学习</div>
-              </div>
-              <div class="ob-quiz-opts">
-                <div
-                  class="ob-opt"
-                  id="ob-qopt-a"
-                  style="opacity: 0; transform: translateY(18px)"
-                >
-                  <div class="ob-opt-lbl">A</div>
-                  Saya suka belajar
-                </div>
-                <div
-                  class="ob-opt faded"
-                  id="ob-qopt-b"
-                  style="opacity: 0; transform: translateY(18px)"
-                >
-                  <div class="ob-opt-lbl">B</div>
-                  Dia makan nasi
-                </div>
-                <div
-                  class="ob-opt faded"
-                  id="ob-qopt-c"
-                  style="opacity: 0; transform: translateY(18px)"
-                >
-                  <div class="ob-opt-lbl">C</div>
-                  Kamu tidur siang
-                </div>
-                <div
-                  class="ob-opt faded"
-                  id="ob-qopt-d"
-                  style="opacity: 0; transform: translateY(18px)"
-                >
-                  <div class="ob-opt-lbl">D</div>
-                  Kami pergi ke sana
-                </div>
-              </div>
+      <!-- ── Slide 2: Quiz ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-quiz-wrap">
+            <div class="ob-quiz-q">
+              <div class="ob-quiz-label">Apa artinya?</div>
+              <div class="ob-quiz-hz">我喜欢学习</div>
             </div>
-          </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Uji hafalan dengan<br />Quiz Harian</div>
-            <div class="ob-sub">
-              Pilihan ganda & susun kalimat<br />untuk memastikan kamu paham.
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Slide 3: Tata Bahasa (Grammar) ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-gram-wrap">
-              <div class="ob-gram-q">
-                <div class="ob-gram-qlbl">Susun menjadi kalimat yang benar</div>
-                <div class="ob-gram-qtxt">Saya makan nasi.</div>
+            <div class="ob-quiz-opts">
+              <div class="ob-opt" id="ob-qopt-a" style="opacity: 0; transform: translateY(18px)">
+                <div class="ob-opt-lbl">A</div>
+                Saya suka belajar
               </div>
-              <div class="ob-gram-drop" id="ob-gram-drop">
-                <span class="ob-gram-placeholder">susun di sini...</span>
+              <div class="ob-opt faded" id="ob-qopt-b" style="opacity: 0; transform: translateY(18px)">
+                <div class="ob-opt-lbl">B</div>
+                Dia makan nasi
               </div>
-              <div class="ob-gram-fb" id="ob-gram-fb"></div>
-              <div class="ob-gram-bank" id="ob-gram-bank">
-                <div class="ob-gram-chip" id="ob-gc-fan">
-                  <span class="ob-gc-hz">饭</span>
-                  <span class="ob-gc-py">fàn</span>
-                </div>
-                <div class="ob-gram-chip" id="ob-gc-wo">
-                  <span class="ob-gc-hz">我</span>
-                  <span class="ob-gc-py">wǒ</span>
-                </div>
-                <div class="ob-gram-chip" id="ob-gc-chi">
-                  <span class="ob-gc-hz">吃</span>
-                  <span class="ob-gc-py">chī</span>
-                </div>
+              <div class="ob-opt faded" id="ob-qopt-c" style="opacity: 0; transform: translateY(18px)">
+                <div class="ob-opt-lbl">C</div>
+                Kamu tidur siang
               </div>
-            </div>
-          </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Latih pola<br />tata bahasa</div>
-            <div class="ob-sub">
-              Susun kata jadi kalimat,<br />pahami struktur Mandarin.
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Slide 4: Flashcard Kalimat ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-kalfc-wrap">
-              <div class="ob-kalfc" id="ob-kalfc">
-                <div class="ob-kalfc-hz">我每天都学习中文。</div>
-                <div class="ob-kalfc-reveal">
-                  <div class="ob-kalfc-py">Wǒ měitiān dōu xuéxí zhōngwén.</div>
-                  <div class="ob-kalfc-id">
-                    Saya belajar Mandarin setiap hari.
-                  </div>
-                </div>
-                <div class="ob-kalfc-tap">ketuk untuk ungkap</div>
-              </div>
-              <div class="ob-reveal-prog">
-                <div class="ob-reveal-fill" id="ob-reveal-fill"></div>
-              </div>
-            </div>
-          </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Pelajari kalimat<br />lengkap</div>
-            <div class="ob-sub">
-              Tap kartu untuk ungkap pinyin<br />dan terjemahannya.
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Slide 5: Baca Cerita ── -->
-        <div class="ob-slide">
-          <div class="ob-vis">
-            <div class="ob-read-wrap">
-              <div class="ob-read-hd">
-                <div class="ob-read-title">第一课 · Perkenalan</div>
-                <div class="ob-read-play">▶ Putar</div>
-              </div>
-              <div class="ob-read-body">
-                <div class="ob-read-para" id="ob-read-p1">
-                  我叫<span class="ob-hl">王明</span>，今年<span class="ob-hl"
-                    >二十</span
-                  >岁。
-                </div>
-                <div class="ob-read-para dim" id="ob-read-p2">
-                  我是<span class="ob-hl">学生</span>，我喜欢学习。
-                </div>
-                <div class="ob-read-para dim" id="ob-read-p3">
-                  我的老师<span class="ob-hl">很好</span>，我爱中文。
-                </div>
-              </div>
-              <div class="ob-read-prog">
-                <div
-                  class="ob-read-prog-fill"
-                  id="ob-read-fill"
-                  style="width: 15%"
-                ></div>
-              </div>
-            </div>
-          </div>
-          <div class="ob-bottom">
-            <div class="ob-title">Mode Membaca<br />bahasa Mandarin</div>
-            <div class="ob-sub">
-              Tap kata untuk lihat artinya.<br />Auto-scroll saat diputar.
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Slide 7: Placement Q1 — Level ── -->
-        <div class="ob-slide ob-pl-slide">
-          <div class="ob-vis ob-pl-vis">
-            <div class="ob-pl-card">
-              <div class="ob-pl-step-dots">
-                <div class="ob-pl-dot ob-pl-dot-cur"></div>
-                <div class="ob-pl-dot"></div>
-                <div class="ob-pl-dot"></div>
-              </div>
-              <div class="ob-pl-qlabel">Pertanyaan 1 dari 3</div>
-              <div class="ob-pl-qtitle">
-                Sudah sampai level mana belajar Mandarinmu?
-              </div>
-              <div class="ob-pl-qsub">
-                Kami akan membuka tier yang sesuai untukmu.
-              </div>
-              <div class="ob-pl-opts" id="pl-opts-0">
-                <div
-                  class="ob-pl-opt"
-                  data-val="0"
-                  onclick="window._plSelect(0, 0)"
-                >
-                  <div class="ob-pl-badge">零</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Belum pernah belajar</div>
-                    <div class="ob-pl-ohsk">Mulai dari nol</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="1"
-                  onclick="window._plSelect(0, 1)"
-                >
-                  <div class="ob-pl-badge">基</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Pemula — sedikit kosakata</div>
-                    <div class="ob-pl-ohsk">HSK 1–2</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="2"
-                  onclick="window._plSelect(0, 2)"
-                >
-                  <div class="ob-pl-badge">中</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">
-                      Menengah — bisa percakapan sederhana
-                    </div>
-                    <div class="ob-pl-ohsk">HSK 3</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="3"
-                  onclick="window._plSelect(0, 3)"
-                >
-                  <div class="ob-pl-badge">进</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">
-                      Lanjut — tata bahasa cukup paham
-                    </div>
-                    <div class="ob-pl-ohsk">HSK 4–5</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="4"
-                  onclick="window._plSelect(0, 4)"
-                >
-                  <div class="ob-pl-badge">精</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">
-                      Fasih — bisa baca teks panjang
-                    </div>
-                    <div class="ob-pl-ohsk">HSK 6</div>
-                  </div>
-                </div>
+              <div class="ob-opt faded" id="ob-qopt-d" style="opacity: 0; transform: translateY(18px)">
+                <div class="ob-opt-lbl">D</div>
+                Kami pergi ke sana
               </div>
             </div>
           </div>
         </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Uji hafalan dengan<br />Quiz Harian</div>
+          <div class="ob-sub">
+            Pilihan ganda & susun kalimat<br />untuk memastikan kamu paham.
+          </div>
+        </div>
+      </div>
 
-        <!-- ── Slide 8: Placement Q2 — Hanzi ── -->
-        <div class="ob-slide ob-pl-slide">
-          <div class="ob-vis ob-pl-vis">
-            <div class="ob-pl-card">
-              <div class="ob-pl-step-dots">
-                <div class="ob-pl-dot ob-pl-dot-done"></div>
-                <div class="ob-pl-dot ob-pl-dot-cur"></div>
-                <div class="ob-pl-dot"></div>
+      <!-- ── Slide 3: Tata Bahasa (Grammar) ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-gram-wrap">
+            <div class="ob-gram-q">
+              <div class="ob-gram-qlbl">Susun menjadi kalimat yang benar</div>
+              <div class="ob-gram-qtxt">Saya makan nasi.</div>
+            </div>
+            <div class="ob-gram-drop" id="ob-gram-drop">
+              <span class="ob-gram-placeholder">susun di sini...</span>
+            </div>
+            <div class="ob-gram-fb" id="ob-gram-fb"></div>
+            <div class="ob-gram-bank" id="ob-gram-bank">
+              <div class="ob-gram-chip" id="ob-gc-fan">
+                <span class="ob-gc-hz">饭</span>
+                <span class="ob-gc-py">fàn</span>
               </div>
-              <div class="ob-pl-qlabel">Pertanyaan 2 dari 3</div>
-              <div class="ob-pl-qtitle">
-                Apakah kamu bisa membaca Hanzi tanpa Pinyin?
+              <div class="ob-gram-chip" id="ob-gc-wo">
+                <span class="ob-gc-hz">我</span>
+                <span class="ob-gc-py">wǒ</span>
               </div>
-              <div class="ob-pl-qsub">
-                Membantu kami menyesuaikan mode belajarmu.
+              <div class="ob-gram-chip" id="ob-gc-chi">
+                <span class="ob-gc-hz">吃</span>
+                <span class="ob-gc-py">chī</span>
               </div>
-              <div class="ob-pl-opts" id="pl-opts-1">
-                <div
-                  class="ob-pl-opt"
-                  data-val="0"
-                  onclick="window._plSelect(1, 0)"
-                >
-                  <div class="ob-pl-badge">否</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">
-                      Belum bisa, masih butuh Pinyin
-                    </div>
-                    <div class="ob-pl-ohsk">Pinyin tampil di semua latihan</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="1"
-                  onclick="window._plSelect(1, 1)"
-                >
-                  <div class="ob-pl-badge">半</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Sebagian — karakter umum saja</div>
-                    <div class="ob-pl-ohsk">Pinyin muncul saat dibutuhkan</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="2"
-                  onclick="window._plSelect(1, 2)"
-                >
-                  <div class="ob-pl-badge">是</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Bisa — tidak butuh Pinyin</div>
-                    <div class="ob-pl-ohsk">Mode tanpa Pinyin diaktifkan</div>
-                  </div>
-                </div>
-              </div>
-              <button class="ob-pl-back" onclick="window._plBack(8)">
-                Kembali
-              </button>
             </div>
           </div>
         </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Latih pola<br />tata bahasa</div>
+          <div class="ob-sub">
+            Susun kata jadi kalimat,<br />pahami struktur Mandarin.
+          </div>
+        </div>
+      </div>
 
-        <!-- ── Slide 9: Placement Q3 — Tujuan ── -->
-        <div class="ob-slide ob-pl-slide">
-          <div class="ob-vis ob-pl-vis">
-            <div class="ob-pl-card">
-              <div class="ob-pl-step-dots">
-                <div class="ob-pl-dot ob-pl-dot-done"></div>
-                <div class="ob-pl-dot ob-pl-dot-done"></div>
-                <div class="ob-pl-dot ob-pl-dot-cur"></div>
-              </div>
-              <div class="ob-pl-qlabel">Pertanyaan 3 dari 3</div>
-              <div class="ob-pl-qtitle">
-                Apa tujuan utama belajar Mandarinmu?
-              </div>
-              <div class="ob-pl-qsub">
-                Kami akan rekomendasikan urutan latihan yang tepat.
-              </div>
-              <div class="ob-pl-opts" id="pl-opts-2">
-                <div
-                  class="ob-pl-opt"
-                  data-val="0"
-                  onclick="window._plSelect(2, 0)"
-                >
-                  <div class="ob-pl-badge">旅</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">
-                      Perjalanan & percakapan sehari-hari
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="1"
-                  onclick="window._plSelect(2, 1)"
-                >
-                  <div class="ob-pl-badge">试</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Persiapan ujian HSK</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="2"
-                  onclick="window._plSelect(2, 2)"
-                >
-                  <div class="ob-pl-badge">业</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Keperluan kerja atau bisnis</div>
-                  </div>
-                </div>
-                <div
-                  class="ob-pl-opt"
-                  data-val="3"
-                  onclick="window._plSelect(2, 3)"
-                >
-                  <div class="ob-pl-badge">趣</div>
-                  <div class="ob-pl-info">
-                    <div class="ob-pl-oname">Hobi & minat budaya</div>
-                  </div>
+      <!-- ── Slide 4: Flashcard Kalimat ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-kalfc-wrap">
+            <div class="ob-kalfc" id="ob-kalfc">
+              <div class="ob-kalfc-hz">我每天都学习中文。</div>
+              <div class="ob-kalfc-reveal">
+                <div class="ob-kalfc-py">Wǒ měitiān dōu xuéxí zhōngwén.</div>
+                <div class="ob-kalfc-id">
+                  Saya belajar Mandarin setiap hari.
                 </div>
               </div>
-              <button class="ob-pl-back" onclick="window._plBack(9)">
-                Kembali
-              </button>
+              <div class="ob-kalfc-tap">ketuk untuk ungkap</div>
+            </div>
+            <div class="ob-reveal-prog">
+              <div class="ob-reveal-fill" id="ob-reveal-fill"></div>
             </div>
           </div>
         </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Pelajari kalimat<br />lengkap</div>
+          <div class="ob-sub">
+            Tap kartu untuk ungkap pinyin<br />dan terjemahannya.
+          </div>
+        </div>
+      </div>
 
-        <!-- ── Slide 10: Placement Result ── -->
-        <div class="ob-slide ob-pl-slide">
-          <div class="ob-vis ob-pl-vis">
-            <div class="ob-pl-card ob-pl-result-card">
-              <div class="ob-pl-res-hz" id="ob-pl-res-hz">坚</div>
-              <div class="ob-pl-res-title" id="ob-pl-res-title">
-                Siap memulai!
+      <!-- ── Slide 5: Baca Cerita ── -->
+      <div class="ob-slide">
+        <div class="ob-vis">
+          <div class="ob-read-wrap">
+            <div class="ob-read-hd">
+              <div class="ob-read-title">第一课 · Perkenalan</div>
+              <div class="ob-read-play">▶ Putar</div>
+            </div>
+            <div class="ob-read-body">
+              <div class="ob-read-para" id="ob-read-p1">
+                我叫<span class="ob-hl">王明</span>，今年<span class="ob-hl">二十</span>岁。
               </div>
-              <div class="ob-pl-res-sub" id="ob-pl-res-sub">
-                Tier dibuka berdasarkan levelmu.
+              <div class="ob-read-para dim" id="ob-read-p2">
+                我是<span class="ob-hl">学生</span>，我喜欢学习。
               </div>
-              <div class="ob-pl-unlock-list" id="ob-pl-unlock-list"></div>
-              <button
-                class="ob-pl-start-btn"
-                id="ob-pl-start-btn"
-                onclick="window._plFinish()"
-              >
-                GASSS POLLL!
-              </button>
+              <div class="ob-read-para dim" id="ob-read-p3">
+                我的老师<span class="ob-hl">很好</span>，我爱中文。
+              </div>
+            </div>
+            <div class="ob-read-prog">
+              <div class="ob-read-prog-fill" id="ob-read-fill" style="width: 15%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ob-bottom">
+          <div class="ob-title">Mode Membaca<br />bahasa Mandarin</div>
+          <div class="ob-sub">
+            Tap kata untuk lihat artinya.<br />Auto-scroll saat diputar.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Slide 7: Placement Q1 — Level ── -->
+      <div class="ob-slide ob-pl-slide">
+        <div class="ob-vis ob-pl-vis">
+          <div class="ob-pl-card">
+            <div class="ob-pl-step-dots">
+              <div class="ob-pl-dot ob-pl-dot-cur"></div>
+              <div class="ob-pl-dot"></div>
+              <div class="ob-pl-dot"></div>
+            </div>
+            <div class="ob-pl-qlabel">Pertanyaan 1 dari 3</div>
+            <div class="ob-pl-qtitle">
+              Sudah sampai level mana belajar Mandarinmu?
+            </div>
+            <div class="ob-pl-qsub">
+              Kami akan membuka tier yang sesuai untukmu.
+            </div>
+            <div class="ob-pl-opts" id="pl-opts-0">
+              <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(0, 0)">
+                <div class="ob-pl-badge">零</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Belum pernah belajar</div>
+                  <div class="ob-pl-ohsk">Mulai dari nol</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(0, 1)">
+                <div class="ob-pl-badge">基</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Pemula — sedikit kosakata</div>
+                  <div class="ob-pl-ohsk">HSK 1–2</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(0, 2)">
+                <div class="ob-pl-badge">中</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">
+                    Menengah — bisa percakapan sederhana
+                  </div>
+                  <div class="ob-pl-ohsk">HSK 3</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="3" onclick="window._plSelect(0, 3)">
+                <div class="ob-pl-badge">进</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">
+                    Lanjut — tata bahasa cukup paham
+                  </div>
+                  <div class="ob-pl-ohsk">HSK 4–5</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="4" onclick="window._plSelect(0, 4)">
+                <div class="ob-pl-badge">精</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">
+                    Fasih — bisa baca teks panjang
+                  </div>
+                  <div class="ob-pl-ohsk">HSK 6</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <!-- /ob-track -->
 
-      <!-- Dots — di luar track, tidak ikut geser -->
-      <div class="ob-dots-fixed" id="ob-dots-fixed"></div>
-
-      <!-- Tombol Mulai Belajar — hanya muncul di slide 6, lanjut ke placement -->
-      <div class="ob-finish-bar" id="ob-finish-bar">
-        <button class="ob-btn" id="ob-btn" onclick="window._obStartPlacement()">
-          Mulai Belajar
-        </button>
-      </div>
-    </div>
-    <!-- /onboarding-overlay -->
-
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="screen login-screen-wrap">
-      <div class="login-center">
-        <div class="login-logo">坚</div>
-        <div class="login-title">Mandarin Journey</div>
-        <div class="login-sub">坚持不懈学中文</div>
-        <div class="login-desc">
-          Ada peribahasa, Tuntutlah ilmu sampai ke negeri China.<br />
-          Login untuk menyimpan &amp; sinkronisasi progress kamu.
+      <!-- ── Slide 8: Placement Q2 — Hanzi ── -->
+      <div class="ob-slide ob-pl-slide">
+        <div class="ob-vis ob-pl-vis">
+          <div class="ob-pl-card">
+            <div class="ob-pl-step-dots">
+              <div class="ob-pl-dot ob-pl-dot-done"></div>
+              <div class="ob-pl-dot ob-pl-dot-cur"></div>
+              <div class="ob-pl-dot"></div>
+            </div>
+            <div class="ob-pl-qlabel">Pertanyaan 2 dari 3</div>
+            <div class="ob-pl-qtitle">
+              Apakah kamu bisa membaca Hanzi tanpa Pinyin?
+            </div>
+            <div class="ob-pl-qsub">
+              Membantu kami menyesuaikan mode belajarmu.
+            </div>
+            <div class="ob-pl-opts" id="pl-opts-1">
+              <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(1, 0)">
+                <div class="ob-pl-badge">否</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">
+                    Belum bisa, masih butuh Pinyin
+                  </div>
+                  <div class="ob-pl-ohsk">Pinyin tampil di semua latihan</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(1, 1)">
+                <div class="ob-pl-badge">半</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Sebagian — karakter umum saja</div>
+                  <div class="ob-pl-ohsk">Pinyin muncul saat dibutuhkan</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(1, 2)">
+                <div class="ob-pl-badge">是</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Bisa — tidak butuh Pinyin</div>
+                  <div class="ob-pl-ohsk">Mode tanpa Pinyin diaktifkan</div>
+                </div>
+              </div>
+            </div>
+            <button class="ob-pl-back" onclick="window._plBack(8)">
+              Kembali
+            </button>
+          </div>
         </div>
-        <div id="login-msg" class="login-msg"></div>
-        <button
-          id="btn-login"
-          class="btn-google"
-          onclick="window.doGoogleLoginScreen()"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-              fill="#4285F4"
-            />
-            <path
-              d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
-              fill="#34A853"
-            />
-            <path
-              d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
-              fill="#EA4335"
-            />
-          </svg>
-          Masuk dengan Google
-        </button>
-        <div class="login-legal">
-          Dengan masuk, kamu menyetujui<br />
-          <a
-            href="/privacy.html"
-            target="_blank"
-            style="color: var(--gold); text-decoration: none"
-            >Kebijakan Privasi</a
-          >
-          &nbsp;·&nbsp;
-          <a
-            href="/terms.html"
-            target="_blank"
-            style="color: var(--gold); text-decoration: none"
-            >Syarat Layanan</a
-          >
+      </div>
+
+      <!-- ── Slide 9: Placement Q3 — Tujuan ── -->
+      <div class="ob-slide ob-pl-slide">
+        <div class="ob-vis ob-pl-vis">
+          <div class="ob-pl-card">
+            <div class="ob-pl-step-dots">
+              <div class="ob-pl-dot ob-pl-dot-done"></div>
+              <div class="ob-pl-dot ob-pl-dot-done"></div>
+              <div class="ob-pl-dot ob-pl-dot-cur"></div>
+            </div>
+            <div class="ob-pl-qlabel">Pertanyaan 3 dari 3</div>
+            <div class="ob-pl-qtitle">
+              Apa tujuan utama belajar Mandarinmu?
+            </div>
+            <div class="ob-pl-qsub">
+              Kami akan rekomendasikan urutan latihan yang tepat.
+            </div>
+            <div class="ob-pl-opts" id="pl-opts-2">
+              <div class="ob-pl-opt" data-val="0" onclick="window._plSelect(2, 0)">
+                <div class="ob-pl-badge">旅</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">
+                    Perjalanan & percakapan sehari-hari
+                  </div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="1" onclick="window._plSelect(2, 1)">
+                <div class="ob-pl-badge">试</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Persiapan ujian HSK</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="2" onclick="window._plSelect(2, 2)">
+                <div class="ob-pl-badge">业</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Keperluan kerja atau bisnis</div>
+                </div>
+              </div>
+              <div class="ob-pl-opt" data-val="3" onclick="window._plSelect(2, 3)">
+                <div class="ob-pl-badge">趣</div>
+                <div class="ob-pl-info">
+                  <div class="ob-pl-oname">Hobi & minat budaya</div>
+                </div>
+              </div>
+            </div>
+            <button class="ob-pl-back" onclick="window._plBack(9)">
+              Kembali
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Slide 10: Placement Result ── -->
+      <div class="ob-slide ob-pl-slide">
+        <div class="ob-vis ob-pl-vis">
+          <div class="ob-pl-card ob-pl-result-card">
+            <div class="ob-pl-res-hz" id="ob-pl-res-hz">坚</div>
+            <div class="ob-pl-res-title" id="ob-pl-res-title">
+              Siap memulai!
+            </div>
+            <div class="ob-pl-res-sub" id="ob-pl-res-sub">
+              Tier dibuka berdasarkan levelmu.
+            </div>
+            <div class="ob-pl-unlock-list" id="ob-pl-unlock-list"></div>
+            <button class="ob-pl-start-btn" id="ob-pl-start-btn" onclick="window._plFinish()">
+              GASSS POLLL!
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    <!-- /ob-track -->
 
-    <!-- DASHBOARD -->
-    <div id="dash" class="screen">
-      <div class="streak-banner">
-        <div class="streak-banner-inner">
-          <div class="streak-banner-top">
-            <div>
-              <div class="streak-banner-label">Streak kamu</div>
-              <div
-                style="
+    <!-- Dots — di luar track, tidak ikut geser -->
+    <div class="ob-dots-fixed" id="ob-dots-fixed"></div>
+
+    <!-- Tombol Mulai Belajar — hanya muncul di slide 6, lanjut ke placement -->
+    <div class="ob-finish-bar" id="ob-finish-bar">
+      <button class="ob-btn" id="ob-btn" onclick="window._obStartPlacement()">
+        Mulai Belajar
+      </button>
+    </div>
+  </div>
+  <!-- /onboarding-overlay -->
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="screen login-screen-wrap">
+    <div class="login-center">
+      <div class="login-logo">坚</div>
+      <div class="login-title">Mandarin Journey</div>
+      <div class="login-sub">坚持不懈学中文</div>
+      <div class="login-desc">
+        Ada peribahasa, Tuntutlah ilmu sampai ke negeri China.
+      </div>
+      <div id="login-msg" class="login-msg"></div>
+      <button id="btn-login" class="btn-google" onclick="window.doGoogleLoginScreen()">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+            fill="#4285F4" />
+          <path
+            d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+            fill="#34A853" />
+          <path
+            d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+            fill="#FBBC05" />
+          <path
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
+            fill="#EA4335" />
+        </svg>
+        Masuk dengan Google
+      </button>
+
+      <div style="font-size: 11px; color: var(--dim); margin-top: 14px; margin-bottom: -4px;">
+        Login untuk menyimpan &amp; sinkronisasi progress kamu.
+      </div>
+
+      <div class="login-legal">
+        Dengan masuk, kamu menyetujui<br />
+        <a href="/privacy.html" target="_blank" style="color: var(--gold); text-decoration: none">Kebijakan Privasi</a>
+        &nbsp;·&nbsp;
+        <a href="/terms.html" target="_blank" style="color: var(--gold); text-decoration: none">Syarat Layanan</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash" class="screen">
+    <div class="streak-banner">
+      <div class="streak-banner-inner">
+        <div class="streak-banner-top">
+          <div>
+            <div class="streak-banner-label">Streak kamu</div>
+            <div style="
                   display: flex;
                   align-items: baseline;
                   gap: 6px;
                   margin-top: 4px;
-                "
-              >
-                <div class="streak-days-big" id="streak-days-big">0</div>
-                <div class="streak-days-lbl">hari berturut-turut</div>
-              </div>
+                ">
+              <div class="streak-days-big" id="streak-days-big">0</div>
             </div>
-            <div
-              style="
+          </div>
+          <div style="
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 2px;
-              "
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2C9 7 6 9 6 13a6 6 0 0012 0c0-4-3-6-6-11z"
-                  fill="#e8c96d"
-                  opacity="0.9"
-                />
-                <path
-                  d="M12 10c-1 2.5-2 3.5-2 5a2 2 0 004 0c0-1.5-1-2.5-2-5z"
-                  fill="#fff"
-                  opacity="0.4"
-                />
-              </svg>
-            </div>
+              ">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C9 7 6 9 6 13a6 6 0 0012 0c0-4-3-6-6-11z" fill="#e8c96d" opacity="0.9" />
+              <path d="M12 10c-1 2.5-2 3.5-2 5a2 2 0 004 0c0-1.5-1-2.5-2-5z" fill="#fff" opacity="0.4" />
+            </svg>
           </div>
+        </div>
 
-          <div class="streak-dots-row" id="streak-dots-row"></div>
+        <div class="streak-dots-row" id="streak-dots-row"></div>
 
-          <div class="streak-stats-row">
-            <div class="streak-stat">
-              <div class="streak-stat-n" id="streak-stat-best">0</div>
-              <div class="streak-stat-l">Streak terbaik</div>
-            </div>
-            <div class="streak-stat">
-              <div class="streak-stat-n" id="streak-stat-kon">0%</div>
-              <div class="streak-stat-l">Konsistensi</div>
-            </div>
+        <div class="streak-stats-row">
+          <div class="streak-stat">
+            <div class="streak-stat-n" id="streak-stat-best">0</div>
+            <div class="streak-stat-l">Streak terbaik</div>
+          </div>
+          <div class="streak-stat">
+            <div class="streak-stat-n" id="streak-stat-kon">0%</div>
+            <div class="streak-stat-l">Konsistensi</div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- SRS KOSAKATA -->
-      <div class="srs-sec" id="srs-sec" style="display: none">
-        <div class="srs-header">
-          <span class="srs-title">Progress Kosakata</span>
-          <span
-            class="srs-due-badge"
-            id="srs-due-badge"
-            style="display: none; cursor: pointer"
-            onclick="window.startFCDue()"
-          >
-            ⏰ <span id="srs-due-count">0</span> due — Review
-          </span>
+    <!-- SRS KOSAKATA -->
+    <div class="srs-sec" id="srs-sec" style="display: none">
+      <div class="srs-header">
+        <span class="srs-title">Progress Kosakata</span>
+        <span class="srs-due-badge" id="srs-due-badge" style="display: none; cursor: pointer"
+          onclick="window.startFCDue()">
+          ⏰ <span id="srs-due-count">0</span> due — Review
+        </span>
+      </div>
+      <div class="srs-chips">
+        <div class="srs-chip">
+          <div class="srs-chip-n" id="srs-total">—</div>
+          <div class="srs-chip-l">Total Kartu</div>
         </div>
-        <div class="srs-chips">
-          <div class="srs-chip">
-            <div class="srs-chip-n" id="srs-total">—</div>
-            <div class="srs-chip-l">Total Kartu</div>
-          </div>
-          <div class="srs-chip srs-chip--mature">
-            <div class="srs-chip-n" id="srs-mature">—</div>
-            <div class="srs-chip-l">Sudah Hafal</div>
-          </div>
-          <div class="srs-chip srs-chip--due">
-            <div class="srs-chip-n" id="srs-due">—</div>
-            <div class="srs-chip-l">Due Hari Ini</div>
-          </div>
+        <div class="srs-chip srs-chip--mature">
+          <div class="srs-chip-n" id="srs-mature">—</div>
+          <div class="srs-chip-l">Sudah Hafal</div>
         </div>
-        <div class="srs-bar-wrap">
-          <div class="srs-bar-track">
-            <div class="srs-bar-fill" id="srs-bar-fill" style="width: 0%"></div>
-          </div>
-          <div class="srs-bar-label">
-            <span id="srs-bar-text">0 / 0 kartu mature</span>
-            <span id="srs-bar-pct" style="color: var(--gold); font-weight: 600"
-              >0%</span
-            >
-          </div>
+        <div class="srs-chip srs-chip--due">
+          <div class="srs-chip-n" id="srs-due">—</div>
+          <div class="srs-chip-l">Due Hari Ini</div>
         </div>
       </div>
+      <div class="srs-bar-wrap">
+        <div class="srs-bar-track">
+          <div class="srs-bar-fill" id="srs-bar-fill" style="width: 0%"></div>
+        </div>
+        <div class="srs-bar-label">
+          <span id="srs-bar-text">0 / 0 kartu mature</span>
+          <span id="srs-bar-pct" style="color: var(--gold); font-weight: 600">0%</span>
+        </div>
+      </div>
+    </div>
 
-      <div class="menu-sec">
-        <div class="menu-sec-title">Menu Latihan</div>
-        <div class="menu-grid">
-          <div
-            class="menu-card mc-vok"
-            onclick="
+    <div class="menu-sec">
+      <div class="menu-sec-title">Menu Latihan</div>
+      <div class="menu-grid">
+        <div class="menu-card mc-vok" onclick="
               window._kosActiveHSK = 'all';
               clearKosGlobalSearch();
               document
@@ -690,678 +557,248 @@
               openLayer('layer-kos');
               renderKosDeckGrid();
               initGlobalSearchCache();
-            "
-          >
-            <div class="mc-icon">🃏</div>
-            <div class="mc-title">Daftar Kata</div>
-            <div class="mc-sub">
-              Semua kosakata per day · Search · Flashcard
-            </div>
-            <div class="mc-count" id="mc-kos-count">25 Deck tersedia</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-kos-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-kos-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
-            </div>
-            <div class="mc-arrow">❯❯</div>
+            ">
+          <div class="mc-icon">🃏</div>
+          <div class="mc-title">Daftar Kata</div>
+          <div class="mc-sub">
+            Semua kosakata per day · Search · Flashcard
           </div>
-
-          <div
-            class="menu-card mc-quiz"
-            onclick="window.openLayer('layer-quiz')"
-          >
-            <div class="mc-icon">📝</div>
-            <div class="mc-title">Quiz Harian</div>
-            <div class="mc-sub">100 soal per day · 4 bagian · diacak</div>
-            <div class="mc-count" id="mc-quiz-count">memuat...</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-quiz-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-quiz-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
+          <div class="mc-count" id="mc-kos-count">25 Deck tersedia</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-kos-val">0 / —</span>
             </div>
-            <div class="mc-arrow">❯❯</div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-kos-fill" style="width: 0%"></div>
+            </div>
           </div>
+          <div class="mc-arrow">❯❯</div>
+        </div>
 
-          <div
-            class="menu-card mc-grammar"
-            onclick="window.openLayer('layer-grammar')"
-          >
-            <div class="mc-icon">🚀</div>
-            <div class="mc-title">Tata Bahasa</div>
-            <div class="mc-sub">Susun kata · Latihan tata bahasa Mandarin</div>
-            <div class="mc-count" id="mc-grammar-count">memuat...</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-grammar-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-grammar-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
+        <div class="menu-card mc-quiz" onclick="window.openLayer('layer-quiz')">
+          <div class="mc-icon">📝</div>
+          <div class="mc-title">Quiz Harian</div>
+          <div class="mc-sub">100 soal per day · 4 bagian · diacak</div>
+          <div class="mc-count" id="mc-quiz-count">memuat...</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-quiz-val">0 / —</span>
             </div>
-            <div class="mc-arrow">❯❯</div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-quiz-fill" style="width: 0%"></div>
+            </div>
           </div>
+          <div class="mc-arrow">❯❯</div>
+        </div>
 
-          <div
-            class="menu-card mc-hanzi"
-            onclick="window.openLayer('layer-hanzi')"
-          >
-            <div class="mc-icon">👁️</div>
-            <div class="mc-title">Flashcard Kumulatif</div>
-            <div class="mc-sub">
-              Kalimat kumulatif · Ketuk reveal Pinyin &amp; Arti · Bisa diulang
+        <div class="menu-card mc-grammar" onclick="window.openLayer('layer-grammar')">
+          <div class="mc-icon">🚀</div>
+          <div class="mc-title">Tata Bahasa</div>
+          <div class="mc-sub">Susun kata · Latihan tata bahasa Mandarin</div>
+          <div class="mc-count" id="mc-grammar-count">memuat...</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-grammar-val">0 / —</span>
             </div>
-            <div class="mc-count" id="mc-hanzi-count">16 Set tersedia</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-hanzi-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-hanzi-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-grammar-fill" style="width: 0%"></div>
             </div>
-            <div class="mc-arrow">❯❯</div>
           </div>
+          <div class="mc-arrow">❯❯</div>
+        </div>
 
-          <div
-            class="menu-card mc-kalimat"
-            onclick="window.openLayer('layer-kalimat')"
-          >
-            <div class="mc-icon">💬</div>
-            <div class="mc-title">Quiz Kumulatif</div>
-            <div class="mc-sub">Gabungan kalimat utuh · kumulatif Day</div>
-            <div class="mc-count" id="mc-kal-count">memuat...</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-kal-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-kal-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
-            </div>
-            <div class="mc-arrow">❯❯</div>
+        <div class="menu-card mc-hanzi" onclick="window.openLayer('layer-hanzi')">
+          <div class="mc-icon">👁️</div>
+          <div class="mc-title">Flashcard Kumulatif</div>
+          <div class="mc-sub">
+            Kalimat kumulatif · Ketuk reveal Pinyin &amp; Arti · Bisa diulang
           </div>
+          <div class="mc-count" id="mc-hanzi-count">16 Set tersedia</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-hanzi-val">0 / —</span>
+            </div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-hanzi-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="mc-arrow">❯❯</div>
+        </div>
 
-          <!-- MENU CARD: BACA CERITA -->
-          <div
-            class="menu-card mc-cerita"
-            onclick="
+        <div class="menu-card mc-kalimat" onclick="window.openLayer('layer-kalimat')">
+          <div class="mc-icon">💬</div>
+          <div class="mc-title">Quiz Kumulatif</div>
+          <div class="mc-sub">Gabungan kalimat utuh · kumulatif Day</div>
+          <div class="mc-count" id="mc-kal-count">memuat...</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-kal-val">0 / —</span>
+            </div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-kal-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="mc-arrow">❯❯</div>
+        </div>
+
+        <!-- MENU CARD: BACA CERITA -->
+        <div class="menu-card mc-cerita" onclick="
               window.openLayer('layer-cerita');
               renderCeritaList();
-            "
-          >
-            <div class="mc-icon">📖</div>
-            <div class="mc-title">Mode Membaca</div>
-            <div class="mc-sub">
-              Teks Hanzi tanpa pinyin · Tap kata · Auto-scroll
-            </div>
-            <div class="mc-count" id="mc-cerita-count">memuat...</div>
-            <div class="mc-prog-wrap">
-              <div class="mc-prog-top">
-                <span>Selesai</span
-                ><span class="mc-prog-val" id="mc-cerita-val">0 / —</span>
-              </div>
-              <div class="mc-prog-bar">
-                <div
-                  class="mc-prog-fill"
-                  id="mc-cerita-fill"
-                  style="width: 0%"
-                ></div>
-              </div>
-            </div>
-            <div class="mc-arrow">❯❯</div>
+            ">
+          <div class="mc-icon">📖</div>
+          <div class="mc-title">Mode Membaca</div>
+          <div class="mc-sub">
+            Teks Hanzi tanpa pinyin · Tap kata · Auto-scroll
           </div>
+          <div class="mc-count" id="mc-cerita-count">memuat...</div>
+          <div class="mc-prog-wrap">
+            <div class="mc-prog-top">
+              <span>Selesai</span><span class="mc-prog-val" id="mc-cerita-val">0 / —</span>
+            </div>
+            <div class="mc-prog-bar">
+              <div class="mc-prog-fill" id="mc-cerita-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="mc-arrow">❯❯</div>
         </div>
       </div>
+    </div>
 
-      <div class="dash-copyright">
-        © 2026 Piansah — Mandarin Journey. All rights reserved.
+    <div class="dash-copyright">
+      © 2026 Piansah — Mandarin Journey. All rights reserved.
+    </div>
+    <!-- LAYER: QUIZ LIST -->
+    <div class="layer" id="layer-quiz">
+      <div class="layer-hd">
+        <div class="btn-back" onclick="window.closeLayer('layer-quiz')">
+          ❮❮
+        </div>
+        <div>
+          <div class="layer-title">📝 Quiz Harian</div>
+          <div class="layer-sub" id="layer-quiz-sub">
+            100 soal per day · 4 bagian
+          </div>
+        </div>
       </div>
-      <!-- LAYER: QUIZ LIST -->
-      <div class="layer" id="layer-quiz">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeLayer('layer-quiz')">
-            ❮❮
-          </div>
-          <div>
-            <div class="layer-title">📝 Quiz Harian</div>
-            <div class="layer-sub" id="layer-quiz-sub">
-              100 soal per day · 4 bagian
+      <div class="hsk-dropdown-wrap" id="hsk-filter-quiz">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+          <span class="hsk-dropdown-val">Semua</span>
+          <span class="hsk-dropdown-arrow">▾</span>
+          <div class="hsk-dropdown-menu">
+            <div class="hsk-dropdown-item active" data-level="all"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'all', this)">
+              Semua
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk1"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk1', this)">
+              HSK 1
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk2"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk2', this)">
+              HSK 2
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk3"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk3', this)">
+              HSK 3
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk4"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk4', this)">
+              HSK 4
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk5"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk5', this)">
+              HSK 5
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk6"
+              onclick="window.filterHSKDropdown(event, 'quiz', 'hsk6', this)">
+              HSK 6
             </div>
           </div>
         </div>
-        <div class="hsk-dropdown-wrap" id="hsk-filter-quiz">
-          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-            <span class="hsk-dropdown-val">Semua</span>
-            <span class="hsk-dropdown-arrow">▾</span>
-            <div class="hsk-dropdown-menu">
-              <div
-                class="hsk-dropdown-item active"
-                data-level="all"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'all', this)"
-              >
-                Semua
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk1"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk1', this)"
-              >
-                HSK 1
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk2"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk2', this)"
-              >
-                HSK 2
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk3"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk3', this)"
-              >
-                HSK 3
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk4"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk4', this)"
-              >
-                HSK 4
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk5"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk5', this)"
-              >
-                HSK 5
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk6"
-                onclick="window.filterHSKDropdown(event, 'quiz', 'hsk6', this)"
-              >
-                HSK 6
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="layer-body">
-          <div class="layer-sec">
-            <div class="content-grid" id="quiz-list-grid">
-              <div
-                style="
+      </div>
+      <div class="layer-body">
+        <div class="layer-sec">
+          <div class="content-grid" id="quiz-list-grid">
+            <div style="
                   text-align: center;
                   padding: 40px;
                   color: var(--dim);
                   font-size: 13px;
-                "
-              >
-                <span class="spinner"></span>Memuat...
-              </div>
+                ">
+              <span class="spinner"></span>Memuat...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER: DAFTAR KATA — GRID DECK -->
+    <div class="layer" id="layer-kos">
+      <div class="layer-hd">
+        <div class="btn-back" onclick="window.closeLayer('layer-kos')">
+          ❮❮
+        </div>
+        <div style="flex: 1">
+          <div class="layer-title">🃏 Daftar Kata</div>
+          <div class="layer-sub" id="kos-layer-sub">
+            Pilih deck untuk mulai belajar
+          </div>
+        </div>
+      </div>
+
+      <!-- HSK Filter Dropdown (hidden when searching) -->
+      <div class="hsk-dropdown-wrap" id="hsk-filter-kos">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+          <span class="hsk-dropdown-val">Semua</span>
+          <span class="hsk-dropdown-arrow">▾</span>
+          <div class="hsk-dropdown-menu">
+            <div class="hsk-dropdown-item active" data-level="all"
+              onclick="window.filterHSKDropdown(event, 'kos', 'all', this)">
+              Semua
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk1"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk1', this)">
+              HSK 1
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk2"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk2', this)">
+              HSK 2
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk3"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk3', this)">
+              HSK 3
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk4"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk4', this)">
+              HSK 4
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk5"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk5', this)">
+              HSK 5
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk6"
+              onclick="window.filterHSKDropdown(event, 'kos', 'hsk6', this)">
+              HSK 6
             </div>
           </div>
         </div>
       </div>
 
-      <!-- LAYER: DAFTAR KATA — GRID DECK -->
-      <div class="layer" id="layer-kos">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeLayer('layer-kos')">
-            ❮❮
-          </div>
-          <div style="flex: 1">
-            <div class="layer-title">🃏 Daftar Kata</div>
-            <div class="layer-sub" id="kos-layer-sub">
-              Pilih deck untuk mulai belajar
-            </div>
-          </div>
-        </div>
+      <!-- Global Search Results (shown when typing) -->
+      <div style="display: none; flex: 1; overflow-y: auto"></div>
 
-        <!-- HSK Filter Dropdown (hidden when searching) -->
-        <div class="hsk-dropdown-wrap" id="hsk-filter-kos">
-          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-            <span class="hsk-dropdown-val">Semua</span>
-            <span class="hsk-dropdown-arrow">▾</span>
-            <div class="hsk-dropdown-menu">
-              <div
-                class="hsk-dropdown-item active"
-                data-level="all"
-                onclick="window.filterHSKDropdown(event, 'kos', 'all', this)"
-              >
-                Semua
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk1"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk1', this)"
-              >
-                HSK 1
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk2"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk2', this)"
-              >
-                HSK 2
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk3"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk3', this)"
-              >
-                HSK 3
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk4"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk4', this)"
-              >
-                HSK 4
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk5"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk5', this)"
-              >
-                HSK 5
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk6"
-                onclick="window.filterHSKDropdown(event, 'kos', 'hsk6', this)"
-              >
-                HSK 6
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Global Search Results (shown when typing) -->
-        <div style="display: none; flex: 1; overflow-y: auto"></div>
-
-        <!-- Deck Grid (hidden when searching) -->
-        <div id="kos-deck-section" style="flex: 1; overflow-y: auto">
-          <div class="layer-body" style="padding-top: 4px">
-            <div class="layer-sec">
-              <div class="content-grid" id="kos-deck-grid">
-                <div
-                  style="
+      <!-- Deck Grid (hidden when searching) -->
+      <div id="kos-deck-section" style="flex: 1; overflow-y: auto">
+        <div class="layer-body" style="padding-top: 4px">
+          <div class="layer-sec">
+            <div class="content-grid" id="kos-deck-grid">
+              <div style="
                     text-align: center;
                     padding: 40px;
                     color: var(--dim);
                     font-size: 13px;
-                  "
-                >
-                  <span class="spinner"></span>Memuat...
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LAYER: DAFTAR KATA — ISI DECK -->
-      <div class="layer" id="layer-kos-deck">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeKosDeck()">❮❮</div>
-          <div style="flex: 1">
-            <div class="layer-title" id="kos-deck-title">Daftar Kata</div>
-            <div class="layer-sub" id="kos-deck-sub"></div>
-          </div>
-        </div>
-        <div class="kos-toolbar">
-          <input
-            class="kos-search"
-            id="kos-search"
-            name="kosakata-search"
-            placeholder="Cari Hanzi, Pinyin, atau Arti..."
-            oninput="window.filterKos()"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            type="search"
-            inputmode="search"
-          />
-        </div>
-        <div class="kos-list" id="kos-list">
-          <div class="kos-empty">
-            <div style="font-size: 32px; margin-bottom: 10px">📖</div>
-            <div>Memuat...</div>
-          </div>
-        </div>
-
-        <div id="kos-bottom-bar" class="kos-bottom-bar">
-          <button
-            class="btn-kos-mulai"
-            id="kos-mulai-btn"
-            onclick="window.toggleKosTooltip()"
-          >
-            Mulai Latihan
-          </button>
-        </div>
-
-        <!-- Tooltip latihan -->
-        <div id="kos-latihan-tooltip" class="kos-latihan-tooltip">
-          <div
-            class="kos-tooltip-backdrop"
-            onclick="window.closeKosTooltip()"
-          ></div>
-          <div class="kos-tooltip-sheet">
-            <div class="kos-tooltip-drag-bar"></div>
-            <div class="kos-tooltip-title">Pilih Latihan</div>
-            <div class="kos-tooltip-actions">
-              <button
-                class="kos-tooltip-btn"
-                id="kos-tt-nada"
-                onclick="window.openKosNada()"
-              >
-                <span class="kos-tt-icon">🎵</span>
-                <span class="kos-tt-label">Latihan Nada</span>
-              </button>
-              <button
-                class="kos-tooltip-btn"
-                id="kos-tt-fc"
-                onclick="window.openKosFlashcard()"
-              >
-                <span class="kos-tt-icon">🃏</span>
-                <span class="kos-tt-label">Flashcard</span>
-              </button>
-              <button
-                class="kos-tooltip-btn"
-                id="kos-tt-tulis"
-                onclick="window.openKosTulis()"
-              >
-                <span class="kos-tt-icon">✍🏻</span>
-                <span class="kos-tt-label">Tulis Hanzi</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LAYER: DAFTAR KATA — DETAIL KATA -->
-      <div class="layer" id="layer-kos-word">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeKosWord()">❮❮</div>
-          <div style="flex: 1">
-            <div class="layer-title" id="kos-word-title">Detail Kata</div>
-            <div class="layer-sub" id="kos-word-sub"></div>
-          </div>
-          <button
-            class="btn-add-vok"
-            id="btn-kwd-add"
-            onclick="window.openKosContohForm()"
-          >
-            + Tambah
-          </button>
-        </div>
-
-        <div class="kos-word-body" id="kos-word-body">
-          <!-- Tab Bar — sekarang di dalam body, di bawah hero -->
-          <div class="kwd-tabs">
-            <div
-              class="kwd-tab active"
-              data-tab="kalimat"
-              onclick="window._switchTab('kalimat')"
-            >
-              Sentences
-            </div>
-            <div
-              class="kwd-tab"
-              data-tab="stroke"
-              onclick="window._switchTab('stroke')"
-            >
-              Stroke
-            </div>
-            <div
-              class="kwd-tab"
-              data-tab="char"
-              onclick="window._switchTab('char')"
-            >
-              Char
-            </div>
-            <div
-              class="kwd-tab"
-              data-tab="word"
-              onclick="window._switchTab('word')"
-            >
-              Word
-            </div>
-            <div class="kwd-tab-indicator"></div>
-          </div>
-
-          <div class="kwd-tab-content active" id="kwd-content-kalimat">
-            <div id="kwd-hero-container"></div>
-            <div id="kwd-examples-list" style="padding-top: 8px"></div>
-          </div>
-          <div class="kwd-tab-content" id="kwd-content-stroke">
-            <div id="kwd-stroke-slider" class="kwd-stroke-slider"></div>
-          </div>
-          <div class="kwd-tab-content" id="kwd-content-char">
-            <div id="kwd-char-container"></div>
-          </div>
-          <div class="kwd-tab-content" id="kwd-content-word">
-            <div id="kwd-native-list" class="kwd-native-list"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LAYER: Flashcard Kumulatif LIST -->
-      <div class="layer" id="layer-hanzi">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeLayer('layer-hanzi')">
-            ❮❮
-          </div>
-          <div>
-            <div class="layer-title">👁️ Flashcard Kumulatif</div>
-            <div class="layer-sub">
-              Kalimat kumulatif · Ketuk reveal Pinyin &amp; arti
-            </div>
-          </div>
-        </div>
-        <div class="hsk-dropdown-wrap" id="hsk-filter-hanzi">
-          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-            <span class="hsk-dropdown-val">Semua</span>
-            <span class="hsk-dropdown-arrow">▾</span>
-            <div class="hsk-dropdown-menu">
-              <div
-                class="hsk-dropdown-item active"
-                data-level="all"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'all', this)"
-              >
-                Semua
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk1"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk1', this)"
-              >
-                HSK 1
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk2"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk2', this)"
-              >
-                HSK 2
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk3"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk3', this)"
-              >
-                HSK 3
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk4"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk4', this)"
-              >
-                HSK 4
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk5"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk5', this)"
-              >
-                HSK 5
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk6"
-                onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk6', this)"
-              >
-                HSK 6
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="layer-body">
-          <div class="layer-sec">
-            <div class="content-grid" id="hanzi-list-grid">
-              <div
-                style="
-                  text-align: center;
-                  padding: 40px;
-                  color: var(--dim);
-                  font-size: 13px;
-                "
-              >
-                <span class="spinner"></span>Memuat...
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LAYER: POLA KALIMAT (GRAMMAR) -->
-      <div class="layer" id="layer-grammar">
-        <div class="layer-hd">
-          <div class="btn-back" onclick="window.closeLayer('layer-grammar')">
-            ❮❮
-          </div>
-          <div>
-            <div class="layer-title">🚀 Tata Bahasa</div>
-            <div class="layer-sub" id="layer-grammar-sub">
-              Susun kata · Latihan tata bahasa Mandarin
-            </div>
-          </div>
-        </div>
-        <div class="hsk-dropdown-wrap" id="hsk-filter-grammar">
-          <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-            <span class="hsk-dropdown-val">Semua</span>
-            <span class="hsk-dropdown-arrow">▾</span>
-            <div class="hsk-dropdown-menu">
-              <div
-                class="hsk-dropdown-item active"
-                data-level="all"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'all', this)
-                "
-              >
-                Semua
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk1"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk1', this)
-                "
-              >
-                HSK 1
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk2"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk2', this)
-                "
-              >
-                HSK 2
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk3"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk3', this)
-                "
-              >
-                HSK 3
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk4"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk4', this)
-                "
-              >
-                HSK 4
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk5"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk5', this)
-                "
-              >
-                HSK 5
-              </div>
-              <div
-                class="hsk-dropdown-item"
-                data-level="hsk6"
-                onclick="
-                  window.filterHSKDropdown(event, 'grammar', 'hsk6', this)
-                "
-              >
-                HSK 6
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="layer-body">
-          <div class="layer-sec">
-            <div class="content-grid" id="grammar-list-grid">
-              <div
-                style="
-                  text-align: center;
-                  padding: 40px;
-                  color: var(--dim);
-                  font-size: 13px;
-                "
-              >
+                  ">
                 <span class="spinner"></span>Memuat...
               </div>
             </div>
@@ -1370,350 +807,49 @@
       </div>
     </div>
 
-    <!-- LAYER: KALIMAT LIST (outside #dash, same z-level) -->
-    <div class="layer" id="layer-kalimat">
+    <!-- LAYER: DAFTAR KATA — ISI DECK -->
+    <div class="layer" id="layer-kos-deck">
       <div class="layer-hd">
-        <div class="btn-back" onclick="window.closeLayer('layer-kalimat')">
-          ❮❮
-        </div>
-        <div>
-          <div class="layer-title">💬 Quiz Kumulatif</div>
-          <div class="layer-sub" id="layer-kal-sub">
-            Kalimat kumulatif · Semakin panjang seiring level naik
-          </div>
-        </div>
-      </div>
-      <div class="hsk-dropdown-wrap" id="hsk-filter-kalimat">
-        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-          <span class="hsk-dropdown-val">Semua</span>
-          <span class="hsk-dropdown-arrow">▾</span>
-          <div class="hsk-dropdown-menu">
-            <div
-              class="hsk-dropdown-item active"
-              data-level="all"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'all', this)"
-            >
-              Semua
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk1"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk1', this)"
-            >
-              HSK 1
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk2"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk2', this)"
-            >
-              HSK 2
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk3"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk3', this)"
-            >
-              HSK 3
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk4"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk4', this)"
-            >
-              HSK 4
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk5"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk5', this)"
-            >
-              HSK 5
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk6"
-              onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk6', this)"
-            >
-              HSK 6
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div class="content-grid" id="kal-list-grid">
-            <div
-              style="
-                text-align: center;
-                padding: 40px;
-                color: var(--dim);
-                font-size: 13px;
-              "
-            >
-              <span class="spinner"></span>Memuat...
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LAYER: BACA CERITA -->
-    <div class="layer" id="layer-cerita">
-      <div class="layer-hd">
-        <div class="btn-back" onclick="window.closeLayer('layer-cerita')">
-          ❮❮
-        </div>
-        <div>
-          <div class="layer-title">📖 Mode Membaca</div>
-          <div class="layer-sub">
-            Teks Hanzi · Tap kata untuk pinyin &amp; arti
-          </div>
-        </div>
-      </div>
-      <div class="hsk-dropdown-wrap" id="hsk-filter-cerita">
-        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
-          <span class="hsk-dropdown-val">Semua</span>
-          <span class="hsk-dropdown-arrow">▾</span>
-          <div class="hsk-dropdown-menu">
-            <div
-              class="hsk-dropdown-item active"
-              data-level="all"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'all', this)"
-            >
-              Semua
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk1"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk1', this)"
-            >
-              HSK 1
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk2"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk2', this)"
-            >
-              HSK 2
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk3"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk3', this)"
-            >
-              HSK 3
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk4"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk4', this)"
-            >
-              HSK 4
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk5"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk5', this)"
-            >
-              HSK 5
-            </div>
-            <div
-              class="hsk-dropdown-item"
-              data-level="hsk6"
-              onclick="window.filterHSKDropdown(event, 'cerita', 'hsk6', this)"
-            >
-              HSK 6
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div class="content-grid" id="cerita-list-grid">
-            <div
-              style="
-                text-align: center;
-                padding: 40px;
-                color: var(--dim);
-                font-size: 13px;
-              "
-            >
-              <span class="spinner"></span>Memuat...
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Kata Favorit -->
-    <div class="layer" id="layer-favorites">
-      <div class="layer-hd">
-        <div class="btn-back" onclick="window.closeLayer('layer-favorites')">
-          ❮❮
-        </div>
-        <div>
-          <div class="layer-title">❤️ Kata Favorit</div>
-          <div class="layer-sub">Semua kata yang kamu simpan</div>
-        </div>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div id="favorites-list" class="pd-list-wrap"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Pilih Tema -->
-    <div class="layer" id="layer-personal-themes">
-      <div class="layer-hd">
-        <div
-          class="btn-back"
-          onclick="window.closeLayer('layer-personal-themes')"
-        >
-          ❮❮
-        </div>
+        <div class="btn-back" onclick="window.closeKosDeck()">❮❮</div>
         <div style="flex: 1">
-          <div class="layer-title">Deck Personal</div>
-          <div class="layer-sub">Kelola tema deck belajarmu</div>
-        </div>
-        <button onclick="window.pdShowAddThemeModal()" class="pd-hd-btn">
-          + Tema
-        </button>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div id="pd-theme-grid" class="pd-theme-grid"></div>
+          <div class="layer-title" id="kos-deck-title">Daftar Kata</div>
+          <div class="layer-sub" id="kos-deck-sub"></div>
         </div>
       </div>
-    </div>
+      <div class="kos-toolbar">
+        <input class="kos-search" id="kos-search" name="kosakata-search" placeholder="Cari Hanzi, Pinyin, atau Arti..."
+          oninput="window.filterKos()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          type="search" inputmode="search" />
+      </div>
+      <div class="kos-list" id="kos-list">
+        <div class="kos-empty">
+          <div style="font-size: 32px; margin-bottom: 10px">📖</div>
+          <div>Memuat...</div>
+        </div>
+      </div>
 
-    <!-- Layer: OCR Scanner -->
-    <div class="layer" id="layer-ocr">
-      <div class="ocr-camera-wrap">
-        <video id="ocr-video" autoplay playsinline></video>
-        <canvas id="ocr-canvas" style="display:none"></canvas>
-        
-        <!-- Viewfinder Overlay -->
-        <div class="ocr-overlay">
-          <div class="ocr-header">
-            <div class="ocr-close" onclick="window.closeOCRScanner()">✕</div>
-            <div class="ocr-title">Arahkan ke Hanzi</div>
-            <div id="ocr-torch-btn" class="ocr-torch-btn" onclick="window._toggleTorch()">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M7 2v11h3v9l7-12h-4l4-8H7z"/>
-              </svg>
-            </div>
-          </div>
-          
-          <div class="ocr-scan-area">
-            <div class="ocr-scan-box">
-              <div class="ocr-corner tl"></div>
-              <div class="ocr-corner tr"></div>
-              <div class="ocr-corner bl"></div>
-              <div class="ocr-corner br"></div>
-            </div>
-          </div>
-          
-          <div class="ocr-footer" id="ocr-footer">
-            <!-- Diisi oleh ocr.js (camera mode / result mode) -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Deck per Tema -->
-    <div class="layer" id="layer-personal-decks">
-      <div class="layer-hd">
-        <div
-          class="btn-back"
-          onclick="window.closeLayer('layer-personal-decks', true); window.backToLayer('layer-personal-themes')"
-        >
-          ❮❮
-        </div>
-        <div style="flex: 1">
-          <div class="layer-title" id="pd-decks-theme-title">Deck</div>
-          <div class="layer-sub" id="pd-decks-theme-sub">Pilih deck</div>
-        </div>
-        <button onclick="window.pdShowAddDeckModal()" class="pd-hd-btn">
-          + Deck
-        </button>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div id="pd-deck-grid" class="kos-deck-grid"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Isi Deck (Kata-kata) -->
-    <div class="layer" id="layer-personal-cards">
-      <div class="layer-hd">
-        <div
-          class="btn-back"
-          onclick="window.closeLayer('layer-personal-cards', true); window.backToLayer('layer-personal-decks')"
-        >
-          ❮❮
-        </div>
-        <div style="flex: 1">
-          <div class="layer-title" id="pd-cards-deck-title">Deck</div>
-          <div class="layer-sub" id="pd-cards-deck-count">0 kata</div>
-        </div>
-        <button
-          onclick="window.pdShowAddCardModal()"
-          class="pd-hd-btn pd-hd-btn-outline"
-        >
-          + Kosakata
-        </button>
-      </div>
-      <div class="layer-body">
-        <div class="layer-sec">
-          <div
-            id="pd-cards-list"
-            class="pd-list-wrap"
-            style="margin-bottom: 20px"
-          ></div>
-        </div>
-      </div>
-      <div class="kos-bottom-bar">
-        <button
-          id="pd-latihan-btn"
-          class="btn-kos-mulai"
-          onclick="window.pdToggleLatihan()"
-        >
+      <div id="kos-bottom-bar" class="kos-bottom-bar">
+        <button class="btn-kos-mulai" id="kos-mulai-btn" onclick="window.toggleKosTooltip()">
           Mulai Latihan
         </button>
       </div>
-      <div class="kos-latihan-tooltip" id="pd-latihan-tooltip">
-        <div
-          class="kos-tooltip-backdrop"
-          onclick="window.pdCloseLatihan()"
-        ></div>
+
+      <!-- Tooltip latihan -->
+      <div id="kos-latihan-tooltip" class="kos-latihan-tooltip">
+        <div class="kos-tooltip-backdrop" onclick="window.closeKosTooltip()"></div>
         <div class="kos-tooltip-sheet">
           <div class="kos-tooltip-drag-bar"></div>
           <div class="kos-tooltip-title">Pilih Latihan</div>
           <div class="kos-tooltip-actions">
-            <button
-              id="pd-tt-nada"
-              class="kos-tooltip-btn"
-              onclick="window.pdOpenNada()"
-            >
+            <button class="kos-tooltip-btn" id="kos-tt-nada" onclick="window.openKosNada()">
               <span class="kos-tt-icon">🎵</span>
               <span class="kos-tt-label">Latihan Nada</span>
             </button>
-            <button
-              id="pd-tt-fc"
-              class="kos-tooltip-btn"
-              onclick="window.pdOpenFlashcard()"
-            >
+            <button class="kos-tooltip-btn" id="kos-tt-fc" onclick="window.openKosFlashcard()">
               <span class="kos-tt-icon">🃏</span>
               <span class="kos-tt-label">Flashcard</span>
             </button>
-            <button
-              id="pd-tt-tulis"
-              class="kos-tooltip-btn"
-              onclick="window.pdOpenTulis()"
-            >
+            <button class="kos-tooltip-btn" id="kos-tt-tulis" onclick="window.openKosTulis()">
               <span class="kos-tt-icon">✍🏻</span>
               <span class="kos-tt-label">Tulis Hanzi</span>
             </button>
@@ -1722,410 +858,785 @@
       </div>
     </div>
 
-    <!-- Modal: Tambah / Edit Tema -->
-    <div id="pd-add-theme-modal" class="pd-modal-overlay">
-      <div class="pd-modal-backdrop" onclick="window.pdHideAddThemeModal()"></div>
-      <div class="pd-modal-content">
-        <div class="pd-form-title" id="pd-theme-modal-title">+ Tema Baru</div>
-        <input
-          id="pd-theme-name"
-          class="pd-input"
-          placeholder="Nama tema (contoh: Makanan)"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-        <div id="pd-emoji-grid" class="pd-emoji-grid"></div>
-        <button id="pd-btn-save-theme" class="pd-btn-main">Simpan Tema</button>
-      </div>
-    </div>
-
-    <!-- Modal: Tambah / Edit Deck -->
-    <div id="pd-add-deck-modal" class="pd-modal-overlay">
-      <div class="pd-modal-backdrop" onclick="window.pdHideAddDeckModal()"></div>
-      <div class="pd-modal-content">
-        <div class="pd-form-title" id="pd-deck-modal-title">+ Deck Baru</div>
-        <input
-          id="pd-deck-title-input"
-          class="pd-input"
-          placeholder="Judul deck (contoh: Kata kerja harian)"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-        <input
-          id="pd-deck-desc-input"
-          class="pd-input"
-          placeholder="Deskripsi (opsional)"
-          style="margin-top: 8px"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-        <button id="pd-btn-save-deck" class="pd-btn-main" style="margin-top: 4px">
-          Simpan Deck
-        </button>
-      </div>
-    </div>
-
-    <!-- Layer: Cari & Tambah Kosakata (Full Screen) -->
-    <div id="layer-pd-add-card" class="layer">
-      <div class="search-hd">
-        <div class="btn-back" onclick="window.pdHideAddCardModal()">←</div>
-        <div style="flex: 1; margin: 0 12px; position: relative">
-          <input
-            type="search"
-            inputmode="search"
-            id="pd-card-search"
-            class="search-input"
-            placeholder="Cari Hanzi, Pinyin, atau Arti..."
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            oninput="window.pdSearchCardsV2(this.value)"
-          />
+    <!-- LAYER: DAFTAR KATA — DETAIL KATA -->
+    <div class="layer" id="layer-kos-word">
+      <div class="layer-hd">
+        <div class="btn-back" onclick="window.closeKosWord()">❮❮</div>
+        <div style="flex: 1">
+          <div class="layer-title" id="kos-word-title">Detail Kata</div>
+          <div class="layer-sub" id="kos-word-sub"></div>
         </div>
-      </div>
-      <div class="search-filters-wrap" id="pd-search-filters" style="margin-bottom: 8px;">
-        <div class="search-filter-btn active" data-filter="all">Semua</div>
-        <div class="search-filter-btn" data-filter="hsk">HSK</div>
-        <div class="search-filter-btn" data-filter="common">Common</div>
-        <div class="search-filter-btn" data-filter="native">Native</div>
-      </div>
-      <div class="search-results" id="pd-card-search-results" style="padding-top: 0; padding-bottom: 80px;">
-        <!-- Results will be injected here -->
-      </div>
-    </div>
-
-    <!-- Modal: Opsi Deck (Edit / Hapus) -->
-    <div id="pd-deck-options-modal" class="pd-modal-overlay bottom">
-      <div class="pd-modal-backdrop" onclick="window.pdHideDeckOptions()"></div>
-      <div class="pd-modal-content">
-        <div class="pd-modal-handle"></div>
-        <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Deck</div>
-        <button id="pd-deck-opt-edit" class="pd-btn-option" onclick="window.pdDeckOptEdit()">
-          Edit Deck
-        </button>
-        <button id="pd-deck-opt-delete" class="pd-btn-option pd-btn-option-danger" onclick="window.pdDeckOptDelete()">
-          Hapus Deck
+        <button class="btn-add-vok" id="btn-kwd-add" onclick="window.openKosContohForm()">
+          + Tambah
         </button>
       </div>
-    </div>
 
-    <!-- Modal: Opsi Tema (Edit / Hapus) -->
-    <div id="pd-theme-options-modal" class="pd-modal-overlay bottom">
-      <div class="pd-modal-backdrop" onclick="window.pdHideThemeOptions()"></div>
-      <div class="pd-modal-content">
-        <div class="pd-modal-handle"></div>
-        <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Tema</div>
-        <button id="pd-theme-opt-edit" class="pd-btn-option" onclick="window.pdThemeOptEdit()">
-          Edit Tema
-        </button>
-        <button id="pd-theme-opt-delete" class="pd-btn-option pd-btn-option-danger" onclick="window.pdThemeOptDelete()">
-          Hapus Tema
-        </button>
-      </div>
-    </div>
-
-
-    <!-- QUIZ SCREEN -->
-    <div id="quiz-screen" class="screen">
-      <div class="quiz-hd">
-        <div class="quiz-hd-left">
-          <h1 id="quiz-title">Quiz</h1>
-          <p id="quiz-sub"></p>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px">
-          <div class="score-badge">
-            <div class="score-num" id="live-score">0</div>
-            <div class="score-lbl">dari <span id="ans-count">0</span></div>
+      <div class="kos-word-body" id="kos-word-body">
+        <!-- Tab Bar — sekarang di dalam body, di bawah hero -->
+        <div class="kwd-tabs">
+          <div class="kwd-tab active" data-tab="kalimat" onclick="window._switchTab('kalimat')">
+            Sentences
           </div>
-          <div class="btn-back" onclick="window.closeQuiz()">❮❮</div>
+          <div class="kwd-tab" data-tab="stroke" onclick="window._switchTab('stroke')">
+            Stroke
+          </div>
+          <div class="kwd-tab" data-tab="char" onclick="window._switchTab('char')">
+            Char
+          </div>
+          <div class="kwd-tab" data-tab="word" onclick="window._switchTab('word')">
+            Word
+          </div>
+          <div class="kwd-tab-indicator"></div>
         </div>
-        <div
-          class="prog-bar"
-          style="position: absolute; bottom: 0; left: 0; right: 0"
-        >
-          <div class="prog-fill" id="prog"></div>
+
+        <div class="kwd-tab-content active" id="kwd-content-kalimat">
+          <div id="kwd-hero-container"></div>
+          <div id="kwd-examples-list" style="padding-top: 8px"></div>
+        </div>
+        <div class="kwd-tab-content" id="kwd-content-stroke">
+          <div id="kwd-stroke-slider" class="kwd-stroke-slider"></div>
+        </div>
+        <div class="kwd-tab-content" id="kwd-content-char">
+          <div id="kwd-char-container"></div>
+        </div>
+        <div class="kwd-tab-content" id="kwd-content-word">
+          <div id="kwd-native-list" class="kwd-native-list"></div>
         </div>
       </div>
-      <div id="quiz-scroll" style="flex: 1; overflow-y: auto">
-        <div class="quiz-wrap">
-          <div
-            id="quiz-tab-bar"
-            style="
+    </div>
+
+    <!-- LAYER: Flashcard Kumulatif LIST -->
+    <div class="layer" id="layer-hanzi">
+      <div class="layer-hd">
+        <div class="btn-back" onclick="window.closeLayer('layer-hanzi')">
+          ❮❮
+        </div>
+        <div>
+          <div class="layer-title">👁️ Flashcard Kumulatif</div>
+          <div class="layer-sub">
+            Kalimat kumulatif · Ketuk reveal Pinyin &amp; arti
+          </div>
+        </div>
+      </div>
+      <div class="hsk-dropdown-wrap" id="hsk-filter-hanzi">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+          <span class="hsk-dropdown-val">Semua</span>
+          <span class="hsk-dropdown-arrow">▾</span>
+          <div class="hsk-dropdown-menu">
+            <div class="hsk-dropdown-item active" data-level="all"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'all', this)">
+              Semua
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk1"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk1', this)">
+              HSK 1
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk2"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk2', this)">
+              HSK 2
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk3"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk3', this)">
+              HSK 3
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk4"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk4', this)">
+              HSK 4
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk5"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk5', this)">
+              HSK 5
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk6"
+              onclick="window.filterHSKDropdown(event, 'hanzi', 'hsk6', this)">
+              HSK 6
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layer-body">
+        <div class="layer-sec">
+          <div class="content-grid" id="hanzi-list-grid">
+            <div style="
+                  text-align: center;
+                  padding: 40px;
+                  color: var(--dim);
+                  font-size: 13px;
+                ">
+              <span class="spinner"></span>Memuat...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER: POLA KALIMAT (GRAMMAR) -->
+    <div class="layer" id="layer-grammar">
+      <div class="layer-hd">
+        <div class="btn-back" onclick="window.closeLayer('layer-grammar')">
+          ❮❮
+        </div>
+        <div>
+          <div class="layer-title">🚀 Tata Bahasa</div>
+          <div class="layer-sub" id="layer-grammar-sub">
+            Susun kata · Latihan tata bahasa Mandarin
+          </div>
+        </div>
+      </div>
+      <div class="hsk-dropdown-wrap" id="hsk-filter-grammar">
+        <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+          <span class="hsk-dropdown-val">Semua</span>
+          <span class="hsk-dropdown-arrow">▾</span>
+          <div class="hsk-dropdown-menu">
+            <div class="hsk-dropdown-item active" data-level="all" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'all', this)
+                ">
+              Semua
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk1" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk1', this)
+                ">
+              HSK 1
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk2" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk2', this)
+                ">
+              HSK 2
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk3" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk3', this)
+                ">
+              HSK 3
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk4" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk4', this)
+                ">
+              HSK 4
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk5" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk5', this)
+                ">
+              HSK 5
+            </div>
+            <div class="hsk-dropdown-item" data-level="hsk6" onclick="
+                  window.filterHSKDropdown(event, 'grammar', 'hsk6', this)
+                ">
+              HSK 6
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layer-body">
+        <div class="layer-sec">
+          <div class="content-grid" id="grammar-list-grid">
+            <div style="
+                  text-align: center;
+                  padding: 40px;
+                  color: var(--dim);
+                  font-size: 13px;
+                ">
+              <span class="spinner"></span>Memuat...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYER: KALIMAT LIST (outside #dash, same z-level) -->
+  <div class="layer" id="layer-kalimat">
+    <div class="layer-hd">
+      <div class="btn-back" onclick="window.closeLayer('layer-kalimat')">
+        ❮❮
+      </div>
+      <div>
+        <div class="layer-title">💬 Quiz Kumulatif</div>
+        <div class="layer-sub" id="layer-kal-sub">
+          Kalimat kumulatif · Semakin panjang seiring level naik
+        </div>
+      </div>
+    </div>
+    <div class="hsk-dropdown-wrap" id="hsk-filter-kalimat">
+      <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+        <span class="hsk-dropdown-val">Semua</span>
+        <span class="hsk-dropdown-arrow">▾</span>
+        <div class="hsk-dropdown-menu">
+          <div class="hsk-dropdown-item active" data-level="all"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'all', this)">
+            Semua
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk1"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk1', this)">
+            HSK 1
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk2"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk2', this)">
+            HSK 2
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk3"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk3', this)">
+            HSK 3
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk4"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk4', this)">
+            HSK 4
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk5"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk5', this)">
+            HSK 5
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk6"
+            onclick="window.filterHSKDropdown(event, 'kalimat', 'hsk6', this)">
+            HSK 6
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div class="content-grid" id="kal-list-grid">
+          <div style="
+                text-align: center;
+                padding: 40px;
+                color: var(--dim);
+                font-size: 13px;
+              ">
+            <span class="spinner"></span>Memuat...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYER: BACA CERITA -->
+  <div class="layer" id="layer-cerita">
+    <div class="layer-hd">
+      <div class="btn-back" onclick="window.closeLayer('layer-cerita')">
+        ❮❮
+      </div>
+      <div>
+        <div class="layer-title">📖 Mode Membaca</div>
+        <div class="layer-sub">
+          Teks Hanzi · Tap kata untuk pinyin &amp; arti
+        </div>
+      </div>
+    </div>
+    <div class="hsk-dropdown-wrap" id="hsk-filter-cerita">
+      <div class="hsk-dropdown" onclick="window.toggleHSKDropdown(this)">
+        <span class="hsk-dropdown-val">Semua</span>
+        <span class="hsk-dropdown-arrow">▾</span>
+        <div class="hsk-dropdown-menu">
+          <div class="hsk-dropdown-item active" data-level="all"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'all', this)">
+            Semua
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk1"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk1', this)">
+            HSK 1
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk2"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk2', this)">
+            HSK 2
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk3"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk3', this)">
+            HSK 3
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk4"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk4', this)">
+            HSK 4
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk5"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk5', this)">
+            HSK 5
+          </div>
+          <div class="hsk-dropdown-item" data-level="hsk6"
+            onclick="window.filterHSKDropdown(event, 'cerita', 'hsk6', this)">
+            HSK 6
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div class="content-grid" id="cerita-list-grid">
+          <div style="
+                text-align: center;
+                padding: 40px;
+                color: var(--dim);
+                font-size: 13px;
+              ">
+            <span class="spinner"></span>Memuat...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer: Kata Favorit -->
+  <div class="layer" id="layer-favorites">
+    <div class="layer-hd">
+      <div class="btn-back" onclick="window.closeLayer('layer-favorites')">
+        ❮❮
+      </div>
+      <div>
+        <div class="layer-title">❤️ Kata Favorit</div>
+        <div class="layer-sub">Semua kata yang kamu simpan</div>
+      </div>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div id="favorites-list" class="pd-list-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer: Pilih Tema -->
+  <div class="layer" id="layer-personal-themes">
+    <div class="layer-hd">
+      <div class="btn-back" onclick="window.closeLayer('layer-personal-themes')">
+        ❮❮
+      </div>
+      <div style="flex: 1">
+        <div class="layer-title">Deck Personal</div>
+        <div class="layer-sub">Kelola tema deck belajarmu</div>
+      </div>
+      <button onclick="window.pdShowAddThemeModal()" class="pd-hd-btn">
+        + Tema
+      </button>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div id="pd-theme-grid" class="pd-theme-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer: OCR Scanner -->
+  <div class="layer" id="layer-ocr">
+    <div class="ocr-camera-wrap">
+      <video id="ocr-video" autoplay playsinline></video>
+      <canvas id="ocr-canvas" style="display:none"></canvas>
+
+      <!-- Viewfinder Overlay -->
+      <div class="ocr-overlay">
+        <div class="ocr-header">
+          <div class="ocr-close" onclick="window.closeOCRScanner()">✕</div>
+          <div class="ocr-title">Arahkan ke Hanzi</div>
+          <div id="ocr-torch-btn" class="ocr-torch-btn" onclick="window._toggleTorch()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7 2v11h3v9l7-12h-4l4-8H7z" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="ocr-scan-area">
+          <div class="ocr-scan-box">
+            <div class="ocr-corner tl"></div>
+            <div class="ocr-corner tr"></div>
+            <div class="ocr-corner bl"></div>
+            <div class="ocr-corner br"></div>
+          </div>
+        </div>
+
+        <div class="ocr-footer" id="ocr-footer">
+          <!-- Diisi oleh ocr.js (camera mode / result mode) -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer: Deck per Tema -->
+  <div class="layer" id="layer-personal-decks">
+    <div class="layer-hd">
+      <div class="btn-back"
+        onclick="window.closeLayer('layer-personal-decks', true); window.backToLayer('layer-personal-themes')">
+        ❮❮
+      </div>
+      <div style="flex: 1">
+        <div class="layer-title" id="pd-decks-theme-title">Deck</div>
+        <div class="layer-sub" id="pd-decks-theme-sub">Pilih deck</div>
+      </div>
+      <button onclick="window.pdShowAddDeckModal()" class="pd-hd-btn">
+        + Deck
+      </button>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div id="pd-deck-grid" class="kos-deck-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layer: Isi Deck (Kata-kata) -->
+  <div class="layer" id="layer-personal-cards">
+    <div class="layer-hd">
+      <div class="btn-back"
+        onclick="window.closeLayer('layer-personal-cards', true); window.backToLayer('layer-personal-decks')">
+        ❮❮
+      </div>
+      <div style="flex: 1">
+        <div class="layer-title" id="pd-cards-deck-title">Deck</div>
+        <div class="layer-sub" id="pd-cards-deck-count">0 kata</div>
+      </div>
+      <button onclick="window.pdShowAddCardModal()" class="pd-hd-btn pd-hd-btn-outline">
+        + Kosakata
+      </button>
+    </div>
+    <div class="layer-body">
+      <div class="layer-sec">
+        <div id="pd-cards-list" class="pd-list-wrap" style="margin-bottom: 20px"></div>
+      </div>
+    </div>
+    <div class="kos-bottom-bar">
+      <button id="pd-latihan-btn" class="btn-kos-mulai" onclick="window.pdToggleLatihan()">
+        Mulai Latihan
+      </button>
+    </div>
+    <div class="kos-latihan-tooltip" id="pd-latihan-tooltip">
+      <div class="kos-tooltip-backdrop" onclick="window.pdCloseLatihan()"></div>
+      <div class="kos-tooltip-sheet">
+        <div class="kos-tooltip-drag-bar"></div>
+        <div class="kos-tooltip-title">Pilih Latihan</div>
+        <div class="kos-tooltip-actions">
+          <button id="pd-tt-nada" class="kos-tooltip-btn" onclick="window.pdOpenNada()">
+            <span class="kos-tt-icon">🎵</span>
+            <span class="kos-tt-label">Latihan Nada</span>
+          </button>
+          <button id="pd-tt-fc" class="kos-tooltip-btn" onclick="window.pdOpenFlashcard()">
+            <span class="kos-tt-icon">🃏</span>
+            <span class="kos-tt-label">Flashcard</span>
+          </button>
+          <button id="pd-tt-tulis" class="kos-tooltip-btn" onclick="window.pdOpenTulis()">
+            <span class="kos-tt-icon">✍🏻</span>
+            <span class="kos-tt-label">Tulis Hanzi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Tambah / Edit Tema -->
+  <div id="pd-add-theme-modal" class="pd-modal-overlay">
+    <div class="pd-modal-backdrop" onclick="window.pdHideAddThemeModal()"></div>
+    <div class="pd-modal-content">
+      <div class="pd-form-title" id="pd-theme-modal-title">+ Tema Baru</div>
+      <input id="pd-theme-name" class="pd-input" placeholder="Nama tema (contoh: Makanan)" autocomplete="off"
+        autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <div id="pd-emoji-grid" class="pd-emoji-grid"></div>
+      <button id="pd-btn-save-theme" class="pd-btn-main">Simpan Tema</button>
+    </div>
+  </div>
+
+  <!-- Modal: Tambah / Edit Deck -->
+  <div id="pd-add-deck-modal" class="pd-modal-overlay">
+    <div class="pd-modal-backdrop" onclick="window.pdHideAddDeckModal()"></div>
+    <div class="pd-modal-content">
+      <div class="pd-form-title" id="pd-deck-modal-title">+ Deck Baru</div>
+      <input id="pd-deck-title-input" class="pd-input" placeholder="Judul deck (contoh: Kata kerja harian)"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <input id="pd-deck-desc-input" class="pd-input" placeholder="Deskripsi (opsional)" style="margin-top: 8px"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <button id="pd-btn-save-deck" class="pd-btn-main" style="margin-top: 4px">
+        Simpan Deck
+      </button>
+    </div>
+  </div>
+
+  <!-- Layer: Cari & Tambah Kosakata (Full Screen) -->
+  <div id="layer-pd-add-card" class="layer">
+    <div class="search-hd">
+      <div class="btn-back" onclick="window.pdHideAddCardModal()">←</div>
+      <div style="flex: 1; margin: 0 12px; position: relative">
+        <input type="search" inputmode="search" id="pd-card-search" class="search-input"
+          placeholder="Cari Hanzi, Pinyin, atau Arti..." autocomplete="off" autocorrect="off" autocapitalize="off"
+          spellcheck="false" oninput="window.pdSearchCardsV2(this.value)" />
+      </div>
+    </div>
+    <div class="search-filters-wrap" id="pd-search-filters" style="margin-bottom: 8px;">
+      <div class="search-filter-btn active" data-filter="all">Semua</div>
+      <div class="search-filter-btn" data-filter="hsk">HSK</div>
+      <div class="search-filter-btn" data-filter="common">Common</div>
+      <div class="search-filter-btn" data-filter="native">Native</div>
+    </div>
+    <div class="search-results" id="pd-card-search-results" style="padding-top: 0; padding-bottom: 80px;">
+      <!-- Results will be injected here -->
+    </div>
+  </div>
+
+  <!-- Modal: Opsi Deck (Edit / Hapus) -->
+  <div id="pd-deck-options-modal" class="pd-modal-overlay bottom">
+    <div class="pd-modal-backdrop" onclick="window.pdHideDeckOptions()"></div>
+    <div class="pd-modal-content">
+      <div class="pd-modal-handle"></div>
+      <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Deck</div>
+      <button id="pd-deck-opt-edit" class="pd-btn-option" onclick="window.pdDeckOptEdit()">
+        Edit Deck
+      </button>
+      <button id="pd-deck-opt-delete" class="pd-btn-option pd-btn-option-danger" onclick="window.pdDeckOptDelete()">
+        Hapus Deck
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Opsi Tema (Edit / Hapus) -->
+  <div id="pd-theme-options-modal" class="pd-modal-overlay bottom">
+    <div class="pd-modal-backdrop" onclick="window.pdHideThemeOptions()"></div>
+    <div class="pd-modal-content">
+      <div class="pd-modal-handle"></div>
+      <div class="pd-form-title" style="margin-bottom: 20px; text-align: center;">Opsi Tema</div>
+      <button id="pd-theme-opt-edit" class="pd-btn-option" onclick="window.pdThemeOptEdit()">
+        Edit Tema
+      </button>
+      <button id="pd-theme-opt-delete" class="pd-btn-option pd-btn-option-danger" onclick="window.pdThemeOptDelete()">
+        Hapus Tema
+      </button>
+    </div>
+  </div>
+
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen" class="screen">
+    <div class="quiz-hd">
+      <div class="quiz-hd-left">
+        <h1 id="quiz-title">Quiz</h1>
+        <p id="quiz-sub"></p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div class="score-badge">
+          <div class="score-num" id="live-score">0</div>
+          <div class="score-lbl">dari <span id="ans-count">0</span></div>
+        </div>
+        <div class="btn-back" onclick="window.closeQuiz()">❮❮</div>
+      </div>
+      <div class="prog-bar" style="position: absolute; bottom: 0; left: 0; right: 0">
+        <div class="prog-fill" id="prog"></div>
+      </div>
+    </div>
+    <div id="quiz-scroll" style="flex: 1; overflow-y: auto">
+      <div class="quiz-wrap">
+        <div id="quiz-tab-bar" style="
               display: flex;
               gap: 8px;
               flex-wrap: wrap;
               justify-content: center;
               margin-bottom: 20px;
-            "
-          >
-            <button
-              class="quiz-tab active"
-              onclick="window.filterQuizTab('all', true)"
-              id="qtab-all"
-            >
-              Semua
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterQuizTab(0, true)"
-              id="qtab-0"
-            >
-              Tipe 1
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterQuizTab(1, true)"
-              id="qtab-1"
-            >
-              Tipe 2
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterQuizTab(2, true)"
-              id="qtab-2"
-            >
-              Tipe 3
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterQuizTab(3, true)"
-              id="qtab-3"
-            >
-              Tipe 4
-            </button>
-          </div>
-          <div id="quiz-main"></div>
-          <div class="submit-wrap">
-            <div class="warn" id="warn-box"></div>
-            <button class="btn-submit" onclick="window.submitQuiz()">
-              📊 Lihat Hasil
-            </button>
-          </div>
-          <div class="result-panel" id="result-panel">
-            <h2 id="r-title">Hasil Quiz</h2>
-            <div class="result-big" id="r-score"></div>
-            <div class="result-grade" id="r-grade"></div>
-            <div class="result-grid">
-              <div class="rc rc-ok">
-                <div class="rn" id="r-correct">0</div>
-                <div class="rl">✓ Benar</div>
-              </div>
-              <div class="rc rc-bad">
-                <div class="rn" id="r-wrong">0</div>
-                <div class="rl">✗ Salah</div>
-              </div>
-              <div class="rc rc-sk">
-                <div class="rn" id="r-skip">0</div>
-                <div class="rl">— Lewati</div>
-              </div>
-              <div class="rc">
-                <div class="rn" id="r-pct" style="color: var(--gold)">0%</div>
-                <div class="rl">Persentase</div>
-              </div>
+            ">
+          <button class="quiz-tab active" onclick="window.filterQuizTab('all', true)" id="qtab-all">
+            Semua
+          </button>
+          <button class="quiz-tab" onclick="window.filterQuizTab(0, true)" id="qtab-0">
+            Tipe 1
+          </button>
+          <button class="quiz-tab" onclick="window.filterQuizTab(1, true)" id="qtab-1">
+            Tipe 2
+          </button>
+          <button class="quiz-tab" onclick="window.filterQuizTab(2, true)" id="qtab-2">
+            Tipe 3
+          </button>
+          <button class="quiz-tab" onclick="window.filterQuizTab(3, true)" id="qtab-3">
+            Tipe 4
+          </button>
+        </div>
+        <div id="quiz-main"></div>
+        <div class="submit-wrap">
+          <div class="warn" id="warn-box"></div>
+          <button class="btn-submit" onclick="window.submitQuiz()">
+            📊 Lihat Hasil
+          </button>
+        </div>
+        <div class="result-panel" id="result-panel">
+          <h2 id="r-title">Hasil Quiz</h2>
+          <div class="result-big" id="r-score"></div>
+          <div class="result-grade" id="r-grade"></div>
+          <div class="result-grid">
+            <div class="rc rc-ok">
+              <div class="rn" id="r-correct">0</div>
+              <div class="rl">✓ Benar</div>
             </div>
-            <div class="result-msg" id="r-msg"></div>
-            <button class="btn-retry" onclick="window.confirmRetryQuiz()">
-              🔀 Acak Ulang &amp; Coba Lagi
-            </button>
+            <div class="rc rc-bad">
+              <div class="rn" id="r-wrong">0</div>
+              <div class="rl">✗ Salah</div>
+            </div>
+            <div class="rc rc-sk">
+              <div class="rn" id="r-skip">0</div>
+              <div class="rl">— Lewati</div>
+            </div>
+            <div class="rc">
+              <div class="rn" id="r-pct" style="color: var(--gold)">0%</div>
+              <div class="rl">Persentase</div>
+            </div>
           </div>
+          <div class="result-msg" id="r-msg"></div>
+          <button class="btn-retry" onclick="window.confirmRetryQuiz()">
+            🔀 Acak Ulang &amp; Coba Lagi
+          </button>
         </div>
-      </div>
-      <div class="sticky-pill">
-        <div id="sticky" class="sticky-inner">
-          <div class="sticky-dot"></div>
-          <span id="sticky-txt">0 / 100 dijawab</span>
-        </div>
-        <button
-          class="sticky-scroll-btn"
-          onclick="window.scrollTo({ top: 999999, behavior: 'smooth' })"
-          title="Ke tombol Lihat Hasil"
-        >
-          ⛛
-        </button>
       </div>
     </div>
+    <div class="sticky-pill">
+      <div id="sticky" class="sticky-inner">
+        <div class="sticky-dot"></div>
+        <span id="sticky-txt">0 / 100 dijawab</span>
+      </div>
+      <button class="sticky-scroll-btn" onclick="window.scrollTo({ top: 999999, behavior: 'smooth' })"
+        title="Ke tombol Lihat Hasil">
+        ⛛
+      </button>
+    </div>
+  </div>
 
-    <!-- FLASHCARD SCREEN -->
-    <div id="fc-screen" class="screen">
-      <div class="fc-hd">
-        <div
-          style="
+  <!-- FLASHCARD SCREEN -->
+  <div id="fc-screen" class="screen">
+    <div class="fc-hd">
+      <div style="
             display: flex;
             align-items: center;
             gap: 10px;
             flex: 1;
             min-width: 0;
-          "
-        >
-          <div style="min-width: 0">
-            <h1 id="fc-title">Flashcard Kosakata</h1>
-            <p id="fc-sub"></p>
-          </div>
+          ">
+        <div style="min-width: 0">
+          <h1 id="fc-title">Flashcard Kosakata</h1>
+          <p id="fc-sub"></p>
         </div>
-        <div
-          style="
+      </div>
+      <div style="
             display: flex;
             align-items: center;
             gap: 8px;
             margin-left: auto;
             flex-shrink: 0;
-          "
-        >
-          <div class="score-badge">
-            <div class="score-num" id="fc-count-num">0</div>
-            <div class="score-lbl">dari <span id="fc-count-denom">0</span></div>
-          </div>
-          <div class="btn-back" onclick="window.closeFC()">❮❮</div>
+          ">
+        <div class="score-badge">
+          <div class="score-num" id="fc-count-num">0</div>
+          <div class="score-lbl">dari <span id="fc-count-denom">0</span></div>
         </div>
+        <div class="btn-back" onclick="window.closeFC()">❮❮</div>
       </div>
-      <div class="fc-prog"><div class="fc-prog-fill" id="fc-prog"></div></div>
-      <div
-        style="flex: 1; overflow: hidden; display: flex; flex-direction: column"
-      >
-        <div
-          class="fc-wrap"
-          style="
+    </div>
+    <div class="fc-prog">
+      <div class="fc-prog-fill" id="fc-prog"></div>
+    </div>
+    <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column">
+      <div class="fc-wrap" style="
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-          "
-        >
-          <div class="fc-card-wrap" id="fc-card-wrap">
-            <div class="fc-swipe-overlay ov-right" id="fc-ov-right">
-              HAFAL ✓
+          ">
+        <div class="fc-card-wrap" id="fc-card-wrap">
+          <div class="fc-swipe-overlay ov-right" id="fc-ov-right">
+            HAFAL ✓
+          </div>
+          <div class="fc-swipe-overlay ov-left" id="fc-ov-left">LUPA ✗</div>
+          <div class="fc-card" id="fc-card">
+            <div class="fc-front">
+              <div class="fc-hanzi" id="fc-hanzi">字</div>
             </div>
-            <div class="fc-swipe-overlay ov-left" id="fc-ov-left">LUPA ✗</div>
-            <div class="fc-card" id="fc-card">
-              <div class="fc-front">
-                <div class="fc-hanzi" id="fc-hanzi">字</div>
-              </div>
-              <div class="fc-back1" style="display: none">
-                <div class="fc-hz-small" id="fc-hanzi2">字</div>
-                <div class="fc-pinyin-big" id="fc-pinyin"></div>
-              </div>
-              <div class="fc-back2" style="display: none">
-                <div class="fc-hz-small" id="fc-hanzi3">字</div>
-                <div
-                  style="
+            <div class="fc-back1" style="display: none">
+              <div class="fc-hz-small" id="fc-hanzi2">字</div>
+              <div class="fc-pinyin-big" id="fc-pinyin"></div>
+            </div>
+            <div class="fc-back2" style="display: none">
+              <div class="fc-hz-small" id="fc-hanzi3">字</div>
+              <div style="
                     font-size: 13px;
                     color: var(--dim2);
                     text-align: center;
-                  "
-                  id="fc-pinyin2"
-                ></div>
-                <div class="fc-arti" id="fc-arti"></div>
-              </div>
+                  " id="fc-pinyin2"></div>
+              <div class="fc-arti" id="fc-arti"></div>
             </div>
           </div>
-          <p class="fc-swipe-hint" id="fc-swipe-hint">
-            ❮❮ geser · ketuk kartu untuk flip · geser ❯❯
-          </p>
-          <!-- Speaking toolbar — dikelola oleh speaking.js -->
-          <div id="spk-toolbar">
-            <div class="spk-btn-row">
-              <!-- <button
+        </div>
+        <p class="fc-swipe-hint" id="fc-swipe-hint">
+          ❮❮ geser · ketuk kartu untuk flip · geser ❯❯
+        </p>
+        <!-- Speaking toolbar — dikelola oleh speaking.js -->
+        <div id="spk-toolbar">
+          <div class="spk-btn-row">
+            <!-- <button
                 id="spk-btn-listen"
                 class="spk-tb-btn"
                 onclick="window._spkListen()"
               >
                 <span class="spk-tb-icon">▶</span> Dengarkan
               </button> -->
-              <button
-                id="spk-btn-mic"
-                class="spk-tb-btn"
-                onclick="window._spkToggleRec()"
-              >
-                <span class="spk-tb-icon" id="spk-mic-icon">🎙</span>
-                <span id="spk-mic-txt">Coba Ucapkan</span>
-              </button>
-            </div>
-            <div id="spk-feedback" class="spk-fb spk-fb--hidden"></div>
+            <button id="spk-btn-mic" class="spk-tb-btn" onclick="window._spkToggleRec()">
+              <span class="spk-tb-icon" id="spk-mic-icon">🎙</span>
+              <span id="spk-mic-txt">Coba Ucapkan</span>
+            </button>
           </div>
-          <div id="fc-done-wrap" class="fc-done-wrap" style="display: none">
-            <!-- Content rendered by _renderDoneStats() in flashcard.js -->
-          </div>
+          <div id="spk-feedback" class="spk-fb spk-fb--hidden"></div>
+        </div>
+        <div id="fc-done-wrap" class="fc-done-wrap" style="display: none">
+          <!-- Content rendered by _renderDoneStats() in flashcard.js -->
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Flashcard Kumulatif SCREEN -->
-    <div id="hanzi-screen" class="screen">
-      <div class="hanzi-hd">
-        <div
-          style="
+  <!-- Flashcard Kumulatif SCREEN -->
+  <div id="hanzi-screen" class="screen">
+    <div class="hanzi-hd">
+      <div style="
             display: flex;
             align-items: center;
             gap: 10px;
             flex: 1;
             min-width: 0;
-          "
-        >
-          <div style="min-width: 0">
-            <h1 id="hanzi-title">Flashcard Kumulatif</h1>
-            <p id="hanzi-sub"></p>
-          </div>
+          ">
+        <div style="min-width: 0">
+          <h1 id="hanzi-title">Flashcard Kumulatif</h1>
+          <p id="hanzi-sub"></p>
         </div>
-        <div
-          style="
+      </div>
+      <div style="
             display: flex;
             align-items: center;
             gap: 8px;
             margin-left: auto;
             flex-shrink: 0;
-          "
-        >
-          <div class="kal-score">
-            <div class="n" id="h-done">0</div>
-            <div class="l">dari <span id="h-left">100</span></div>
-          </div>
-          <div class="btn-back" onclick="window.closeHanzi()">❮❮</div>
+          ">
+        <div class="kal-score">
+          <div class="n" id="h-done">0</div>
+          <div class="l">dari <span id="h-left">100</span></div>
         </div>
-        <div
-          class="hanzi-prog"
-          style="position: absolute; bottom: 0; left: 0; right: 0"
-        >
-          <div class="hanzi-prog-fill" id="h-prog"></div>
-        </div>
+        <div class="btn-back" onclick="window.closeHanzi()">❮❮</div>
       </div>
-      <div style="flex: 1; overflow-y: auto">
-        <div class="hanzi-wrap">
-          <div class="hanzi-instr">
-            <strong>Cara pakai:</strong> Lihat Hanzi → coba baca dalam hati →
-            <strong>Ketuk sekali</strong> → Pinyin berwarna →
-            <strong>Ketuk lagi</strong> → Arti Indonesia.
-          </div>
-          <div class="h-legend">
-            <div class="h-legend-item">
-              <div class="hld" style="background: #2e2e28"></div>
-              Belum dibuka
-            </div>
-            <div class="h-legend-item">
-              <div class="hld" style="background: var(--t2)"></div>
-              Pinyin terlihat
-            </div>
-            <div class="h-legend-item">
-              <div class="hld" style="background: #4ade80"></div>
-              Arti terlihat
-            </div>
-          </div>
-          <div id="hanzi-main"></div>
-          <button class="btn-reset-h" onclick="window.resetHanzi()">
-            🔄 Reset Semua
-          </button>
-          <div class="h-prog-txt" id="h-prog-txt">0 dari 100 selesai</div>
-        </div>
+      <div class="hanzi-prog" style="position: absolute; bottom: 0; left: 0; right: 0">
+        <div class="hanzi-prog-fill" id="h-prog"></div>
       </div>
-      <div
-        id="hanzi-bottom-bar"
-        style="
+    </div>
+    <div style="flex: 1; overflow-y: auto">
+      <div class="hanzi-wrap">
+        <div class="hanzi-instr">
+          <strong>Cara pakai:</strong> Lihat Hanzi → coba baca dalam hati →
+          <strong>Ketuk sekali</strong> → Pinyin berwarna →
+          <strong>Ketuk lagi</strong> → Arti Indonesia.
+        </div>
+        <div class="h-legend">
+          <div class="h-legend-item">
+            <div class="hld" style="background: #2e2e28"></div>
+            Belum dibuka
+          </div>
+          <div class="h-legend-item">
+            <div class="hld" style="background: var(--t2)"></div>
+            Pinyin terlihat
+          </div>
+          <div class="h-legend-item">
+            <div class="hld" style="background: #4ade80"></div>
+            Arti terlihat
+          </div>
+        </div>
+        <div id="hanzi-main"></div>
+        <button class="btn-reset-h" onclick="window.resetHanzi()">
+          🔄 Reset Semua
+        </button>
+        <div class="h-prog-txt" id="h-prog-txt">0 dari 100 selesai</div>
+      </div>
+    </div>
+    <div id="hanzi-bottom-bar" style="
           position: fixed;
           bottom: 0;
           left: 0;
@@ -2136,644 +1647,518 @@
           padding: 12px 16px;
           display: flex;
           justify-content: center;
-        "
-      >
-        <button class="btn-latihan-hanzi" onclick="window.startHanziLatihan()">
-          Latihan
-        </button>
-      </div>
+        ">
+      <button class="btn-latihan-hanzi" onclick="window.startHanziLatihan()">
+        Latihan
+      </button>
     </div>
+  </div>
 
-    <!-- LATIHAN KALIMAT SCREEN -->
-    <div id="kalimat-screen" class="screen">
-      <div class="kal-hd">
-        <div style="display: flex; align-items: center; gap: 10px">
-          <div>
-            <h1 id="kal-title">Latihan Kalimat</h1>
-            <p id="kal-sub"></p>
-          </div>
+  <!-- LATIHAN KALIMAT SCREEN -->
+  <div id="kalimat-screen" class="screen">
+    <div class="kal-hd">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div>
+          <h1 id="kal-title">Latihan Kalimat</h1>
+          <p id="kal-sub"></p>
         </div>
-        <div
-          style="
+      </div>
+      <div style="
             display: flex;
             align-items: center;
             gap: 10px;
             margin-left: auto;
-          "
-        >
-          <div class="kal-score">
-            <div class="n" id="kal-live">0</div>
-            <div class="l">dari <span id="kal-ans">0</span></div>
-          </div>
-          <div class="btn-back" onclick="window.closeKalimat()">❮❮</div>
+          ">
+        <div class="kal-score">
+          <div class="n" id="kal-live">0</div>
+          <div class="l">dari <span id="kal-ans">0</span></div>
         </div>
-        <div
-          class="kal-prog"
-          style="position: absolute; bottom: 0; left: 0; right: 0"
-        >
-          <div class="kal-prog-fill" id="kal-prog"></div>
-        </div>
+        <div class="btn-back" onclick="window.closeKalimat()">❮❮</div>
       </div>
-      <div class="tabs" id="kal-tabs"></div>
-      <div style="flex: 1; overflow-y: auto">
-        <div class="kal-wrap">
-          <div
-            id="kal-tab-bar"
-            style="
+      <div class="kal-prog" style="position: absolute; bottom: 0; left: 0; right: 0">
+        <div class="kal-prog-fill" id="kal-prog"></div>
+      </div>
+    </div>
+    <div class="tabs" id="kal-tabs"></div>
+    <div style="flex: 1; overflow-y: auto">
+      <div class="kal-wrap">
+        <div id="kal-tab-bar" style="
               display: flex;
               gap: 8px;
               flex-wrap: wrap;
               justify-content: center;
               margin-bottom: 20px;
-            "
-          >
-            <button
-              class="quiz-tab active"
-              onclick="window.filterKalTab('all', true)"
-              id="ktab-all"
-            >
-              Semua
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterKalTab(0, true)"
-              id="ktab-0"
-            >
-              Tipe 1
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterKalTab(1, true)"
-              id="ktab-1"
-            >
-              Tipe 2
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterKalTab(2, true)"
-              id="ktab-2"
-            >
-              Tipe 3
-            </button>
-            <button
-              class="quiz-tab"
-              onclick="window.filterKalTab(3, true)"
-              id="ktab-3"
-            >
-              Tipe 4
-            </button>
-          </div>
-          <div id="kal-main"></div>
-          <div class="submit-wrap">
-            <div class="warn" id="kal-warn" style="display: none"></div>
-            <button class="btn-submit" onclick="window.submitKalimat()">
-              📊 Lihat Hasil
-            </button>
-          </div>
-          <div class="kal-res" id="kal-res">
-            <h2>Hasil Latihan Kalimat</h2>
-            <div class="kal-res-big" id="kr-score"></div>
-            <div class="kal-res-grade" id="kr-grade"></div>
-            <div class="kal-res-grid">
-              <div class="krc krc-ok">
-                <div class="krn" id="kr-correct">0</div>
-                <div class="krl">✓ Benar</div>
-              </div>
-              <div class="krc krc-bad">
-                <div class="krn" id="kr-wrong">0</div>
-                <div class="krl">✗ Salah</div>
-              </div>
-              <div class="krc krc-sk">
-                <div class="krn" id="kr-skip">0</div>
-                <div class="krl">— Lewati</div>
-              </div>
-              <div class="krc">
-                <div class="krn" id="kr-pct" style="color: #f0c040">0%</div>
-                <div class="krl">Persentase</div>
-              </div>
+            ">
+          <button class="quiz-tab active" onclick="window.filterKalTab('all', true)" id="ktab-all">
+            Semua
+          </button>
+          <button class="quiz-tab" onclick="window.filterKalTab(0, true)" id="ktab-0">
+            Tipe 1
+          </button>
+          <button class="quiz-tab" onclick="window.filterKalTab(1, true)" id="ktab-1">
+            Tipe 2
+          </button>
+          <button class="quiz-tab" onclick="window.filterKalTab(2, true)" id="ktab-2">
+            Tipe 3
+          </button>
+          <button class="quiz-tab" onclick="window.filterKalTab(3, true)" id="ktab-3">
+            Tipe 4
+          </button>
+        </div>
+        <div id="kal-main"></div>
+        <div class="submit-wrap">
+          <div class="warn" id="kal-warn" style="display: none"></div>
+          <button class="btn-submit" onclick="window.submitKalimat()">
+            📊 Lihat Hasil
+          </button>
+        </div>
+        <div class="kal-res" id="kal-res">
+          <h2>Hasil Latihan Kalimat</h2>
+          <div class="kal-res-big" id="kr-score"></div>
+          <div class="kal-res-grade" id="kr-grade"></div>
+          <div class="kal-res-grid">
+            <div class="krc krc-ok">
+              <div class="krn" id="kr-correct">0</div>
+              <div class="krl">✓ Benar</div>
             </div>
-            <div class="kal-res-msg" id="kr-msg"></div>
-            <button class="btn-retry2" onclick="window.confirmRetryKalimat()">
-              🔀 Acak Ulang &amp; Coba Lagi
-            </button>
+            <div class="krc krc-bad">
+              <div class="krn" id="kr-wrong">0</div>
+              <div class="krl">✗ Salah</div>
+            </div>
+            <div class="krc krc-sk">
+              <div class="krn" id="kr-skip">0</div>
+              <div class="krl">— Lewati</div>
+            </div>
+            <div class="krc">
+              <div class="krn" id="kr-pct" style="color: #f0c040">0%</div>
+              <div class="krl">Persentase</div>
+            </div>
           </div>
+          <div class="kal-res-msg" id="kr-msg"></div>
+          <button class="btn-retry2" onclick="window.confirmRetryKalimat()">
+            🔀 Acak Ulang &amp; Coba Lagi
+          </button>
         </div>
-      </div>
-      <div class="sticky-pill">
-        <div
-          id="kal-sticky"
-          class="sticky-inner"
-          style="border-color: #f0c040; color: #f0c040; background: #18181f"
-        >
-          <div class="kal-sdot"></div>
-          <span id="kal-sticky-txt">0 / 100 dijawab</span>
-        </div>
-        <button
-          class="sticky-scroll-btn"
-          onclick="window.scrollTo({ top: 999999, behavior: 'smooth' })"
-          title="Ke tombol Lihat Hasil"
-          style="border-color: #f0c040; color: #f0c040; background: #18181f"
-        >
-          ⛛
-        </button>
       </div>
     </div>
+    <div class="sticky-pill">
+      <div id="kal-sticky" class="sticky-inner" style="border-color: #f0c040; color: #f0c040; background: #18181f">
+        <div class="kal-sdot"></div>
+        <span id="kal-sticky-txt">0 / 100 dijawab</span>
+      </div>
+      <button class="sticky-scroll-btn" onclick="window.scrollTo({ top: 999999, behavior: 'smooth' })"
+        title="Ke tombol Lihat Hasil" style="border-color: #f0c040; color: #f0c040; background: #18181f">
+        ⛛
+      </button>
+    </div>
+  </div>
 
-    <!-- GRAMMAR / POLA KALIMAT SCREEN -->
-    <div id="grammar-screen" class="screen">
-      <!-- Header -->
-      <div class="gram-hd">
-        <div>
-          <h1 id="gram-title">Grammar</h1>
-          <p id="gram-sub"></p>
-        </div>
-        <div
-          style="
+  <!-- GRAMMAR / POLA KALIMAT SCREEN -->
+  <div id="grammar-screen" class="screen">
+    <!-- Header -->
+    <div class="gram-hd">
+      <div>
+        <h1 id="gram-title">Grammar</h1>
+        <p id="gram-sub"></p>
+      </div>
+      <div style="
             display: flex;
             align-items: center;
             gap: 10px;
             margin-left: auto;
             flex-shrink: 0;
-          "
-        >
-          <div class="gram-score">
-            <div class="n" id="gram-score-n">0</div>
-            <div class="l">dari <span id="gram-score-l">0</span></div>
-          </div>
-          <div class="btn-back" onclick="window.closeGrammar()">❮❮</div>
+          ">
+        <div class="gram-score">
+          <div class="n" id="gram-score-n">0</div>
+          <div class="l">dari <span id="gram-score-l">0</span></div>
         </div>
+        <div class="btn-back" onclick="window.closeGrammar()">❮❮</div>
       </div>
+    </div>
 
-      <!-- Progress Bar -->
-      <div class="gram-prog">
-        <div class="gram-prog-fill" id="gram-prog-fill"></div>
-      </div>
+    <!-- Progress Bar -->
+    <div class="gram-prog">
+      <div class="gram-prog-fill" id="gram-prog-fill"></div>
+    </div>
 
-      <div style="flex: 1; overflow-y: auto">
-        <div class="gram-wrap">
-          <!-- FASE 1: Teori -->
-          <div id="gram-theory-phase">
-            <div class="gram-theory">
-              <div class="gram-theory-label">Teori pola</div>
-              <div class="gram-theory-title" id="gram-theory-title"></div>
-              <div class="gram-theory-body" id="gram-theory-body"></div>
-              <div style="margin-top: 10px">
-                <span
-                  class="gram-theory-toggle"
-                  id="gram-theory-toggle"
-                  onclick="window.toggleGramTheory()"
-                  >Lihat contoh ▾</span
-                >
-              </div>
-              <div class="gram-theory-ex" id="gram-theory-ex">
-                <div class="gram-ex-list" id="gram-ex-list"></div>
-              </div>
+    <div style="flex: 1; overflow-y: auto">
+      <div class="gram-wrap">
+        <!-- FASE 1: Teori -->
+        <div id="gram-theory-phase">
+          <div class="gram-theory">
+            <div class="gram-theory-label">Teori pola</div>
+            <div class="gram-theory-title" id="gram-theory-title"></div>
+            <div class="gram-theory-body" id="gram-theory-body"></div>
+            <div style="margin-top: 10px">
+              <span class="gram-theory-toggle" id="gram-theory-toggle" onclick="window.toggleGramTheory()">Lihat contoh
+                ▾</span>
             </div>
-          </div>
-
-          <!-- FASE 2: Soal -->
-          <div id="gram-soal-phase" style="display: none">
-            <!-- Counter -->
-            <div class="gram-counter">
-              <span class="gram-counter-txt" id="gram-soal-label"
-                >Soal 1 dari 5 — susun kata</span
-              >
-              <button
-                class="gram-counter-reset"
-                id="gram-counter-reset"
-                onclick="window.confirmGramRestart()"
-                title="Ulangi dari awal"
-              >
-                ↺
-              </button>
-            </div>
-
-            <!-- Soal Wrap -->
-            <div id="gram-soal-wrap">
-              <div class="gram-soal">
-                <div class="gram-soal-instr">
-                  Susun menjadi kalimat yang benar
-                </div>
-                <div class="gram-soal-target" id="gram-soal-target"></div>
-
-                <!-- Answer Zone -->
-                <div class="gram-answer-zone" id="gram-answer-zone">
-                  <span class="gram-answer-placeholder"
-                    >Ketuk kata di bawah untuk menyusun...</span
-                  >
-                </div>
-
-                <!-- Word Bank -->
-                <div class="gram-word-bank" id="gram-word-bank"></div>
-
-                <!-- Result -->
-                <div class="gram-result" id="gram-result"></div>
-
-                <!-- Action Buttons -->
-                <div class="gram-actions">
-                  <button
-                    class="gram-btn-check"
-                    id="gram-btn-check"
-                    onclick="window.gramCheck()"
-                  >
-                    ✓ Cek Jawaban
-                  </button>
-                </div>
-              </div>
-            </div>
-            <!-- /gram-soal-wrap -->
-          </div>
-          <!-- /gram-soal-phase -->
-
-          <!-- Done Screen -->
-          <div class="gram-done" id="gram-done">
-            <div class="gram-done-emoji">🎉</div>
-            <div class="gram-done-title" id="gram-done-pct">0%</div>
-            <div class="gram-done-sub" id="gram-done-total">0 dari 5 benar</div>
-            <div class="gram-done-grid">
-              <div class="gram-done-card">
-                <div class="gram-done-n green" id="gram-done-correct">0</div>
-                <div class="gram-done-l">✓ Benar</div>
-              </div>
-              <div class="gram-done-card">
-                <div class="gram-done-n red" id="gram-done-wrong">0</div>
-                <div class="gram-done-l">✗ Salah</div>
-              </div>
-              <div class="gram-done-card">
-                <div class="gram-done-n" id="gram-done-skipped">0</div>
-                <div class="gram-done-l">— Lewati</div>
-              </div>
-            </div>
-            <div class="gram-done-btns">
-              <button
-                class="gram-done-btn"
-                onclick="window.confirmGramRestart()"
-              >
-                🔄 Ulangi
-              </button>
-              <button class="gram-done-btn" onclick="window.closeGrammar()">
-                ❮❮ Kembali
-              </button>
+            <div class="gram-theory-ex" id="gram-theory-ex">
+              <div class="gram-ex-list" id="gram-ex-list"></div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Sticky Footer Buttons -->
-      <div class="gram-footer">
-        <!-- Fase Teori -->
-        <div id="gram-footer-theory">
-          <button
-            class="gram-btn-nav primary"
-            style="width: 100%"
-            onclick="window.gramStartSoal()"
-          >
-            Mulai Latihan
-          </button>
+        <!-- FASE 2: Soal -->
+        <div id="gram-soal-phase" style="display: none">
+          <!-- Counter -->
+          <div class="gram-counter">
+            <span class="gram-counter-txt" id="gram-soal-label">Soal 1 dari 5 — susun kata</span>
+            <button class="gram-counter-reset" id="gram-counter-reset" onclick="window.confirmGramRestart()"
+              title="Ulangi dari awal">
+              ↺
+            </button>
+          </div>
+
+          <!-- Soal Wrap -->
+          <div id="gram-soal-wrap">
+            <div class="gram-soal">
+              <div class="gram-soal-instr">
+                Susun menjadi kalimat yang benar
+              </div>
+              <div class="gram-soal-target" id="gram-soal-target"></div>
+
+              <!-- Answer Zone -->
+              <div class="gram-answer-zone" id="gram-answer-zone">
+                <span class="gram-answer-placeholder">Ketuk kata di bawah untuk menyusun...</span>
+              </div>
+
+              <!-- Word Bank -->
+              <div class="gram-word-bank" id="gram-word-bank"></div>
+
+              <!-- Result -->
+              <div class="gram-result" id="gram-result"></div>
+
+              <!-- Action Buttons -->
+              <div class="gram-actions">
+                <button class="gram-btn-check" id="gram-btn-check" onclick="window.gramCheck()">
+                  ✓ Cek Jawaban
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- /gram-soal-wrap -->
         </div>
-        <!-- Fase Soal -->
-        <div id="gram-footer-soal" style="display: none" class="gram-nav">
-          <button
-            class="gram-btn-nav"
-            id="gram-btn-prev"
-            onclick="window.gramPrev()"
-          >
-            Teori
-          </button>
-          <button
-            class="gram-btn-nav primary"
-            id="gram-btn-next"
-            onclick="window.gramNext()"
-            style="display: none"
-          >
-            Lanjut
-          </button>
+        <!-- /gram-soal-phase -->
+
+        <!-- Done Screen -->
+        <div class="gram-done" id="gram-done">
+          <div class="gram-done-emoji">🎉</div>
+          <div class="gram-done-title" id="gram-done-pct">0%</div>
+          <div class="gram-done-sub" id="gram-done-total">0 dari 5 benar</div>
+          <div class="gram-done-grid">
+            <div class="gram-done-card">
+              <div class="gram-done-n green" id="gram-done-correct">0</div>
+              <div class="gram-done-l">✓ Benar</div>
+            </div>
+            <div class="gram-done-card">
+              <div class="gram-done-n red" id="gram-done-wrong">0</div>
+              <div class="gram-done-l">✗ Salah</div>
+            </div>
+            <div class="gram-done-card">
+              <div class="gram-done-n" id="gram-done-skipped">0</div>
+              <div class="gram-done-l">— Lewati</div>
+            </div>
+          </div>
+          <div class="gram-done-btns">
+            <button class="gram-done-btn" onclick="window.confirmGramRestart()">
+              🔄 Ulangi
+            </button>
+            <button class="gram-done-btn" onclick="window.closeGrammar()">
+              ❮❮ Kembali
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- CERITA SCREEN (Reading Mode) -->
-    <div id="cerita-screen" class="screen">
-      <!-- Header: title kiri, back button kanan -->
-      <div class="cerita-hd">
+    <!-- Sticky Footer Buttons -->
+    <div class="gram-footer">
+      <!-- Fase Teori -->
+      <div id="gram-footer-theory">
+        <button class="gram-btn-nav primary" style="width: 100%" onclick="window.gramStartSoal()">
+          Mulai Latihan
+        </button>
+      </div>
+      <!-- Fase Soal -->
+      <div id="gram-footer-soal" style="display: none" class="gram-nav">
+        <button class="gram-btn-nav" id="gram-btn-prev" onclick="window.gramPrev()">
+          Teori
+        </button>
+        <button class="gram-btn-nav primary" id="gram-btn-next" onclick="window.gramNext()" style="display: none">
+          Lanjut
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERITA SCREEN (Reading Mode) -->
+  <div id="cerita-screen" class="screen">
+    <!-- Header: title kiri, back button kanan -->
+    <div class="cerita-hd">
+      <div>
+        <h1 id="cerita-title">Memuat...</h1>
+        <p id="cerita-sub"></p>
+        <p class="cerita-title-zh" id="cerita-title-zh" style="display: none"></p>
+      </div>
+      <div class="btn-back" onclick="window.closeCerita()">❮❮</div>
+    </div>
+
+    <!-- Progress bar tipis -->
+    <div class="cerita-progress-bar">
+      <div class="cerita-progress-fill" id="cerita-progress-fill" style="width: 0%"></div>
+    </div>
+
+    <!-- Scroll area -->
+    <div class="cerita-scroll-container" id="cerita-scroll-container" onscroll="updateCeritaProgress()">
+      <div class="cerita-chapter-label">Cerita · Teks Hanzi</div>
+      <div class="cerita-body" id="cerita-body"></div>
+    </div>
+
+    <!-- Bottom bar: kiri = progress/reset badge, kanan = controls -->
+    <div class="cerita-bottombar">
+      <button class="cerita-prog-badge" id="cerita-prog-badge" onclick="window.confirmCeritaReset()">
+        <span id="cerita-progress-label">0%</span>
+      </button>
+      <div class="cerita-controls">
+        <div class="cerita-ctrl-group">
+          <button class="cerita-btn" onclick="window.changeCeritaFont(-2)">
+            A−
+          </button>
+          <span id="cerita-font-label" class="cerita-ctrl-val">22px</span>
+          <button class="cerita-btn" onclick="window.changeCeritaFont(2)">
+            A+
+          </button>
+        </div>
+        <div class="cerita-ctrl-group">
+          <button class="cerita-btn" onclick="window.changeCeritaSpeed(-0.5)">
+            −
+          </button>
+          <span id="cerita-speed-val" class="cerita-ctrl-val">1×</span>
+          <button class="cerita-btn" onclick="window.changeCeritaSpeed(0.5)">
+            +
+          </button>
+        </div>
+        <button class="cerita-play-btn" onclick="window.toggleCeritaScroll()">
+          <span id="cerita-play-icon">▶</span>
+          <span id="cerita-play-label" class="play-label">Auto-scroll</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH SCREEN -->
+  <div id="search-screen" class="screen">
+    <div class="search-hd">
+      <div class="btn-back" onclick="window.backToDash()">❮❮</div>
+      <div style="flex: 1; margin: 0 12px; position: relative">
+        <input type="search" inputmode="search" id="kos-global-search" name="kosakata-global-search"
+          class="search-input" placeholder="Cari Hanzi, Pinyin, atau Arti..." autocomplete="off" autocorrect="off"
+          autocapitalize="off" spellcheck="false" oninput="window.onKosGlobalSearch()" />
+        <div class="search-history-trigger" onclick="event.stopPropagation(); window.showSearchHistoryDropdown?.()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="search-filters-wrap" id="kos-search-filters">
+      <div class="search-filter-btn active" data-filter="all">Semua</div>
+      <div class="search-filter-btn" data-filter="hsk">HSK</div>
+      <div class="search-filter-btn" data-filter="common">Common</div>
+      <div class="search-filter-btn" data-filter="native">Native</div>
+    </div>
+    <div class="search-results" id="kos-global-results">
+      <div class="search-empty"></div>
+    </div>
+
+    <!-- Voice & OCR FABs -->
+    <div class="search-fabs-wrap">
+      <button id="search-mic-fab" class="search-fab mic" onclick="window.startVoiceSearch?.()" title="Voice Search">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+          <path
+            d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+        </svg>
+      </button>
+      <button id="search-ocr-fab" class="search-fab ocr" onclick="window.openOCRScanner()" title="Scan Hanzi">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+          <circle cx="12" cy="12" r="3.2" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div id="profile-screen" class="screen">
+    <!-- Header -->
+    <div class="prof-hd">
+      <div class="prof-hd-left">
+        <h1>Profile</h1>
+        <p>个人资料 — Halaman Profile</p>
+      </div>
+      <button class="prof-edit-btn" onclick="window._profStartEditName()" title="Edit nama">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9999bb" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Scrollable content — diisi oleh profile.js -->
+    <div class="prof-scroll" id="prof-scroll"></div>
+  </div>
+
+  <!-- USER PROFILE SCREEN (profil orang lain) -->
+  <div id="user-profile-screen" class="screen">
+    <div class="prof-hd uprof-hd-grid">
+      <div class="uprof-hd-left">
+        <span id="user-profile-screen-title">Profile</span>
+        <p>个人资料 — Profil Pengguna</p>
+      </div>
+      <div id="uprof-header-tier"></div>
+    </div>
+    <div class="prof-scroll" id="user-prof-scroll"></div>
+  </div>
+
+  <!-- SOSIAL SCREEN — struktur yang benar (REBUILD) -->
+  <div class="screen" id="sosial-screen">
+    <!-- ✅ HEADER FIXED -->
+    <div class="sosial-hd">
+      <div class="sosial-hd-top">
         <div>
-          <h1 id="cerita-title">Memuat...</h1>
-          <p id="cerita-sub"></p>
-          <p
-            class="cerita-title-zh"
-            id="cerita-title-zh"
-            style="display: none"
-          ></p>
+          <div class="sosial-hd-title">Peringkat</div>
+          <div class="sosial-hd-sub">社交 — Komunitas Belajar</div>
         </div>
-        <div class="btn-back" onclick="window.closeCerita()">❮❮</div>
-      </div>
-
-      <!-- Progress bar tipis -->
-      <div class="cerita-progress-bar">
-        <div
-          class="cerita-progress-fill"
-          id="cerita-progress-fill"
-          style="width: 0%"
-        ></div>
-      </div>
-
-      <!-- Scroll area -->
-      <div
-        class="cerita-scroll-container"
-        id="cerita-scroll-container"
-        onscroll="updateCeritaProgress()"
-      >
-        <div class="cerita-chapter-label">Cerita · Teks Hanzi</div>
-        <div class="cerita-body" id="cerita-body"></div>
-      </div>
-
-      <!-- Bottom bar: kiri = progress/reset badge, kanan = controls -->
-      <div class="cerita-bottombar">
-        <button
-          class="cerita-prog-badge"
-          id="cerita-prog-badge"
-          onclick="window.confirmCeritaReset()"
-        >
-          <span id="cerita-progress-label">0%</span>
-        </button>
-        <div class="cerita-controls">
-          <div class="cerita-ctrl-group">
-            <button class="cerita-btn" onclick="window.changeCeritaFont(-2)">
-              A−
-            </button>
-            <span id="cerita-font-label" class="cerita-ctrl-val">22px</span>
-            <button class="cerita-btn" onclick="window.changeCeritaFont(2)">
-              A+
-            </button>
+        <div class="period-tabs">
+          <div class="period-tab active" data-period="week" onclick="window.sosialSwitchPeriod('week', this)">
+            Minggu ini
           </div>
-          <div class="cerita-ctrl-group">
-            <button class="cerita-btn" onclick="window.changeCeritaSpeed(-0.5)">
-              −
-            </button>
-            <span id="cerita-speed-val" class="cerita-ctrl-val">1×</span>
-            <button class="cerita-btn" onclick="window.changeCeritaSpeed(0.5)">
-              +
-            </button>
+          <div class="period-tab" data-period="month" onclick="window.sosialSwitchPeriod('month', this)">
+            Bulan
           </div>
-          <button class="cerita-play-btn" onclick="window.toggleCeritaScroll()">
-            <span id="cerita-play-icon">▶</span>
-            <span id="cerita-play-label" class="play-label">Auto-scroll</span>
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- SEARCH SCREEN -->
-    <div id="search-screen" class="screen">
-      <div class="search-hd">
-        <div class="btn-back" onclick="window.backToDash()">❮❮</div>
-        <div style="flex: 1; margin: 0 12px; position: relative">
-          <input
-            type="search"
-            inputmode="search"
-            id="kos-global-search"
-            name="kosakata-global-search"
-            class="search-input"
-            placeholder="Cari Hanzi, Pinyin, atau Arti..."
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            oninput="window.onKosGlobalSearch()"
-          />
-          <div class="search-history-trigger" onclick="event.stopPropagation(); window.showSearchHistoryDropdown?.()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          </div>
-        </div>
-      </div>
-      <div class="search-filters-wrap" id="kos-search-filters">
-        <div class="search-filter-btn active" data-filter="all">Semua</div>
-        <div class="search-filter-btn" data-filter="hsk">HSK</div>
-        <div class="search-filter-btn" data-filter="common">Common</div>
-        <div class="search-filter-btn" data-filter="native">Native</div>
-      </div>
-      <div class="search-results" id="kos-global-results">
-        <div class="search-empty"></div>
-      </div>
-      
-      <!-- Voice & OCR FABs -->
-      <div class="search-fabs-wrap">
-        <button id="search-mic-fab" class="search-fab mic" onclick="window.startVoiceSearch?.()" title="Voice Search">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-          </svg>
-        </button>
-        <button id="search-ocr-fab" class="search-fab ocr" onclick="window.openOCRScanner()" title="Scan Hanzi">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-            <circle cx="12" cy="12" r="3.2"/>
-          </svg>
-        </button>
-      </div>
+    <div id="sosial-banners">
+      <div class="liga-banner"></div>
+      <!-- tambah ini -->
+      <div class="sosial-podium"></div>
+      <div class="my-rank-banner"></div>
     </div>
 
-    <!-- PROFILE SCREEN -->
-    <div id="profile-screen" class="screen">
-      <!-- Header -->
-      <div class="prof-hd">
-        <div class="prof-hd-left">
-          <h1>Profile</h1>
-          <p>个人资料 — Halaman Profile</p>
-        </div>
-        <button
-          class="prof-edit-btn"
-          onclick="window._profStartEditName()"
-          title="Edit nama"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#9999bb"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </button>
+    <!-- ✅ HANYA INI YANG SCROLL -->
+    <!-- Isi DOM dikendalikan sepenuhnya oleh _ensureXPDOM() dan _ensureFriendsDOM() -->
+    <div id="sosial-scroll" class="sosial-scroll"></div>
+  </div>
+
+  <!-- TULIS HANZI SCREEN -->
+  <div id="tulis-screen" class="screen">
+    <!-- Header -->
+    <div class="tulis-hd">
+      <div class="tulis-hd-center">
+        <div class="tulis-title" id="tulis-title">Tulis Hanzi</div>
+        <div class="tulis-sub" id="tulis-sub"></div>
       </div>
-
-      <!-- Scrollable content — diisi oleh profile.js -->
-      <div class="prof-scroll" id="prof-scroll"></div>
-    </div>
-
-    <!-- USER PROFILE SCREEN (profil orang lain) -->
-    <div id="user-profile-screen" class="screen">
-      <div class="prof-hd uprof-hd-grid">
-        <div class="uprof-hd-left">
-          <span id="user-profile-screen-title">Profile</span>
-          <p>个人资料 — Profil Pengguna</p>
-        </div>
-        <div id="uprof-header-tier"></div>
-      </div>
-      <div class="prof-scroll" id="user-prof-scroll"></div>
-    </div>
-
-    <!-- SOSIAL SCREEN — struktur yang benar (REBUILD) -->
-    <div class="screen" id="sosial-screen">
-      <!-- ✅ HEADER FIXED -->
-      <div class="sosial-hd">
-        <div class="sosial-hd-top">
-          <div>
-            <div class="sosial-hd-title">Peringkat</div>
-            <div class="sosial-hd-sub">社交 — Komunitas Belajar</div>
-          </div>
-          <div class="period-tabs">
-            <div
-              class="period-tab active"
-              data-period="week"
-              onclick="window.sosialSwitchPeriod('week', this)"
-            >
-              Minggu ini
-            </div>
-            <div
-              class="period-tab"
-              data-period="month"
-              onclick="window.sosialSwitchPeriod('month', this)"
-            >
-              Bulan
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="sosial-banners">
-        <div class="liga-banner"></div>
-        <!-- tambah ini -->
-        <div class="sosial-podium"></div>
-        <div class="my-rank-banner"></div>
-      </div>
-
-      <!-- ✅ HANYA INI YANG SCROLL -->
-      <!-- Isi DOM dikendalikan sepenuhnya oleh _ensureXPDOM() dan _ensureFriendsDOM() -->
-      <div id="sosial-scroll" class="sosial-scroll"></div>
-    </div>
-
-    <!-- TULIS HANZI SCREEN -->
-    <div id="tulis-screen" class="screen">
-      <!-- Header -->
-      <div class="tulis-hd">
-        <div class="tulis-hd-center">
-          <div class="tulis-title" id="tulis-title">Tulis Hanzi</div>
-          <div class="tulis-sub" id="tulis-sub"></div>
-        </div>
-        <div
-          style="
+      <div style="
             display: flex;
             align-items: center;
             gap: 8px;
             margin-left: auto;
             flex-shrink: 0;
-          "
-        >
-          <div class="score-badge">
-            <div class="score-num" id="tulis-count-num">0</div>
-            <div class="score-lbl">
-              dari <span id="tulis-count-denom">0</span>
-            </div>
+          ">
+        <div class="score-badge">
+          <div class="score-num" id="tulis-count-num">0</div>
+          <div class="score-lbl">
+            dari <span id="tulis-count-denom">0</span>
           </div>
         </div>
       </div>
-      <!-- Progress bar -->
-      <div class="tulis-prog">
-        <div class="tulis-prog-fill" id="tulis-prog-fill"></div>
+    </div>
+    <!-- Progress bar -->
+    <div class="tulis-prog">
+      <div class="tulis-prog-fill" id="tulis-prog-fill"></div>
+    </div>
+    <!-- Body -->
+    <div class="tulis-body">
+      <!-- Info karakter -->
+      <div class="tulis-info">
+        <div class="tulis-hanzi-full" id="tulis-hanzi-full"></div>
+        <div class="tulis-pinyin" id="tulis-pinyin"></div>
+        <div class="tulis-arti" id="tulis-arti"></div>
       </div>
-      <!-- Body -->
-      <div class="tulis-body">
-        <!-- Info karakter -->
-        <div class="tulis-info">
-          <div class="tulis-hanzi-full" id="tulis-hanzi-full"></div>
-          <div class="tulis-pinyin" id="tulis-pinyin"></div>
-          <div class="tulis-arti" id="tulis-arti"></div>
-        </div>
-        <!-- Canvas area -->
-        <div class="tulis-canvas-wrap">
-          <div id="tulis-hanzi-target"></div>
-        </div>
-        <!-- Hint row -->
-        <!-- Control Row (Icons) -->
-        <div class="tulis-ctrl-row">
-          <button class="tulis-icon-btn" onclick="window.tulisHanziClear()" title="Ulangi">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-          </button>
-          <button class="tulis-icon-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()" title="Tampilkan Panduan">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-          </button>
-          <button class="tulis-icon-btn" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()" title="Strict Mode">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          </button>
-        </div>
+      <!-- Canvas area -->
+      <div class="tulis-canvas-wrap">
+        <div id="tulis-hanzi-target"></div>
       </div>
-      <!-- Bottom bar -->
-      <div class="tulis-bottom">
-        <button
-          class="tulis-btn-next"
-          id="tulis-btn-next"
-          onclick="window.tulisHanziNext()"
-        >
-          Lanjutkan
+      <!-- Hint row -->
+      <!-- Control Row (Icons) -->
+      <div class="tulis-ctrl-row">
+        <button class="tulis-icon-btn" onclick="window.tulisHanziClear()" title="Ulangi">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+        <button class="tulis-icon-btn" id="tulis-hint-btn" onclick="window.toggleTulisHint()" title="Tampilkan Panduan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+        <button class="tulis-icon-btn" id="tulis-strict-btn" onclick="window.toggleTulisStrictMode()"
+          title="Strict Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
         </button>
       </div>
     </div>
-
-    <!-- MODALS -->
-    <div
-      class="modal-overlay"
-      id="auth-modal"
-      onclick="if (event.target === this) closeAuthModal();"
-    >
-      <div class="modal">
-        <div class="modal-close" onclick="window.closeAuthModal()">✕</div>
-        <div id="auth-content"></div>
-      </div>
+    <!-- Bottom bar -->
+    <div class="tulis-bottom">
+      <button class="tulis-btn-next" id="tulis-btn-next" onclick="window.tulisHanziNext()">
+        Lanjutkan
+      </button>
     </div>
+  </div>
 
-    <div
-      class="modal-overlay"
-      id="vok-form-modal"
-      onclick="if (event.target === this) closeVokForm();"
-    >
-      <div class="modal" style="max-width: 460px">
-        <div class="modal-close" onclick="window.closeVokForm()">✕</div>
-        <div id="vok-form-content"></div>
-      </div>
+  <!-- MODALS -->
+  <div class="modal-overlay" id="auth-modal" onclick="if (event.target === this) closeAuthModal();">
+    <div class="modal">
+      <div class="modal-close" onclick="window.closeAuthModal()">✕</div>
+      <div id="auth-content"></div>
     </div>
+  </div>
 
-    <div
-      class="modal-overlay"
-      id="deck-form-modal"
-      onclick="if (event.target === this) closeDeckModal();"
-    >
-      <div class="modal-wrap" style="position: relative">
-        <div class="modal-close" onclick="window.closeDeckModal()">✕</div>
-        <div id="deck-form-content"></div>
-      </div>
+  <div class="modal-overlay" id="vok-form-modal" onclick="if (event.target === this) closeVokForm();">
+    <div class="modal" style="max-width: 460px">
+      <div class="modal-close" onclick="window.closeVokForm()">✕</div>
+      <div id="vok-form-content"></div>
     </div>
+  </div>
 
-    <div
-      class="modal-overlay"
-      id="deck-del-modal"
-      onclick="if (event.target === this) closeDeckDelModal();"
-    >
-      <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="window.closeDeckDelModal()">✕</div>
-        <div class="modal-title" style="color: #f87171">Hapus Deck?</div>
-        <div
-          class="modal-sub"
-          id="deck-del-desc"
-          style="margin-bottom: 20px"
-        ></div>
-        <div
-          style="
+  <div class="modal-overlay" id="deck-form-modal" onclick="if (event.target === this) closeDeckModal();">
+    <div class="modal-wrap" style="position: relative">
+      <div class="modal-close" onclick="window.closeDeckModal()">✕</div>
+      <div id="deck-form-content"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deck-del-modal" onclick="if (event.target === this) closeDeckDelModal();">
+    <div class="modal-wrap" style="position: relative; max-width: 360px">
+      <div class="modal-close" onclick="window.closeDeckDelModal()">✕</div>
+      <div class="modal-title" style="color: #f87171">Hapus Deck?</div>
+      <div class="modal-sub" id="deck-del-desc" style="margin-bottom: 20px"></div>
+      <div style="
             background: rgba(192, 57, 43, 0.1);
             border: 1px solid rgba(192, 57, 43, 0.3);
             border-radius: 9px;
@@ -2781,110 +2166,71 @@
             font-size: 12px;
             color: #f87171;
             margin-bottom: 20px;
-          "
-        >
-          ⚠️ Semua kartu dalam deck ini juga akan dihapus. Tindakan ini tidak
-          bisa dibatalkan.
-        </div>
-        <div style="display: flex; gap: 10px">
-          <button
-            class="btn-submit"
-            onclick="window.closeDeckDelModal()"
-            style="
+          ">
+        ⚠️ Semua kartu dalam deck ini juga akan dihapus. Tindakan ini tidak
+        bisa dibatalkan.
+      </div>
+      <div style="display: flex; gap: 10px">
+        <button class="btn-submit" onclick="window.closeDeckDelModal()" style="
               flex: 1;
               background: var(--sur2);
               color: var(--txt);
               border: 1px solid var(--bdr);
-            "
-          >
-            Batal
-          </button>
-          <button
-            class="btn-submit"
-            id="deck-del-confirm"
-            style="
+            ">
+          Batal
+        </button>
+        <button class="btn-submit" id="deck-del-confirm" style="
               flex: 1;
               background: rgba(192, 57, 43, 0.9);
               color: #fff;
               border: none;
-            "
-          >
-            Hapus
-          </button>
-        </div>
+            ">
+          Hapus
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- MODAL: TAMBAH/EDIT CONTOH KALIMAT -->
-    <div
-      class="modal-overlay"
-      id="contoh-form-modal"
-      onclick="if (event.target === this) closeContohForm();"
-    >
-      <div class="modal-wrap" style="position: relative">
-        <div class="modal-close" onclick="window.closeContohForm()">✕</div>
-        <div id="contoh-form-content"></div>
-      </div>
+  <!-- MODAL: TAMBAH/EDIT CONTOH KALIMAT -->
+  <div class="modal-overlay" id="contoh-form-modal" onclick="if (event.target === this) closeContohForm();">
+    <div class="modal-wrap" style="position: relative">
+      <div class="modal-close" onclick="window.closeContohForm()">✕</div>
+      <div id="contoh-form-content"></div>
     </div>
+  </div>
 
-    <div
-      class="modal-overlay"
-      id="kos-del-modal"
-      onclick="if (event.target === this) closeKosDelModal();"
-    >
-      <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="window.closeKosDelModal()">✕</div>
-        <div class="modal-title" id="kos-del-title" style="color: #f87171">Hapus?</div>
-        <div
-          class="modal-sub"
-          id="kos-del-desc"
-          style="margin-bottom: 20px"
-        ></div>
-        <div style="display: flex; gap: 10px">
-          <button
-            class="btn-submit"
-            onclick="window.closeKosDelModal()"
-            style="
+  <div class="modal-overlay" id="kos-del-modal" onclick="if (event.target === this) closeKosDelModal();">
+    <div class="modal-wrap" style="position: relative; max-width: 360px">
+      <div class="modal-close" onclick="window.closeKosDelModal()">✕</div>
+      <div class="modal-title" id="kos-del-title" style="color: #f87171">Hapus?</div>
+      <div class="modal-sub" id="kos-del-desc" style="margin-bottom: 20px"></div>
+      <div style="display: flex; gap: 10px">
+        <button class="btn-submit" onclick="window.closeKosDelModal()" style="
               flex: 1;
               background: var(--sur2);
               color: var(--txt);
               border: 1px solid var(--bdr);
-            "
-          >
-            Batal
-          </button>
-          <button
-            class="btn-submit"
-            id="kos-del-confirm"
-            style="
+            ">
+          Batal
+        </button>
+        <button class="btn-submit" id="kos-del-confirm" style="
               flex: 1;
               background: rgba(192, 57, 43, 0.9);
               color: #fff;
               border: none;
-            "
-          >
-            Hapus
-          </button>
-        </div>
+            ">
+          Hapus
+        </button>
       </div>
     </div>
+  </div>
 
-    <div
-      class="modal-overlay"
-      id="retry-confirm-modal"
-      onclick="if (event.target === this) closeRetryConfirm();"
-    >
-      <div class="modal-wrap" style="position: relative; max-width: 360px">
-        <div class="modal-close" onclick="window.closeRetryConfirm()">✕</div>
-        <div class="modal-title">Acak Ulang &amp; Coba Lagi?</div>
-        <div
-          class="modal-sub"
-          style="margin-bottom: 20px"
-          id="retry-confirm-desc"
-        ></div>
-        <div
-          id="retry-confirm-warning"
-          style="
+  <div class="modal-overlay" id="retry-confirm-modal" onclick="if (event.target === this) closeRetryConfirm();">
+    <div class="modal-wrap" style="position: relative; max-width: 360px">
+      <div class="modal-close" onclick="window.closeRetryConfirm()">✕</div>
+      <div class="modal-title">Acak Ulang &amp; Coba Lagi?</div>
+      <div class="modal-sub" style="margin-bottom: 20px" id="retry-confirm-desc"></div>
+      <div id="retry-confirm-warning" style="
             background: rgba(232, 201, 109, 0.08);
             border: 1px solid rgba(232, 201, 109, 0.25);
             border-radius: 9px;
@@ -2892,287 +2238,178 @@
             font-size: 12px;
             color: var(--gold);
             margin-bottom: 20px;
-          "
-        >
-          ⚠️ Skor akan dihapus dan soal diacak ulang.
-        </div>
-        <div style="display: flex; gap: 10px">
-          <button
-            class="btn-submit"
-            onclick="window.closeRetryConfirm()"
-            style="
+          ">
+        ⚠️ Skor akan dihapus dan soal diacak ulang.
+      </div>
+      <div style="display: flex; gap: 10px">
+        <button class="btn-submit" onclick="window.closeRetryConfirm()" style="
               flex: 1;
               background: var(--sur2);
               color: var(--txt);
               border: 1px solid var(--bdr);
-            "
-          >
-            Batal
-          </button>
-          <button
-            class="btn-submit"
-            id="retry-confirm-btn"
-            style="
+            ">
+          Batal
+        </button>
+        <button class="btn-submit" id="retry-confirm-btn" style="
               flex: 1;
               background: var(--gold);
               color: #000;
               border: none;
               font-weight: 600;
-            "
-          >
-            Ya
-          </button>
-        </div>
+            ">
+          Ya
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- JS -->
-    <script type="module" src="/src/main.js"></script>
-    <script type="module" src="/src/JS/app/pwa-install.js"></script>
-    <script type="module" src="/src/JS/utilities/history.js"></script>
-    <script type="module" src="/src/JS/utilities/history-ui.js"></script>
-    <script type="module" src="/src/JS/utilities/history-results.js"></script>
+  <!-- JS -->
+  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/JS/app/pwa-install.js"></script>
+  <script type="module" src="/src/JS/utilities/history.js"></script>
+  <script type="module" src="/src/JS/utilities/history-ui.js"></script>
+  <script type="module" src="/src/JS/utilities/history-results.js"></script>
 
-    <!-- ═══════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════
          AUTH TEMPLATES — tidak dirender langsung,
          di-clone oleh showGoogleLogin() & showUserPanel() di auth.js
          ═══════════════════════════════════════════ -->
 
-    <!-- Template: Login dengan Google -->
-    <template id="tpl-google-login">
-      <div style="text-align: center">
-        <div style="font-size: 36px; margin-bottom: 12px">坚</div>
-        <div class="modal-title">Mandarin Journey</div>
-        <div class="modal-sub" style="margin-bottom: 28px">
-          Login untuk menyimpan &amp; sinkronisasi Progress
-        </div>
-        <div class="auth-msg" id="auth-msg"></div>
-        <button
-          class="btn-google"
-          id="btn-google-login"
-          onclick="window.doGoogleLogin()"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-              fill="#4285F4"
-            />
-            <path
-              d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
-              fill="#34A853"
-            />
-            <path
-              d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
-              fill="#EA4335"
-            />
-          </svg>
-          Masuk dengan Google
-        </button>
-        <div
-          style="
+  <!-- Template: Login dengan Google -->
+  <template id="tpl-google-login">
+    <div style="text-align: center">
+      <div style="font-size: 36px; margin-bottom: 12px">坚</div>
+      <div class="modal-title">Mandarin Journey</div>
+      <div class="modal-sub" style="margin-bottom: 28px">
+        Login untuk menyimpan &amp; sinkronisasi Progress
+      </div>
+      <div class="auth-msg" id="auth-msg"></div>
+      <button class="btn-google" id="btn-google-login" onclick="window.doGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+            fill="#4285F4" />
+          <path
+            d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+            fill="#34A853" />
+          <path
+            d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+            fill="#FBBC05" />
+          <path
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
+            fill="#EA4335" />
+        </svg>
+        Masuk dengan Google
+      </button>
+      <div style="
             font-size: 11px;
             color: var(--dim);
             margin-top: 16px;
             line-height: 1.6;
-          "
-        >
-          Dengan masuk, kamu menyetujui penyimpanan<br />data kosakata di akun
-          kamu.
-        </div>
+          ">
+        Dengan masuk, kamu menyetujui penyimpanan<br />data kosakata di akun
+        kamu.
       </div>
-    </template>
+    </div>
+  </template>
 
-    <!-- Template: Panel profil user -->
-    <template id="tpl-user-panel">
-      <div class="user-panel-v2">
-        <div class="upv2-header">
-          <div
-            class="upv2-avatar-ring"
-            onclick="window.openAvatarPicker()"
-            title="Ganti avatar"
-          >
-            <!-- avatar img/initials diisi oleh showUserPanel() -->
-          </div>
-          <div class="upv2-name-row">
-            <span class="upv2-name" id="upv2-name-display"></span>
-            <button
-              class="upv2-rename-btn"
-              onclick="window.toggleRenameInput()"
-              title="Ganti nama"
-            >
-              ✏️
-            </button>
-          </div>
-          <div
-            class="upv2-rename-form"
-            id="upv2-rename-form"
-            style="display: none"
-          >
-            <input
-              class="upv2-rename-input"
-              id="upv2-rename-input"
-              type="text"
-              maxlength="30"
-              placeholder="Nama baru..."
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-            />
-            <button class="upv2-rename-save" onclick="window.saveDisplayName()">
-              Simpan
-            </button>
-            <button
-              class="upv2-rename-cancel"
-              onclick="window.toggleRenameInput()"
-            >
-              Batal
-            </button>
-          </div>
-          <div class="upv2-email"></div>
-          <div
-            id="profile-gelar-chip"
-            class="upv2-gelar-chip"
-            style="display: none"
-          >
-            <span id="profile-gelar-hz" class="upv2-gelar-hz"></span>
-            <span id="profile-gelar-label" class="upv2-gelar-label"></span>
-            <span id="profile-gelar-pinyin" class="upv2-gelar-pinyin"></span>
-          </div>
+  <!-- Template: Panel profil user -->
+  <template id="tpl-user-panel">
+    <div class="user-panel-v2">
+      <div class="upv2-header">
+        <div class="upv2-avatar-ring" onclick="window.openAvatarPicker()" title="Ganti avatar">
+          <!-- avatar img/initials diisi oleh showUserPanel() -->
         </div>
-
-        <div class="upv2-badge-section">
-          <div class="upv2-badge-section-header">
-            <span class="upv2-badge-label">Lencana diraih</span>
-            <span class="upv2-badge-count" id="profile-badge-count"></span>
-          </div>
-          <div id="profile-badge-grid" class="upv2-badge-grid"></div>
-        </div>
-
-        <div class="upv2-footer">
-          <button class="btn-ganti-avatar" onclick="window.openAvatarPicker()">
-            Ganti Avatar
+        <div class="upv2-name-row">
+          <span class="upv2-name" id="upv2-name-display"></span>
+          <button class="upv2-rename-btn" onclick="window.toggleRenameInput()" title="Ganti nama">
+            ✏️
           </button>
-          <button class="btn-logout" onclick="window.doLogout()">Logout</button>
         </div>
-      </div>
-    </template>
-    <nav
-      class="bottom-navbar"
-      id="bottom-navbar"
-      role="navigation"
-      aria-label="Navigasi utama"
-    >
-      <!-- Beranda -->
-      <div
-        class="bnav-item active"
-        data-screen="dash"
-        onclick="window.bnavGoTo('dash')"
-        role="button"
-        tabindex="0"
-      >
-        <div class="bnav-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="3" y="3" width="8" height="8" rx="2" />
-            <rect x="13" y="3" width="8" height="8" rx="2" />
-            <rect x="3" y="13" width="8" height="8" rx="2" />
-            <rect x="13" y="13" width="8" height="8" rx="2" />
-          </svg>
+        <div class="upv2-rename-form" id="upv2-rename-form" style="display: none">
+          <input class="upv2-rename-input" id="upv2-rename-input" type="text" maxlength="30" placeholder="Nama baru..."
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <button class="upv2-rename-save" onclick="window.saveDisplayName()">
+            Simpan
+          </button>
+          <button class="upv2-rename-cancel" onclick="window.toggleRenameInput()">
+            Batal
+          </button>
+        </div>
+        <div class="upv2-email"></div>
+        <div id="profile-gelar-chip" class="upv2-gelar-chip" style="display: none">
+          <span id="profile-gelar-hz" class="upv2-gelar-hz"></span>
+          <span id="profile-gelar-label" class="upv2-gelar-label"></span>
+          <span id="profile-gelar-pinyin" class="upv2-gelar-pinyin"></span>
         </div>
       </div>
 
-      <div
-        class="bnav-item"
-        data-screen="search-screen"
-        onclick="window.bnavGoTo('search-screen')"
-        role="button"
-        tabindex="0"
-      >
-        <div class="bnav-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+      <div class="upv2-badge-section">
+        <div class="upv2-badge-section-header">
+          <span class="upv2-badge-label">Lencana diraih</span>
+          <span class="upv2-badge-count" id="profile-badge-count"></span>
         </div>
+        <div id="profile-badge-grid" class="upv2-badge-grid"></div>
       </div>
 
-      <!-- Sosial -->
-      <div
-        class="bnav-item"
-        data-screen="sosial-screen"
-        onclick="window.bnavGoTo('sosial-screen')"
-        role="button"
-        tabindex="0"
-      >
-        <div class="bnav-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="3" y="12" width="4" height="9" rx="1" />
-            <rect x="10" y="7" width="4" height="14" rx="1" />
-            <rect x="17" y="4" width="4" height="17" rx="1" />
-          </svg>
-        </div>
+      <div class="upv2-footer">
+        <button class="btn-ganti-avatar" onclick="window.openAvatarPicker()">
+          Ganti Avatar
+        </button>
+        <button class="btn-logout" onclick="window.doLogout()">Logout</button>
       </div>
+    </div>
+  </template>
+  <nav class="bottom-navbar" id="bottom-navbar" role="navigation" aria-label="Navigasi utama">
+    <!-- Beranda -->
+    <div class="bnav-item active" data-screen="dash" onclick="window.bnavGoTo('dash')" role="button" tabindex="0">
+      <div class="bnav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="8" height="8" rx="2" />
+          <rect x="13" y="3" width="8" height="8" rx="2" />
+          <rect x="3" y="13" width="8" height="8" rx="2" />
+          <rect x="13" y="13" width="8" height="8" rx="2" />
+        </svg>
+      </div>
+    </div>
 
-      <!-- Profil -->
-      <div
-        class="bnav-item"
-        data-screen="profile-screen"
-        onclick="window.bnavGoTo('profile-screen')"
-        role="button"
-        tabindex="0"
-      >
-        <div class="bnav-icon">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
+    <div class="bnav-item" data-screen="search-screen" onclick="window.bnavGoTo('search-screen')" role="button"
+      tabindex="0">
+      <div class="bnav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
       </div>
-    </nav>
-  </body>
+    </div>
+
+    <!-- Sosial -->
+    <div class="bnav-item" data-screen="sosial-screen" onclick="window.bnavGoTo('sosial-screen')" role="button"
+      tabindex="0">
+      <div class="bnav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="12" width="4" height="9" rx="1" />
+          <rect x="10" y="7" width="4" height="14" rx="1" />
+          <rect x="17" y="4" width="4" height="17" rx="1" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Profil -->
+    <div class="bnav-item" data-screen="profile-screen" onclick="window.bnavGoTo('profile-screen')" role="button"
+      tabindex="0">
+      <div class="bnav-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </div>
+    </div>
+  </nav>
+</body>
+
 </html>

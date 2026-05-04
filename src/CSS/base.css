@@ -59,18 +59,23 @@ body.light {
   --ok: #15693e;
   --bad: #b03020;
 }
+
 body.light .t1 {
   color: #cc3333;
 }
+
 body.light .t2 {
   color: #1a9a50;
 }
+
 body.light .t3 {
   color: #2277cc;
 }
+
 body.light .t4 {
   color: #a07800;
 }
+
 body.light .t0 {
   color: #666688;
 }
@@ -108,6 +113,7 @@ body {
   min-height: 100dvh;
   flex-direction: column;
 }
+
 .screen.active {
   display: flex;
 }
@@ -117,21 +123,27 @@ body {
   font-family: var(--font-hanzi);
   font-size: 20px;
 }
+
 .py {
   font-style: italic;
 }
+
 .t1 {
   color: var(--t1);
 }
+
 .t2 {
   color: var(--t2);
 }
+
 .t3 {
   color: var(--t3);
 }
+
 .t4 {
   color: var(--t4);
 }
+
 .t0 {
   color: var(--t0);
 }
@@ -148,6 +160,7 @@ body {
   vertical-align: middle;
   margin-right: 6px;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -158,9 +171,11 @@ body {
 ::-webkit-scrollbar {
   width: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--bdr);
   border-radius: 2px;
@@ -173,20 +188,23 @@ body {
   justify-content: center;
   background: var(--bg);
 }
+
 .login-center {
   text-align: center;
   padding: 40px 24px;
   max-width: 360px;
   width: 100%;
 }
+
 .login-logo {
   font-family: var(--font-display);
   font-size: 72px;
-  font-weight: 300;
+  font-weight: 500;
   color: var(--gold);
   line-height: 1;
   margin-bottom: 8px;
 }
+
 .login-title {
   font-family: var(--font-serif);
   font-size: 32px;
@@ -194,25 +212,30 @@ body {
   color: var(--gold);
   margin-bottom: 4px;
 }
+
 .login-sub {
   font-family: var(--font-hanzi);
   font-size: 13px;
+  font-weight: 700;
   color: var(--dim2);
   letter-spacing: 3px;
-  margin-bottom: 40px;
+  margin-bottom: 14px;
 }
+
 .login-desc {
-  font-size: 14px;
-  color: var(--dim2);
-  margin-bottom: 28px;
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 120px;
   line-height: 1.7;
 }
+
 .login-msg {
   font-size: 12px;
   color: #f87171;
   margin-bottom: 12px;
   min-height: 18px;
 }
+
 .login-legal {
   font-size: 11px;
   color: var(--dim);
@@ -223,6 +246,7 @@ body {
 body.light {
   background: var(--bg);
 }
+
 .sticky-pill {
   position: fixed;
   bottom: 18px;
@@ -232,6 +256,7 @@ body.light {
   align-items: center;
   gap: 8px;
 }
+
 .sticky-inner {
   background: var(--sur);
   border: 1px solid var(--gold);
@@ -245,6 +270,7 @@ body.light {
   align-items: center;
   gap: 7px;
 }
+
 .sticky-scroll-btn {
   width: 38px;
   height: 38px;
@@ -272,6 +298,7 @@ body.light {
   padding: 1px 6px;
   font-size: 9px;
 }
+
 .badge-native {
   background: rgba(77, 159, 223, 0.12);
   color: var(--blue);
@@ -280,6 +307,7 @@ body.light {
   padding: 1px 6px;
   font-size: 9px;
 }
+
 .badge-hsk {
   background: rgba(232, 201, 109, 0.12);
   color: var(--gold);
@@ -299,11 +327,13 @@ body.light {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 5000; /* Higher than layers and navbar */
+  z-index: 5000;
+  /* Higher than layers and navbar */
   padding: 20px;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
+
 .modal-overlay.active {
   display: flex;
   opacity: 1;
@@ -321,6 +351,7 @@ body.light {
   transform: translateY(20px);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .modal-overlay.active .modal-wrap {
   transform: translateY(0);
 }
@@ -333,6 +364,7 @@ body.light {
   margin-bottom: 8px;
   text-align: center;
 }
+
 .modal-sub {
   font-size: 13px;
   color: var(--dim2);
@@ -340,6 +372,7 @@ body.light {
   text-align: center;
   line-height: 1.5;
 }
+
 .modal-close {
   position: absolute;
   top: 16px;
@@ -354,6 +387,7 @@ body.light {
   cursor: pointer;
   transition: color 0.15s;
 }
+
 .modal-close:hover {
   color: var(--txt);
 }
@@ -377,13 +411,16 @@ body.light {
   gap: 8px;
   margin-top: 10px;
 }
+
 .btn-primary:hover {
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
 .btn-primary:active {
   transform: scale(0.98);
 }
+
 .btn-primary:disabled {
   background: var(--sur3);
   color: var(--dim);
@@ -397,6 +434,7 @@ body.light {
 .hanzi-hd {
   position: relative;
 }
+
 /* ── XP Toast Notification ── */
 #xp-toast {
   position: fixed;
@@ -419,10 +457,12 @@ body.light {
   pointer-events: none;
   white-space: nowrap;
 }
+
 #xp-toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
 .xp-toast-points {
   font-family: var(--font-display);
   font-size: 20px;
@@ -430,6 +470,7 @@ body.light {
   color: var(--gold);
   line-height: 1;
 }
+
 .xp-toast-label {
   font-size: 12px;
   color: var(--dim2);
@@ -451,7 +492,8 @@ body.light {
 
 #pwa-install-banner {
   position: fixed;
-  bottom: 72px; /* di atas navbar */
+  bottom: 72px;
+  /* di atas navbar */
   left: 12px;
   right: 12px;
   z-index: 9000;
@@ -471,40 +513,47 @@ body.light {
     opacity 0.3s ease;
   pointer-events: none;
 }
+
 #pwa-install-banner.visible {
   transform: translateY(0);
   opacity: 1;
   pointer-events: all;
 }
+
 .pwa-banner-left {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
 }
+
 .pwa-banner-icon {
   width: 40px;
   height: 40px;
   border-radius: 10px;
   flex-shrink: 0;
 }
+
 .pwa-banner-title {
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 700;
   color: var(--txt);
 }
+
 .pwa-banner-sub {
   font-family: var(--font-ui);
   font-size: 11px;
   color: var(--dim2);
   margin-top: 2px;
 }
+
 .pwa-banner-actions {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
+
 .pwa-banner-dismiss {
   padding: 7px 12px;
   border-radius: 99px;
@@ -516,6 +565,7 @@ body.light {
   font-weight: 600;
   cursor: pointer;
 }
+
 .pwa-banner-install {
   padding: 7px 14px;
   border-radius: 99px;

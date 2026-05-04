@@ -521,8 +521,43 @@ async function saveDeck() {
 
 export function pdShowDeckOptions(deck) {
   optionDeck = deck;
-  setText("pd-deck-opt-edit", "Edit Deck");
-  setText("pd-deck-opt-delete", "Hapus Deck");
+  const modal = document.getElementById("pd-deck-options-modal");
+  const container = modal?.querySelector(".pd-modal-content");
+  if (!modal || !container) return;
+
+  // Update judul
+  const titleEl = container.querySelector(".pd-modal-label");
+  if (titleEl) titleEl.textContent = "OPSI DECK";
+
+  // Tampilkan kembali tombol Edit & Hapus
+  const btnEdit = document.getElementById("pd-deck-opt-edit");
+  const btnDel = document.getElementById("pd-deck-opt-delete");
+  if (btnEdit) { btnEdit.style.display = ""; btnEdit.textContent = "Edit Deck"; }
+  if (btnDel) { btnDel.style.display = ""; btnDel.textContent = "Hapus Deck"; }
+
+  // Sembunyikan tombol HSK yang tidak relevan
+  const btnBuka = document.getElementById("hsk-opt-open");
+  if (btnBuka) btnBuka.style.display = "none";
+
+  // Tombol Cetak PDF — di paling atas, styling konsisten
+  let btnPrint = document.getElementById("pd-deck-opt-print");
+  if (!btnPrint) {
+    btnPrint = document.createElement("button");
+    btnPrint.id = "pd-deck-opt-print";
+    btnPrint.className = "pd-modal-btn";
+    container.appendChild(btnPrint);
+  }
+  // Pindahkan ke paling atas (sebelum Edit Deck)
+  if (btnEdit && btnPrint.nextSibling !== btnEdit) {
+    container.insertBefore(btnPrint, btnEdit);
+  }
+  btnPrint.style.cssText = "display:block; width:100%; padding:16px; background:transparent; color:var(--gold); border:1.5px solid rgba(232,201,109,0.35); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; text-align:center; margin-bottom:10px; box-sizing:border-box;";
+  btnPrint.textContent = "🖨️ Cetak PDF (Lembar Latihan)";
+  btnPrint.onclick = () => {
+    pdHideDeckOptions();
+    window.preparePrintDeck?.(optionDeck.id, optionDeck.title);
+  };
+
   showModal("pd-deck-options-modal");
 }
 
