@@ -79,6 +79,14 @@ export function hideHistoryDropdown() {
 
 window.useSearchHistory = function(query) {
   if (query) {
+    const input = document.getElementById("kos-global-search");
+    if (input) {
+      input.value = query;
+      // Trigger search manually if needed
+      if (typeof window.onKosGlobalSearch === "function") {
+        window.onKosGlobalSearch();
+      }
+    }
     hideHistoryDropdown();
     if (typeof window.showSegmentedInSearch === "function") {
       window.showSegmentedInSearch(query);

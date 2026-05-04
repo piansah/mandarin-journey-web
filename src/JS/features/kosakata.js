@@ -59,90 +59,46 @@ import { isFavorited, toggleFavorite } from "./personal-deck.js";
  * @param {string} hanzi - teks yang diucapkan saat long-press
  * @param {Function} onTap - callback saat tap biasa
  */
+export function _attachLongPressTTS(el, hanzi, onTap) {
+  let pressTimer = null;
+  let isLongPress = false;
+  let startX = 0, startY = 0;
 
-export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
-  let pressTimer = null,
-    didLongPress = false,
-    didMove = false;
-  let startX = 0,
-    startY = 0;
-  let _wasTouched = false;
+  const start = (e) => {
+    isLongPress = false;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX; startY = clientY;
 
-  const _triggerLongPress = () => {
-    didLongPress = true;
-    if (onLongPress) onLongPress();
-    el.style.transition = "transform 0.2s";
-    el.style.transform = "scale(0.96)";
-    setTimeout(() => {
-      el.style.transform = "";
-    }, 300);
-    // Kunci status long press sedikit lebih lama untuk blokir klik hantu
-    setTimeout(() => {
-      didLongPress = false;
-    }, 500);
+    pressTimer = setTimeout(() => {
+      isLongPress = true;
+      if (window.navigator.vibrate) window.navigator.vibrate(50);
+      if (typeof window.speakTTS === "function" && hanzi) window.speakTTS(hanzi);
+      el.style.transform = "scale(0.95)";
+      setTimeout(() => { el.style.transform = ""; }, 200);
+    }, 600);
   };
 
-  el.addEventListener(
-    "touchstart",
-    (e) => {
-      e.stopPropagation();
-      didLongPress = false;
-      didMove = false;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      pressTimer = setTimeout(() => {
-        if (!didMove) {
-          _triggerLongPress();
-        }
-      }, 500);
-    },
-    { passive: false },
-  );
-
-  el.addEventListener("touchmove", (e) => {
-    const dx = Math.abs(e.touches[0].clientX - startX);
-    const dy = Math.abs(e.touches[0].clientY - startY);
-    if (dx > 10 || dy > 10) didMove = true;
-  }, { passive: true });
-
-  el.addEventListener("touchend", (e) => {
+  const end = (e) => {
     clearTimeout(pressTimer);
-    _wasTouched = true;
-    setTimeout(() => { _wasTouched = false; }, 500);
-    
-    // Jika baru saja long press, cegah kejadian klik bawaan
-    if (didLongPress) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
+    if (!isLongPress && onTap) onTap();
+  };
 
-    if (!didMove && onTap) {
-      e.preventDefault();
-      e.stopPropagation();
-      onTap();
-    }
-  });
+  const move = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) clearTimeout(pressTimer);
+  };
 
-  el.addEventListener("mousedown", (e) => {
-    e.stopPropagation();
-    if (_wasTouched) return;
-    didLongPress = false;
-    didMove = false;
-    pressTimer = setTimeout(() => {
-      _triggerLongPress();
-    }, 500);
-  });
+  el.addEventListener("touchstart", start, { passive: true });
+  el.addEventListener("touchend", end);
+  el.addEventListener("touchmove", move, { passive: true });
+  el.addEventListener("mousedown", start);
+  el.addEventListener("mouseup", end);
+  el.addEventListener("mousemove", move);
+  el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+}
 
-  el.addEventListener("mouseup", (e) => {
-    if (_wasTouched) return;
-    clearTimeout(pressTimer);
-    
-    if (didLongPress) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
 
     if (onTap) {
       e.preventDefault();
