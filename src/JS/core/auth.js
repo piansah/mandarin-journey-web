@@ -75,12 +75,18 @@ async function _ensureUserProfile(user) {
   _ensuredProfiles.add(user.id);
 }
 
-// FIX BUG 2: Wrapper agar checkOnboarding hanya jalan satu instance sekaligus
+// FIX BUG 2: Wrapper agar checkOnboarding hanya jalan satu instance sekaligus dengan Safety Timeout 5 detik
 async function _checkOnboardingOnce() {
   if (_onboardingCheckPromise) return _onboardingCheckPromise;
   _onboardingCheckPromise = (async () => {
     try {
-      return await window.checkOnboarding?.();
+      const timeout = new Promise(resolve => setTimeout(() => resolve(false), 5000));
+      return await Promise.race([
+        window.checkOnboarding?.() || Promise.resolve(false),
+        timeout
+      ]);
+    } catch (e) {
+      return false;
     } finally {
       _onboardingCheckPromise = null;
     }
@@ -101,15 +107,21 @@ function _loadGrammarCountsIfNeeded() {
     window.loadGrammarCounts();
 }
 
-function _backgroundLoad() {
+async function _backgroundLoad() {
   const now = Date.now();
   if (now - _lastBackgroundLoad < 5_000) return;
   _lastBackgroundLoad = now;
-  window.loadKosvok?.();
-  window.loadScores?.();
-  window.loadDashboardCounts?.();
-  _loadGrammarCountsIfNeeded();
-  window.updateHanziDashboard?.();
+  
+  try {
+    // Sequenced loading to avoid request storm
+    await window.loadScores?.();
+    await window.loadDashboardCounts?.();
+    window.loadKosvok?.();
+    _loadGrammarCountsIfNeeded();
+    window.updateHanziDashboard?.();
+  } catch (e) {
+    console.warn("Background load partial fail", e);
+  }
 }
 
 export async function initAuth() {

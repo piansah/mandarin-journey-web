@@ -182,8 +182,13 @@ function _triggerLayerRender(id) {
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
-      if (run() || attempts > 5) clearInterval(interval);
-    }, 200);
+      if (run() || attempts > 15) { // Increase to 15 attempts (4.5s total)
+        clearInterval(interval);
+        if (attempts > 15 && typeof run() !== "boolean") {
+          console.warn(`[navigation] Layer ${id} failed to render after 15 attempts.`);
+        }
+      }
+    }, 300); // Increase interval to 300ms
   }
 }
 

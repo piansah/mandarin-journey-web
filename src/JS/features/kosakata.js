@@ -99,26 +99,6 @@ export function _attachLongPressTTS(el, hanzi, onTap) {
   el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
 }
 
-
-    if (onTap) {
-      e.preventDefault();
-      e.stopPropagation();
-      onTap();
-    }
-  });
-
-  // Listener tambahan untuk memastikan klik tidak tembus
-  el.addEventListener("click", (e) => {
-    if (didLongPress) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  }, true);
-
-  el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-  el.addEventListener("contextmenu", (e) => e.preventDefault());
-}
-
 /**
  * Segmentasi Hanzi untuk contoh kalimat (Cross-Referencing)
  */
@@ -558,10 +538,10 @@ export async function _runKosGlobalSearch() {
         <div class="ssc-label">KONTEKS KALIMAT</div>
         <div class="ssc-text">${raw}</div>
       </div>
-      <div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Kosakata Ditemukan:</div>
+      <div style="font-size:11px;color:var(--dim);padding:0 20px 8px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Kosakata Ditemukan:</div>
     `;
   } else {
-    html += `<div style="font-size:11px;color:var(--dim);padding:12px 20px 8px;">${filtered.length} kata ditemukan</div>`;
+    html += `<div style="font-size:11px;color:var(--dim);padding:0 20px 8px;">${filtered.length} kata ditemukan</div>`;
   }
 
   html += `<div id="kos-global-list" style="display:flex;flex-direction:column;gap:10px;padding:0 16px 80px;"></div>`;

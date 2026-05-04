@@ -141,12 +141,27 @@ window.appReadyPromise = new Promise((resolve) => {
 
 export async function initApp() {
   try {
+    // 1. Pemuatan Kunci (Mandatory)
     await initKeys();
-    if (typeof window.initAuth === "function") await window.initAuth();
+    
+    // 2. Inisialisasi Auth & Navbar (Sequence)
+    if (typeof window.initAuth === "function") {
+      try {
+        await window.initAuth();
+      } catch (authErr) {
+        console.error("initApp: initAuth failed", authErr);
+      }
+    }
+    
     if (typeof window.initNavbar === "function") window.initNavbar();
-    if (typeof window.warmUpGlobalSearchCache === "function")
-      window.warmUpGlobalSearchCache();
+    
+    // 3. Background tasks (Non-blocking)
+    if (typeof window.warmUpGlobalSearchCache === "function") {
+      setTimeout(() => window.warmUpGlobalSearchCache(), 100);
+    }
+  } catch (err) {
+    console.error("initApp: Critical failure during initKeys", err);
   } finally {
-    _resolveAppReady(true);
+    if (typeof _resolveAppReady === "function") _resolveAppReady(true);
   }
 }
