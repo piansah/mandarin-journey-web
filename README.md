@@ -43,7 +43,3 @@ A premium web-based Mandarin learning application ([mandarin-journey.vercel.app]
 ---
 © 2026 Piansah — Mandarin Journey. All rights reserved.
 
-Rekomendasi Utama Sebelum Publish:
-   
-      navigation.js saat berpindah layar.
-   3. IndexedDB: Pindahkan cache kamus dari localStorage ke IndexedDB

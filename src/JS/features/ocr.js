@@ -29,17 +29,48 @@ export async function openOCRScanner() {
 
   openLayer("layer-ocr");
   _startCamera();
+  _setupOCRListeners();
 
   if (!_ocrWorker) _initWorker();
 }
 
-export function closeOCRScanner() {
+export async function closeOCRScanner() {
   if (_ocrStream) {
     _ocrStream.getTracks().forEach(track => track.stop());
     _ocrStream = null;
   }
+  
+  if (_ocrWorker) {
+    try {
+      await _ocrWorker.terminate();
+      _ocrWorker = null;
+    } catch (e) {
+      console.warn("OCR Worker terminate fail:", e);
+    }
+  }
+
   _isTorchOn = false;
+  _isOcrProcessing = false;
+  
+  // Bersihkan listener jika diperlukan
+  _cleanupOCRListeners();
+  
   closeLayer("layer-ocr");
+}
+
+let _ocrClickAbort = null;
+function _setupOCRListeners() {
+  if (_ocrClickAbort) _ocrClickAbort.abort();
+  _ocrClickAbort = new AbortController();
+
+  document.addEventListener("click", _handleOCRClick, { signal: _ocrClickAbort.signal });
+}
+
+function _cleanupOCRListeners() {
+  if (_ocrClickAbort) {
+    _ocrClickAbort.abort();
+    _ocrClickAbort = null;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -359,7 +390,7 @@ window.warmUpOCR = _initWorker;
 /* ══════════════════════════════════════════════════════════════
    EVENT LISTENERS (Delegated)
 ══════════════════════════════════════════════════════════════ */
-document.addEventListener("click", e => {
+function _handleOCRClick(e) {
   const ocrLayer = document.getElementById("layer-ocr");
   if (!ocrLayer || !ocrLayer.classList.contains("active")) return;
 
@@ -392,7 +423,7 @@ document.addEventListener("click", e => {
       }
     }, 350);
   }
-});
+}
 
 
 /* --- Global Bridge for History --- */

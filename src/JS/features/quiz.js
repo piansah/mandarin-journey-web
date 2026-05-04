@@ -601,14 +601,7 @@ export function retryQuiz() {
 
 /* ── Close Quiz ── */
 export function closeQuiz() {
-  lsRemoveScoped("hsk_active_quiz");
-  _isRestoringFromRefresh = false;
-  currentQuizData = null;
-  currentQuizKey = null;
-  allQ = [];
-  answered = {};
-  totalCorrect = 0;
-  totalAnswered = 0;
+  destroyQuiz();
   if (typeof window.backToLayer === "function")
     window.backToLayer("layer-quiz");
 }
@@ -617,6 +610,7 @@ export function closeQuiz() {
  * CLEANUP LOGIC: destroyQuiz
  */
 export function destroyQuiz() {
+  lsRemoveScoped("hsk_active_quiz");
   _isRestoringFromRefresh = false;
   currentQuizData = null;
   currentQuizKey = null;
@@ -624,6 +618,8 @@ export function destroyQuiz() {
   answered = {};
   totalCorrect = 0;
   totalAnswered = 0;
+  // Hentikan suara jika masih ada yang bicara
+  if (typeof window.cancelTTS === "function") window.cancelTTS();
 }
 window.destroyQuiz = destroyQuiz;
 
