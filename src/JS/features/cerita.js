@@ -11,6 +11,7 @@ import { showToast, showXPToast } from "../utilities/helpers.js";
 import { showDoneScreen } from "../core/done-screen.js";
 import { calcXPCeritaQuiz } from "../utilities/xp.js";
 import { XP } from "../utilities/xp.js";
+import { showPettool, hidePettool } from "../utilities/tooltip.js";
 
 let currentCeritaKey = null;
 let currentCeritaData = null;
@@ -253,22 +254,29 @@ export function renderCeritaBody() {
   });
 
   body.querySelectorAll(".cerita-hl").forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const allPopups = body.querySelectorAll(".cerita-popup");
-      const myPopup = el.querySelector(".cerita-popup");
-      const isOpen = myPopup.style.display === "block";
-      allPopups.forEach((p) => (p.style.display = "none"));
-      if (!isOpen) myPopup.style.display = "block";
-    });
-  });
-  body.querySelectorAll(".cerita-popup-speak").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (!currentCeritaKey) return;
-      const word = btn.dataset.word || "";
-      if (word) speakMandarin(word);
-    });
+    const word = el.dataset.word || el.textContent.trim();
+    const v = vocab[word] || { pinyin: "", arti: "" };
+
+    // Gunakan utility long press global
+    if (typeof window._attachLongPressTTS === 'function') {
+      window._attachLongPressTTS(el, null, 
+        () => { // Tap -> TTS
+          speakMandarin(word);
+        },
+        () => { // Hold -> Pettool
+          showPettool(el, { hanzi: word, pinyin: v.pinyin, arti: v.arti }, () => {
+             // Go to detail (requires searchAndOpenWord to be global)
+             if (window.searchAndOpenWord) window.searchAndOpenWord(word);
+          });
+        }
+      );
+    } else {
+        // Fallback jika global utility belum siap
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          speakMandarin(word);
+        });
+    }
   });
 
   document.removeEventListener("click", closeCeritaPopups);
@@ -290,7 +298,7 @@ function markVocab(text, vocabWords, vocab) {
     const v = vocab[word];
     const escapedWord = _escapeHtml(word);
     const pid = `__HL${pidx++}__`;
-    const tag = `<span class="cerita-hl" style="position:relative;display:inline-block;">${escapedWord}<span class="cerita-popup"><span class="cerita-py">${_escapeHtml(v.pinyin)}</span><span class="cerita-ar">${_escapeHtml(v.arti)}</span><button class="cerita-popup-speak" data-word="${escapedWord}" title="Dengar">🔊</button></span></span>`;
+    const tag = `<span class="cerita-hl" data-word="${escapedWord}">${escapedWord}</span>`;
     result = result.split(escapedWord).join(pid);
     placeholders[pid] = tag;
   });

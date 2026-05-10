@@ -55,6 +55,7 @@ import {
   loadTierStartDecks,
 } from "../utilities/tier-unlock.js";
 import { isFavorited, toggleFavorite } from "./personal-deck.js";
+import { showPettool, hidePettool } from "../utilities/tooltip.js";
 
 /**
  * Attach long-press handler ke element.
@@ -88,6 +89,10 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
       isLongPress = true;
       if (window.navigator.vibrate) window.navigator.vibrate(50);
 
+      // Visual feedback
+      el.classList.add("hanzi-holding");
+      el.style.transform = "scale(0.92)";
+
       // Jika ada callback long press, jalankan. Jika tidak, fallback ke TTS.
       if (typeof onLongPress === "function") {
         onLongPress();
@@ -95,9 +100,11 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
         window.speakTTS(hanzi);
       }
 
-      el.style.transform = "scale(0.95)";
-      setTimeout(() => { el.style.transform = ""; }, 200);
-    }, 600);
+      setTimeout(() => { 
+        el.style.transform = ""; 
+        // Jangan langsung hapus class holding jika ini pettool trigger
+      }, 200);
+    }, 550);
   };
 
   const end = (e) => {
@@ -130,6 +137,7 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   el.addEventListener("mousemove", move);
   el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
 }
+window._attachLongPressTTS = _attachLongPressTTS;
 
 /**
  * Segmentasi Hanzi untuk contoh kalimat (Cross-Referencing)
@@ -2421,10 +2429,18 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
     // Hold & Tap pada kata untuk Detail & TTS (Segmentasi Cerdas)
     card.querySelectorAll(".segmented-hz, .clickable-hz").forEach((hz) => {
       const match = hz.dataset.hanzi || hz.textContent;
-      // Pass null pada onTap (argumen ke-3) agar klik "nembus" ke parent card (TTS kalimat)
-      _attachLongPressTTS(hz, null, null,
-        () => { // Hold -> Detail
-          if (window.searchAndOpenWord) window.searchAndOpenWord(match);
+      
+      // Tap -> TTS Kata Saja
+      // Long Press -> Tooltip (Pettool)
+      _attachLongPressTTS(hz, null, 
+        () => { // Tap
+           if (window.speakTTS) window.speakTTS(match);
+        },
+        () => { // Hold -> Show Tooltip
+          const info = _globalSearchCache?.find(h => h.hanzi === match) || { hanzi: match, pinyin: '...', arti: 'Cari di detail...' };
+          showPettool(hz, info, () => {
+            if (window.searchAndOpenWord) window.searchAndOpenWord(match);
+          });
         }
       );
     });
