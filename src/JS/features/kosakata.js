@@ -67,14 +67,24 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   let pressTimer = null;
   let isLongPress = false;
   let startX = 0, startY = 0;
+  let isMoving = false;
 
   const start = (e) => {
+    // Prime TTS for iOS: Start a silent utterance on user gesture
+    if (e.type === 'touchstart' && window.speechSynthesis && typeof window.speakTTS === 'function') {
+      const silent = new SpeechSynthesisUtterance("");
+      silent.volume = 0;
+      window.speechSynthesis.speak(silent);
+    }
+
     isLongPress = false;
+    isMoving = false;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     startX = clientX; startY = clientY;
 
     pressTimer = setTimeout(() => {
+      if (isMoving) return;
       isLongPress = true;
       if (window.navigator.vibrate) window.navigator.vibrate(50);
 
@@ -92,17 +102,28 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
 
   const end = (e) => {
     clearTimeout(pressTimer);
-    if (!isLongPress && onTap) onTap();
+    if (isLongPress) {
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+    if (!isMoving && onTap) {
+      // Small delay to ensure any double-tap logic doesn't conflict
+      onTap();
+      if (e.cancelable) e.preventDefault();
+    }
   };
 
   const move = (e) => {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    if (Math.abs(clientX - startX) > 10 || Math.abs(clientY - startY) > 10) clearTimeout(pressTimer);
+    if (Math.abs(clientX - startX) > 20 || Math.abs(clientY - startY) > 20) {
+      isMoving = true;
+      clearTimeout(pressTimer);
+    }
   };
 
-  el.addEventListener("touchstart", start, { passive: true });
-  el.addEventListener("touchend", end);
+  el.addEventListener("touchstart", start, { passive: false });
+  el.addEventListener("touchend", end, { passive: false });
   el.addEventListener("touchmove", move, { passive: true });
   el.addEventListener("mousedown", start);
   el.addEventListener("mouseup", end);

@@ -217,30 +217,32 @@ export async function initSosialScreen() {
     _ensureXPDOM();
     _renderSkeleton();
 
-    // Jalankan fetch dengan timeout 15 detik
+    // Jalankan fetch dengan timeout 10 detik
     await Promise.race([
       (async () => {
         await _loadMyFollowing();
         await _loadXPLeaderboard(_activePeriod);
       })(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 15000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 10000))
     ]);
   } catch (e) {
     console.error("initSosialScreen error:", e);
-    // Bug #6: Only write to DOM if screen is still active
-    if (document.getElementById("sosial-screen")?.classList.contains("active")) {
-      const listEl = document.getElementById("xp-leaderboard-list");
-      if (listEl) {
-        listEl.innerHTML = `
-          <div class="sosial-empty">
-            <div class="sosial-empty-icon">⚠️</div>
-            <div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div>
-            <button class="sosial-guest-btn" style="margin-top:20px;" onclick="window.retrySosialInit()">Coba Lagi</button>
-          </div>`;
-      }
+    const listEl = document.getElementById("xp-leaderboard-list");
+    if (listEl && (listEl.innerHTML.includes("skeleton") || listEl.innerHTML === "")) {
+      listEl.innerHTML = `
+        <div class="sosial-empty">
+          <div class="sosial-empty-icon">⚠️</div>
+          <div>Gagal memuat data sosial.<br><small>Pastikan koneksi internet stabil.</small></div>
+          <button class="sosial-guest-btn" style="margin-top:20px;" onclick="window.retrySosialInit()">Coba Lagi</button>
+        </div>`;
     }
   } finally {
     _sosialInitInProgress = false;
+    // Safety check: if skeleton still exists, clear it
+    const listEl = document.getElementById("xp-leaderboard-list");
+    if (listEl && listEl.innerHTML.includes("skeleton") && !_leaderboardCache) {
+       _renderXPLeaderboardEmpty();
+    }
   }
 }
 

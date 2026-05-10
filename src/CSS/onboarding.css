@@ -98,7 +98,7 @@ body.ob-open {
 /* ── Slide Track ── */
 .ob-track {
   display: flex;
-  width: 700%;
+  width: 1000%;
   height: 100%;
   transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
@@ -106,7 +106,7 @@ body.ob-open {
 
 /* ── Single Slide ── */
 .ob-slide {
-  width: calc(100% / 7);
+  width: 10%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -823,14 +823,6 @@ body.light .ob-fc-c1 {
 /* ════════════════════════════════════════════════
    PLACEMENT SLIDES — tambahkan ke onboarding.css
 ════════════════════════════════════════════════ */
-
-/* Track width update — sekarang 11 slides */
-.ob-track {
-  width: calc(100% * 11);
-}
-.ob-slide {
-  width: calc(100% / 11);
-}
 
 /* ── Placement slide wrapper ── */
 .ob-pl-slide .ob-pl-vis {

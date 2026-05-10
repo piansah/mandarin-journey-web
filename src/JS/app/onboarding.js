@@ -325,8 +325,6 @@ export function _obGoTo(n) {
   if (n === 4) _obStartKalFC();
   if (n === 5) _obStartRead();
   else _obStopRead();
-  if (n === 6) _obStartPath();
-  else _obStopPath();
 }
 
 export function _obStartPlacement() {
@@ -557,55 +555,7 @@ function _obStartRead() {
   }, 1600);
 }
 
-let _obPathTimer = null,
-  _obPathFrame = null;
-function _obStopPath() {
-  if (_obPathTimer) {
-    clearTimeout(_obPathTimer);
-    _obPathTimer = null;
-  }
-  if (_obPathFrame) {
-    cancelAnimationFrame(_obPathFrame);
-    _obPathFrame = null;
-  }
-  const line = document.getElementById("ob-path-line");
-  if (line) line.style.strokeDashoffset = "750";
-  for (let i = 0; i < 5; i++) {
-    document.getElementById("ob-pd-" + i)?.classList.remove("show");
-    document.getElementById("ob-pl-" + i)?.classList.remove("show");
-  }
-}
-function _obStartPath() {
-  _obStopPath();
-  const line = document.getElementById("ob-path-line");
-  if (!line) return;
-  const totalLen = 750,
-    duration = 2200,
-    dotAt = [0, 0.25, 0.5, 0.75, 1.0],
-    triggered = [false, false, false, false, false];
-  let start = null;
-  function step(ts) {
-    if (_obCur !== 6) return;
-    if (!start) start = ts;
-    const progress = Math.min((ts - start) / duration, 1);
-    line.style.strokeDashoffset = String(totalLen * (1 - progress));
-    dotAt.forEach((threshold, i) => {
-      if (!triggered[i] && progress >= threshold) {
-        triggered[i] = true;
-        document.getElementById("ob-pd-" + i)?.classList.add("show");
-        document.getElementById("ob-pl-" + i)?.classList.add("show");
-      }
-    });
-    if (progress < 1) {
-      _obPathFrame = requestAnimationFrame(step);
-    } else {
-      _obPathTimer = setTimeout(() => {
-        if (_obCur === 6) _obStartPath();
-      }, 1500);
-    }
-  }
-  _obPathFrame = requestAnimationFrame(step);
-}
+
 
 /* ── Swipe gesture ── */
 (function () {

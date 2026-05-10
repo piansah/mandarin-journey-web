@@ -149,4 +149,5 @@ export function cancelTTS() {
 }
 
 window.speakMandarin = speakMandarin;
+window.speakTTS = speakMandarin;
 window.cancelTTS = cancelTTS; // ← tambah ini

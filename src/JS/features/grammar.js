@@ -846,12 +846,11 @@ export function gramRestart() {
 
 /* ── Close Grammar Screen ── */
 export function closeGrammar() {
-  currentGramKey = null;
-  currentGramData = null;
-  gramQ = [];
-  gramAnswered = {};
-  gramCorrect = 0;
-  gramAnsweredN = 0;
+  currentGramPattern = null;
+  gramQuestions = [];
+  gramIdx = 0;
+  gramAnswer = [];
+  gramChipUsed = [];
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   if (typeof window.backToLayer === "function")
     window.backToLayer("layer-grammar");
@@ -861,12 +860,11 @@ export function closeGrammar() {
  * CLEANUP LOGIC: destroyGrammar
  */
 export function destroyGrammar() {
-  currentGramKey = null;
-  currentGramData = null;
-  gramQ = [];
-  gramAnswered = {};
-  gramCorrect = 0;
-  gramAnsweredN = 0;
+  currentGramPattern = null;
+  gramQuestions = [];
+  gramIdx = 0;
+  gramAnswer = [];
+  gramChipUsed = [];
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 window.destroyGrammar = destroyGrammar;

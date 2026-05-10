@@ -63,15 +63,21 @@ export async function initProfileScreen() {
         initAvatarSystem(),
       ]),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Fetch Timeout")), 15000),
+        setTimeout(() => reject(new Error("Fetch Timeout")), 10000),
       ),
     ]);
-    _profInitInProgress = false;
     _renderProfileFull();
   } catch (e) {
     console.error("initProfileScreen error:", e);
-    _profInitInProgress = false;
     _renderProfileError();
+  } finally {
+    _profInitInProgress = false;
+    // Safety check: if skeleton still exists, clear it
+    const scroll = document.getElementById("prof-scroll");
+    if (scroll && scroll.innerHTML.includes("prof-skeleton")) {
+       if (_profData) _renderProfileFull();
+       else _renderProfileError();
+    }
   }
 }
 
