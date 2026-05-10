@@ -16,9 +16,6 @@ function _initPettool() {
     <div class="pettool-content">
       <span class="pettool-py" id="pt-py"></span>
       <span class="pettool-ar" id="pt-ar"></span>
-      <div class="pettool-detail-hint">
-        Tap / Hold untuk Detail <span>❯</span>
-      </div>
     </div>
     <div class="pettool-tip"></div>
   `;
@@ -77,19 +74,23 @@ export function showPettool(targetEl, data, onDetail) {
   _pettoolEl.style.left = `${left}px`;
 
   // Interaction inside tooltip
-  _pettoolEl.onclick = (e) => {
-    e.stopPropagation();
-    hidePettool();
-    if (onDetail) onDetail();
-  };
-
-  // Add long press to tooltip for detail (as requested)
-  // Reuse our logic
+  // Sesuai permintaan: Tap -> TTS, Hold -> Detail
   if (typeof window._attachLongPressTTS === 'function') {
-      window._attachLongPressTTS(_pettoolEl, null, null, () => {
+      window._attachLongPressTTS(_pettoolEl, null, 
+        () => { // Tap -> TTS
+          if (data.hanzi) speakTTS(data.hanzi);
+        }, 
+        () => { // Hold -> Detail
           hidePettool();
           if (onDetail) onDetail();
-      });
+        }
+      );
+  } else {
+      // Fallback
+      _pettoolEl.onclick = (e) => {
+        e.stopPropagation();
+        if (data.hanzi) speakTTS(data.hanzi);
+      };
   }
 
   // Highlight target
