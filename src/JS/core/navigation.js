@@ -17,6 +17,7 @@ let _isRestoringNav = false;
 const _screenScrollPos = {};
 const _layerRenderState = new Map();
 const NAV_STATE_KEY = "hsk_last_nav_state";
+const _NON_RESTORABLE_LAYERS = new Set(["layer-kos-word"]);
 
 // Flag: history sudah diinit atau belum
 let _historyReady = false;
@@ -106,7 +107,9 @@ function _isValidSnapshot(snap) {
   if (snap.activeScreen === "login-screen") return false;
   if (!document.getElementById(snap.activeScreen)) return false;
   return Array.isArray(snap.activeLayers) &&
-    snap.activeLayers.every((id) => document.getElementById(id));
+    snap.activeLayers.every((id) => (
+      document.getElementById(id) && !_NON_RESTORABLE_LAYERS.has(id)
+    ));
 }
 
 function _persistSnapshot(snap = _getSnapshot()) {
@@ -127,8 +130,13 @@ function _persistSnapshot(snap = _getSnapshot()) {
 function _readPersistedSnapshot() {
   try {
     const snap = JSON.parse(sessionStorage.getItem(NAV_STATE_KEY) || "null");
-    return _isValidSnapshot(snap) ? snap : null;
+    if (_isValidSnapshot(snap)) return snap;
+    sessionStorage.removeItem(NAV_STATE_KEY);
+    return null;
   } catch {
+    try {
+      sessionStorage.removeItem(NAV_STATE_KEY);
+    } catch {}
     return null;
   }
 }
