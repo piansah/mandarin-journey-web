@@ -1489,6 +1489,7 @@ let _kwdHeroTapReadyAt = 0;
 // ── Caching untuk tab ──
 let _exampleCache = new Map();
 let _compoundCache = new Map();
+const _EXAMPLE_CACHE_VERSION = "v2";
 
 // ── Stroke state ──
 let _strokeChars = [];
@@ -2360,8 +2361,10 @@ async function _loadKosWordExamples(hanzi) {
   const myId = ++_kosWordExamplesLoadId;
 
   // Cek Cache
-  if (_exampleCache.has(hanzi)) {
-    const { hData, uData } = _exampleCache.get(hanzi);
+  const cacheKey = `${_EXAMPLE_CACHE_VERSION}:${hanzi}`;
+
+  if (_exampleCache.has(cacheKey)) {
+    const { hData, uData } = _exampleCache.get(cacheKey);
     _renderKosWordExamples(listEl, hData, uData);
     return;
   }
@@ -2369,12 +2372,14 @@ async function _loadKosWordExamples(hanzi) {
   listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim);"><span class="spinner"></span></div>';
 
   try {
-    const [hRes, uRes] = await Promise.all([
+    const [hRes, userByWordRes, userBySentenceRes] = await Promise.all([
       _withKosTimeout(
         supa
           .from("hanzi_items")
-          .select("hanzi, pinyin, arti")
+          .select("id, hanzi_key, section_label, section_tag, sort_order, hanzi, pinyin, arti")
           .ilike("hanzi", `%${hanzi}%`)
+          .order("hanzi_key", { ascending: true })
+          .order("sort_order", { ascending: true })
           .limit(15),
         7000,
         { data: [] },
@@ -2382,7 +2387,16 @@ async function _loadKosWordExamples(hanzi) {
       _withKosTimeout(
         supa
           .from("word_examples")
-          .select("id, hanzi, pinyin, arti, added_by")
+          .select("id, word_hanzi, hanzi, pinyin, arti, added_by")
+          .eq("word_hanzi", hanzi)
+          .order("id", { ascending: true }),
+        7000,
+        { data: [] },
+      ),
+      _withKosTimeout(
+        supa
+          .from("word_examples")
+          .select("id, word_hanzi, hanzi, pinyin, arti, added_by")
           .ilike("hanzi", `%${hanzi}%`)
           .order("id", { ascending: true }),
         7000,
@@ -2393,8 +2407,17 @@ async function _loadKosWordExamples(hanzi) {
     if (myId !== _kosWordExamplesLoadId) return;
 
     const hData = hRes?.data || [];
-    const uData = uRes?.data || [];
-    _exampleCache.set(hanzi, { hData, uData });
+    const userSeen = new Set();
+    const uData = [
+      ...(userByWordRes?.data || []),
+      ...(userBySentenceRes?.data || []),
+    ].filter((row) => {
+      const key = row.id ?? `${row.word_hanzi}|${row.hanzi}`;
+      if (userSeen.has(key)) return false;
+      userSeen.add(key);
+      return true;
+    });
+    _exampleCache.set(cacheKey, { hData, uData });
     _renderKosWordExamples(listEl, hData, uData);
   } catch (e) {
     if (myId !== _kosWordExamplesLoadId) return;
@@ -2421,6 +2444,7 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
           onclick="event.stopPropagation(); window.openBugReportModal('Kesalahan Kalimat','Ditemukan kesalahan pada kalimat: ${(h.hanzi || "").replace(/'/g, "\\'")} (${(h.pinyin || "").replace(/'/g, "\\'")})', 'content', '${h.hanzi}')"
           style="position:absolute; top:10px; right:10px; z-index:11; color: var(--dim2);">${SVG_FLAG}</div>
         <div>
+          ${h.section_label ? `<div class="kwd-ex-source">${_escapeHtml(h.section_label)}</div>` : ""}
           <div class="kwd-ex-hz">${_segmentifyHanzi(h.hanzi)}</div>
           <div class="kwd-ex-py">${colorPy(h.pinyin)}</div>
           <div class="kwd-ex-id">${_escapeHtml(h.arti)}</div>
