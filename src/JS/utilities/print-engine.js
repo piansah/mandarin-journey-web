@@ -45,6 +45,9 @@ function _chunkRows(rows, size) {
 
 window.preparePrintDeck = async function (deckId, title) {
   showToast("Menyiapkan lembar latihan...", "info");
+  const printWindow = _openPrintWindow();
+  if (!printWindow) return;
+
   try {
     const { data, error } = await supa
       .from("personal_cards")
@@ -53,14 +56,18 @@ window.preparePrintDeck = async function (deckId, title) {
       .order("created_at", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata.");
-    _generatePrintOutput(title, data);
+    _generatePrintOutput(printWindow, title, data);
   } catch (err) {
     showToast(err.message, "err");
+    printWindow.close();
   }
 };
 
 window.preparePrintHsk = async function (setId, title) {
   showToast("Menyiapkan lembar latihan HSK...", "info");
+  const printWindow = _openPrintWindow();
+  if (!printWindow) return;
+
   try {
     const { data, error } = await supa
       .from("flashcard_cards")
@@ -70,11 +77,45 @@ window.preparePrintHsk = async function (setId, title) {
       .order("id", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata HSK.");
-    _generatePrintOutput(title, data);
+    _generatePrintOutput(printWindow, title, data);
   } catch (err) {
     showToast(err.message, "err");
+    printWindow.close();
   }
 };
+
+function _openPrintWindow() {
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    showToast("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.", "warn");
+    return null;
+  }
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8">
+      <title>Menyiapkan lembar latihan...</title>
+      <style>
+        body {
+          margin: 0;
+          display: grid;
+          min-height: 100vh;
+          place-items: center;
+          background: #f4f4f4;
+          color: #333;
+          font-family: Arial, sans-serif;
+        }
+      </style>
+    </head>
+    <body>Menyiapkan lembar latihan...</body>
+    </html>
+  `);
+  printWindow.document.close();
+  return printWindow;
+}
 
 function _renderBox(content = "", note = "") {
   return `
@@ -87,14 +128,8 @@ function _renderBox(content = "", note = "") {
   `;
 }
 
-function _generatePrintOutput(title, words) {
+function _generatePrintOutput(printWindow, title, words) {
   const rows = _extractHanziRows(words);
-  const printWindow = window.open("", "_blank");
-
-  if (!printWindow) {
-    showToast("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.", "warn");
-    return;
-  }
 
   if (!rows.length) {
     showToast("Tidak ada Hanzi yang bisa dicetak.", "warn");
