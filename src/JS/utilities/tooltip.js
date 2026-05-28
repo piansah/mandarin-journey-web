@@ -1,6 +1,6 @@
 /* © 2026 Piansah — Mandarin Journey. Tooltip (Pettool) Utility */
 
-import { speakTTS } from "./tts.js";
+import { speakMandarin as speakTTS } from "./tts.js";
 
 let _pettoolEl = null;
 let _pettoolTimeout = null;

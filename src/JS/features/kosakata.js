@@ -66,11 +66,24 @@ import { showPettool, hidePettool } from "../utilities/tooltip.js";
  */
 export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   let pressTimer = null;
+  let clearVisualTimer = null;
   let isLongPress = false;
   let startX = 0, startY = 0;
   let isMoving = false;
 
+  const clearHoldVisual = () => {
+    clearTimeout(clearVisualTimer);
+    el.classList.remove("hanzi-holding");
+    el.style.transform = "";
+  };
+
+  const cancelPress = () => {
+    clearTimeout(pressTimer);
+    clearHoldVisual();
+  };
+
   const start = (e) => {
+    cancelPress();
     // Prime TTS for iOS: Start a silent utterance on user gesture
     if (e.type === 'touchstart' && window.speechSynthesis && typeof window.speakTTS === 'function') {
       const silent = new SpeechSynthesisUtterance("");
@@ -100,15 +113,13 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
         window.speakTTS(hanzi);
       }
 
-      setTimeout(() => { 
-        el.style.transform = ""; 
-        // Jangan langsung hapus class holding jika ini pettool trigger
-      }, 200);
+      clearVisualTimer = setTimeout(clearHoldVisual, 220);
     }, 550);
   };
 
   const end = (e) => {
     clearTimeout(pressTimer);
+    clearHoldVisual();
     if (isLongPress) {
       if (e.cancelable) e.preventDefault();
       return;
@@ -125,7 +136,7 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     if (Math.abs(clientX - startX) > 20 || Math.abs(clientY - startY) > 20) {
       isMoving = true;
-      clearTimeout(pressTimer);
+      cancelPress();
     }
   };
 
@@ -135,7 +146,8 @@ export function _attachLongPressTTS(el, hanzi, onTap, onLongPress) {
   el.addEventListener("mousedown", start);
   el.addEventListener("mouseup", end);
   el.addEventListener("mousemove", move);
-  el.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+  el.addEventListener("mouseleave", cancelPress);
+  el.addEventListener("touchcancel", cancelPress, { passive: true });
 }
 window._attachLongPressTTS = _attachLongPressTTS;
 
@@ -734,10 +746,14 @@ async function _loadKosSrsProgress(cardIds) {
   // ✅ OPTIMASI: Gunakan satu query tunggal untuk semua progress user
   // Daripada query per-chunk card_id (yang lambat), ambil semua progress milik user ini.
   try {
-    const { data, error } = await supa
-      .from("user_card_progress")
-      .select("card_id, srs_level, interval_days, ease_factor, next_review, last_reviewed")
-      .eq("user_id", currentUser.id);
+    const { data, error } = await _withKosTimeout(
+      supa
+        .from("user_card_progress")
+        .select("card_id, srs_level, interval_days, ease_factor, next_review, last_reviewed")
+        .eq("user_id", currentUser.id),
+      5000,
+      { data: null, error: new Error("SRS progress timeout") },
+    );
 
     if (!error && data) {
       data.forEach((row) => progressMap.set(row.card_id, row));
@@ -765,7 +781,7 @@ async function _loadKosDueMap(sets) {
 
   let allCards = [];
   if (!_globalSearchCache) {
-    await initGlobalSearchCache();
+    await _withKosTimeout(initGlobalSearchCache(), 3500);
   }
 
   if (_globalSearchCache) {
@@ -774,15 +790,23 @@ async function _loadKosDueMap(sets) {
   } else {
     // Fallback jika cache benar-benar gagal
     for (const chunk of _chunkArray(setIds, 100)) {
-      const { data } = await supa
-        .from("flashcard_cards")
-        .select("id, set_id")
-        .in("set_id", chunk);
+      const { data } = await _withKosTimeout(
+        supa
+          .from("flashcard_cards")
+          .select("id, set_id")
+          .in("set_id", chunk),
+        5000,
+        { data: null },
+      );
       if (data) allCards.push(...data);
     }
   }
 
-  _kosSrsProgressMap = await _loadKosSrsProgress(allCards.map((c) => c.id));
+  _kosSrsProgressMap = await _withKosTimeout(
+    _loadKosSrsProgress(allCards.map((c) => c.id)),
+    5000,
+    new Map(),
+  );
 
   const dueMap = new Map();
   allCards.forEach((card) => {
@@ -1092,11 +1116,15 @@ export async function loadKosDeckData(setId) {
   listEl.innerHTML =
     '<div class="kos-empty"><span class="spinner"></span></div>';
 
-  const { data, error } = await supa
-    .from("flashcard_cards")
-    .select(FC_CARD_COLS)
-    .eq("set_id", setId)
-    .order("id", { ascending: true });
+  const { data, error } = await _withKosTimeout(
+    supa
+      .from("flashcard_cards")
+      .select(FC_CARD_COLS)
+      .eq("set_id", setId)
+      .order("id", { ascending: true }),
+    7000,
+    { data: null, error: new Error("Deck data timeout") },
+  );
 
   if (error || !data) {
     listEl.innerHTML =
@@ -1114,7 +1142,11 @@ async function _processKosDeckData(data, setId) {
     .map((c) => c.id);
 
   if (missingSrsIds.length > 0) {
-    const newSrsMap = await _loadKosSrsProgress(missingSrsIds);
+    const newSrsMap = await _withKosTimeout(
+      _loadKosSrsProgress(missingSrsIds),
+      5000,
+      new Map(),
+    );
     newSrsMap.forEach((val, key) => _kosSrsProgressMap.set(key, val));
   }
 
@@ -2031,7 +2063,7 @@ async function _renderWordTab() {
   const hanzi = _currentKosWord?.hanzi;
   if (!hanzi) return;
 
-  const myId = ++_kosWordLoadId;
+  const myId = ++_kosWordCompoundsLoadId;
 
   // Cek Cache
   if (_compoundCache.has(hanzi)) {
@@ -2043,13 +2075,17 @@ async function _renderWordTab() {
     '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span></div>';
 
   try {
-    const { data, error } = await supa
-      .from("word_compounds")
-      .select("hanzi, pinyin, arti, badge")
-      .ilike("hanzi", `%${hanzi}%`)
-      .order("frequency", { ascending: false });
+    const { data, error } = await _withKosTimeout(
+      supa
+        .from("word_compounds")
+        .select("hanzi, pinyin, arti, badge")
+        .ilike("hanzi", `%${hanzi}%`)
+        .order("frequency", { ascending: false }),
+      7000,
+      { data: null, error: new Error("Word tab timeout") },
+    );
 
-    if (myId !== _kosWordLoadId) return;
+    if (myId !== _kosWordCompoundsLoadId) return;
 
     if (!error && data && data.length > 0) {
       _compoundCache.set(hanzi, data);
@@ -2060,7 +2096,7 @@ async function _renderWordTab() {
     container.innerHTML =
       '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Tidak ada kata gabungan ditemukan.</div>';
   } catch (e) {
-    if (myId !== _kosWordLoadId) return;
+    if (myId !== _kosWordCompoundsLoadId) return;
     console.error("[Word] Error loading compounds:", e);
     container.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--dim);">Gagal memuat data.</div>';
   }
@@ -2129,15 +2165,15 @@ async function _renderCharTab() {
   const hanzi = _currentKosWord?.hanzi || "";
   if (!hanzi) return;
 
-  const myId = ++_kosWordLoadId;
+  const myId = ++_kosWordCharLoadId;
   const chars = [...hanzi];
 
   container.innerHTML =
     '<div style="text-align:center;padding:40px;color:var(--dim);"><span class="spinner"></span>Memuat data karakter...</div>';
 
   try {
-    const dict = await _loadDictMap();
-    if (myId !== _kosWordLoadId) return;
+    const dict = await _withKosTimeout(_loadDictMap(), 7000, {});
+    if (myId !== _kosWordCharLoadId) return;
 
 
     const IDS_LABEL = {
@@ -2248,7 +2284,7 @@ async function _renderCharTab() {
       html ||
       `<div style="text-align:center;padding:48px;color:var(--dim);">Tidak ada data.</div>`;
   } catch (e) {
-    if (myId !== _kosWordLoadId) return;
+    if (myId !== _kosWordCharLoadId) return;
     console.error("[Char] Error rendering char tab:", e);
     container.innerHTML = `<div style="text-align:center;padding:48px;color:var(--dim);">Gagal memuat data karakter.</div>`;
   }
@@ -2313,13 +2349,15 @@ function _navTab(dir) {
   if (idx >= 0 && idx < tabNames.length) _switchTab(tabNames[idx]);
 }
 
-let _kosWordLoadId = 0;
+let _kosWordExamplesLoadId = 0;
+let _kosWordCompoundsLoadId = 0;
+let _kosWordCharLoadId = 0;
 
 async function _loadKosWordExamples(hanzi) {
   const listEl = document.getElementById("kwd-examples-list");
   if (!listEl) return;
 
-  const myId = ++_kosWordLoadId;
+  const myId = ++_kosWordExamplesLoadId;
 
   // Cek Cache
   if (_exampleCache.has(hanzi)) {
@@ -2331,26 +2369,35 @@ async function _loadKosWordExamples(hanzi) {
   listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--dim);"><span class="spinner"></span></div>';
 
   try {
-    const { data: hData } = await supa
-      .from("hanzi_items")
-      .select("hanzi, pinyin, arti")
-      .ilike("hanzi", `%${hanzi}%`)
-      .limit(15);
-    const { data: uData } = await supa
-      .from("word_examples")
-      .select("id, hanzi, pinyin, arti, added_by")
-      .ilike("hanzi", `%${hanzi}%`)
-      .order("id", { ascending: true });
+    const [hRes, uRes] = await Promise.all([
+      _withKosTimeout(
+        supa
+          .from("hanzi_items")
+          .select("hanzi, pinyin, arti")
+          .ilike("hanzi", `%${hanzi}%`)
+          .limit(15),
+        7000,
+        { data: [] },
+      ),
+      _withKosTimeout(
+        supa
+          .from("word_examples")
+          .select("id, hanzi, pinyin, arti, added_by")
+          .ilike("hanzi", `%${hanzi}%`)
+          .order("id", { ascending: true }),
+        7000,
+        { data: [] },
+      ),
+    ]);
 
-    if (myId !== _kosWordLoadId) return;
+    if (myId !== _kosWordExamplesLoadId) return;
 
-    if (hData || uData) {
-      _exampleCache.set(hanzi, { hData: hData || [], uData: uData || [] });
-    }
-
-    _renderKosWordExamples(listEl, hData || [], uData || []);
+    const hData = hRes?.data || [];
+    const uData = uRes?.data || [];
+    _exampleCache.set(hanzi, { hData, uData });
+    _renderKosWordExamples(listEl, hData, uData);
   } catch (e) {
-    if (myId !== _kosWordLoadId) return;
+    if (myId !== _kosWordExamplesLoadId) return;
     listEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--dim);font-size:12px;">Gagal memuat contoh.</div>`;
   }
 }
