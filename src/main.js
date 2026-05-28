@@ -49,6 +49,7 @@ import "./JS/utilities/screen-anim.js";
 import "./JS/utilities/xp.js";
 import "./JS/utilities/stats-api.js";
 import "./JS/utilities/tier-unlock.js";
+import "./JS/utilities/print-engine.js";
 /* ── JS: Features ── */
 import "./JS/features/avatar.js";
 import "./JS/features/dashboard.js";

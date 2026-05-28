@@ -1,150 +1,248 @@
-/* © 2026 Piansah — Mandarin Journey. All rights reserved. */
 /* ============================================================
-   PRINT-ENGINE.JS — Lembar Latihan Tulis (Tianzige/Mizige)
+   PRINT-ENGINE.JS - Lembar Latihan Tulis Hanzi
    ============================================================ */
 
 import { supa } from "../core/config.js";
 import { showToast } from "../utilities/helpers.js";
 
-/**
- * Mempersiapkan data deck (Personal) untuk dicetak
- */
-window.preparePrintDeck = async function(deckId, title) {
+const GRID_COLS = 11;
+const GRID_ROWS_PER_PAGE = 15;
+
+function _escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function _extractHanziRows(words) {
+  const seen = new Set();
+  const rows = [];
+
+  (words || []).forEach((word) => {
+    [...String(word.hanzi || "")].forEach((char) => {
+      if (!/[\u3400-\u4dbf\u4e00-\u9fff]/.test(char) || seen.has(char)) return;
+      seen.add(char);
+      rows.push({
+        hanzi: char,
+        source: word.hanzi || "",
+      });
+    });
+  });
+
+  return rows;
+}
+
+function _chunkRows(rows, size) {
+  const chunks = [];
+  for (let i = 0; i < rows.length; i += size) {
+    chunks.push(rows.slice(i, i + size));
+  }
+  return chunks.length ? chunks : [[]];
+}
+
+window.preparePrintDeck = async function (deckId, title) {
   showToast("Menyiapkan lembar latihan...", "info");
   try {
     const { data, error } = await supa
       .from("personal_cards")
-      .select("hanzi, pinyin, arti")
+      .select("hanzi")
       .eq("deck_id", deckId)
       .order("created_at", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata.");
-    
     _generatePrintOutput(title, data);
   } catch (err) {
     showToast(err.message, "err");
   }
 };
 
-/**
- * Mempersiapkan data HSK (Developer) untuk dicetak
- */
-window.preparePrintHsk = async function(setId, title) {
+window.preparePrintHsk = async function (setId, title) {
   showToast("Menyiapkan lembar latihan HSK...", "info");
   try {
     const { data, error } = await supa
       .from("flashcard_cards")
-      .select("hanzi, pinyin, arti")
+      .select("hanzi")
       .eq("set_id", setId)
-      .is("added_by", null) // Ambil yang default dev saja
+      .is("added_by", null)
       .order("id", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata HSK.");
-    
     _generatePrintOutput(title, data);
   } catch (err) {
     showToast(err.message, "err");
   }
 };
 
-/**
- * Inti dari mesin cetak: Membuka jendela baru dan merender grid latihan
- */
+function _renderBox(content = "", note = "") {
+  return `
+    <div class="tz-box${content ? " hanzi-main" : ""}">
+      <span class="diag-a"></span>
+      <span class="diag-b"></span>
+      ${content ? _escapeHtml(content) : ""}
+      ${note ? `<span class="row-note">${_escapeHtml(note)}</span>` : ""}
+    </div>
+  `;
+}
+
 function _generatePrintOutput(title, words) {
+  const rows = _extractHanziRows(words);
   const printWindow = window.open("", "_blank");
+
   if (!printWindow) {
     showToast("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.", "warn");
     return;
   }
+
+  if (!rows.length) {
+    showToast("Tidak ada Hanzi yang bisa dicetak.", "warn");
+    printWindow.close();
+    return;
+  }
+
+  const pages = _chunkRows(rows, GRID_ROWS_PER_PAGE);
+  const safeTitle = _escapeHtml(title);
 
   const html = `
     <!DOCTYPE html>
     <html lang="id">
     <head>
       <meta charset="UTF-8">
-      <title>Latihan Tulis - ${title}</title>
+      <title>Latihan Tulis - ${safeTitle}</title>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
         @media print {
-          @page { size: A4; margin: 15mm; }
-          body { -webkit-print-color-adjust: exact; }
+          @page { size: A4; margin: 10mm; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none; }
+          .page {
+            margin: 0;
+            box-shadow: none;
+            page-break-after: always;
+          }
+          .page:last-child { page-break-after: auto; }
         }
 
+        * { box-sizing: border-box; }
+
         body {
-          font-family: 'Noto Sans SC', sans-serif;
-          background: white;
-          color: #333;
           margin: 0;
-          padding: 30px;
+          padding: 18px;
+          background: #f4f4f4;
+          color: #333;
+          font-family: Arial, "Noto Sans SC", sans-serif;
+        }
+
+        .page {
+          width: 210mm;
+          min-height: 297mm;
+          margin: 0 auto 18px;
+          padding: 13mm 19.6mm 12mm;
+          background: #fff;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
         }
 
         .header {
           text-align: center;
-          margin-bottom: 30px;
-          border-bottom: 2px solid #e2c96d;
-          padding-bottom: 10px;
-        }
-
-        .header h1 { margin: 0; color: #b48a3d; font-size: 24px; }
-        .header p { margin: 5px 0 0; color: #666; font-size: 14px; }
-
-        .word-section {
-          margin-bottom: 35px;
-          page-break-inside: avoid;
-        }
-
-        .word-info {
-          display: flex;
-          align-items: baseline;
-          gap: 15px;
           margin-bottom: 10px;
         }
 
-        .word-py { color: #b48a3d; font-weight: bold; font-size: 18px; }
-        .word-arti { color: #666; font-size: 14px; font-style: italic; }
-
-        .grid-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0;
+        .header h1 {
+          margin: 0;
+          color: #2e75b6;
+          font-size: 16px;
+          font-weight: 700;
         }
 
-        /* Tianzige Grid Style */
+        .header p {
+          margin: 5px 0 0;
+          color: #888;
+          font-size: 9px;
+        }
+
+        .student-line {
+          display: flex;
+          justify-content: space-between;
+          margin: 13px 0 10px;
+          color: #333;
+          font-size: 9px;
+        }
+
+        .sheet {
+          display: grid;
+          grid-template-columns: repeat(${GRID_COLS}, 44px);
+          grid-auto-rows: 44px;
+          justify-content: center;
+        }
+
+        .row { display: contents; }
+
         .tz-box {
-          width: 42px;
-          height: 42px;
-          border: 1px solid #ffcccc;
           position: relative;
           display: flex;
+          width: 44px;
+          height: 44px;
           align-items: center;
           justify-content: center;
-          background-image: 
-            linear-gradient(to right, transparent 49%, rgba(255, 204, 204, 0.5) 49%, rgba(255, 204, 204, 0.5) 51%, transparent 51%),
-            linear-gradient(to bottom, transparent 49%, rgba(255, 204, 204, 0.5) 49%, rgba(255, 204, 204, 0.5) 51%, transparent 51%);
+          border: 0.8px solid #555;
         }
 
-        .tz-box.hanzi-main {
-          font-family: 'Ma Shan Zheng', cursive;
-          font-size: 30px;
-          color: #000;
-          border-color: #f87171;
+        .tz-box::before,
+        .tz-box::after,
+        .diag-a,
+        .diag-b {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
         }
 
-        .tz-box.hanzi-fade {
-          font-family: 'Ma Shan Zheng', cursive;
+        .tz-box::before {
+          left: 50%;
+          width: 0;
+          border-left: 0.3px dashed #ccc;
+        }
+
+        .tz-box::after {
+          top: 50%;
+          height: 0;
+          border-top: 0.3px dashed #ccc;
+        }
+
+        .diag-a {
+          background: linear-gradient(45deg, transparent 49.4%, #d6d6d6 49.4%, #d6d6d6 50.6%, transparent 50.6%);
+        }
+
+        .diag-b {
+          background: linear-gradient(-45deg, transparent 49.4%, #d6d6d6 49.4%, #d6d6d6 50.6%, transparent 50.6%);
+        }
+
+        .hanzi-main {
+          color: #111;
+          font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
           font-size: 30px;
-          color: #e5e5e5;
+          font-weight: 700;
+        }
+
+        .row-note {
+          position: absolute;
+          left: 3px;
+          bottom: 2px;
+          max-width: 38px;
+          overflow: hidden;
+          color: #999;
+          font-size: 5.5px;
+          line-height: 1;
+          white-space: nowrap;
         }
 
         .footer {
-          position: fixed;
-          bottom: 10mm;
-          left: 15mm;
-          right: 15mm;
-          font-size: 10px;
+          margin-top: 9px;
           color: #999;
+          font-size: 8px;
           text-align: center;
         }
 
@@ -152,51 +250,49 @@ function _generatePrintOutput(title, words) {
           position: fixed;
           top: 20px;
           right: 20px;
-          padding: 12px 24px;
-          background: #b48a3d;
-          color: white;
-          border: none;
-          border-radius: 50px;
-          cursor: pointer;
-          font-weight: bold;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-          font-family: sans-serif;
           z-index: 9999;
+          padding: 12px 22px;
+          border: none;
+          border-radius: 999px;
+          background: #2e75b6;
+          color: white;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          cursor: pointer;
+          font-family: Arial, sans-serif;
+          font-weight: 700;
         }
-        
-        .print-btn-float:hover {
-          background: #8e6d30;
-          transform: translateY(-2px);
-        }
+
+        .print-btn-float:hover { background: #225b8d; }
       </style>
     </head>
     <body>
-      <button class="print-btn-float no-print" onclick="window.print()">🖨️ CETAK LEMBAR LATIHAN</button>
-      
-      <div class="header">
-        <h1>Mandarin Journey - Writing Sheet</h1>
-        <p>Deck: ${title}</p>
-      </div>
+      <button class="print-btn-float no-print" onclick="window.print()">Cetak / Simpan PDF</button>
 
-      ${words.map(w => `
-        <div class="word-section">
-          <div class="word-info">
-            <div class="word-py">${w.pinyin}</div>
-            <div class="word-arti">${w.arti}</div>
+      ${pages.map((pageRows, pageIdx) => `
+        <section class="page">
+          <div class="header">
+            <h1>汉字书写练习 - HSK Writing Practice</h1>
+            <p>Kertas A4 | ${GRID_COLS} kolom x ${GRID_ROWS_PER_PAGE} baris | Halaman ${pageIdx + 1}/${pages.length}</p>
           </div>
-          <div class="grid-row">
-            <div class="tz-box hanzi-main">${w.hanzi}</div>
-            <div class="tz-box hanzi-fade">${w.hanzi}</div>
-            <div class="tz-box hanzi-fade">${w.hanzi}</div>
-            <div class="tz-box hanzi-fade">${w.hanzi}</div>
-            ${Array(11).fill('<div class="tz-box"></div>').join('')}
+          <div class="student-line">
+            <span>Nama / 姓名 : _______________________</span>
+            <span>Tanggal / 日期 : _______________</span>
           </div>
-        </div>
-      `).join('')}
-
-      <div class="footer">
-        © 2026 Mandarin Journey — Digenerasi otomatis untuk latihan tulis tangan.
-      </div>
+          <div class="sheet">
+            ${Array.from({ length: GRID_ROWS_PER_PAGE }).map((_, rowIdx) => {
+              const row = pageRows[rowIdx];
+              return `<div class="row">
+                ${Array.from({ length: GRID_COLS }).map((__, colIdx) => {
+                  const isMain = row && colIdx === 0;
+                  const note = isMain && row.source !== row.hanzi ? row.source : "";
+                  return _renderBox(isMain ? row.hanzi : "", note);
+                }).join("")}
+              </div>`;
+            }).join("")}
+          </div>
+          <div class="footer">Mandarin Journey - ${safeTitle}</div>
+        </section>
+      `).join("")}
     </body>
     </html>
   `;
