@@ -141,21 +141,21 @@ function _readPersistedSnapshot() {
   }
 }
 
+function _setRestoredHistory(snap) {
+  const dashSnap = { activeScreen: "dash", activeLayers: [] };
+  _appHistory = [dashSnap, snap];
+  _appHistIdx = 1;
+  _historyReady = true;
+  history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+  history.pushState({ hskApp: true, idx: 1 }, "", window.location.href);
+}
+
 export function restoreLastNavigationState() {
   const snap = _readPersistedSnapshot();
   if (!snap) return false;
 
-  if (!_historyReady) {
-    _appHistory = [snap];
-    _appHistIdx = 0;
-    _historyReady = true;
-    history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
-  }
-
+  _setRestoredHistory(snap);
   _restoreSnapshot(snap);
-  _appHistory = [snap];
-  _appHistIdx = 0;
-  history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
   return true;
 }
 
@@ -440,10 +440,7 @@ export function initAppHistory() {
 
   const persisted = _readPersistedSnapshot();
   if (persisted) {
-    _appHistory = [persisted];
-    _appHistIdx = 0;
-    _historyReady = true;
-    history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+    _setRestoredHistory(persisted);
     _restoreSnapshot(persisted);
     initNavbar();
     return;
