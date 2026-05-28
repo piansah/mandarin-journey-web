@@ -157,6 +157,11 @@ export async function initAuth() {
         const anyScreenActive = !!document.querySelector(".screen.active");
 
         if ((onLoginScreen || !anyScreenActive) && !obShown) {
+          if (window.restoreLastNavigationState?.()) {
+            window.checkTour?.();
+            _backgroundLoad();
+            return;
+          }
           showScreen("dash");
           window.checkTour?.();
         }
@@ -279,7 +284,7 @@ export async function initAuth() {
     } else {
       if (_currentUser) {
         // FIX BUG 2: tidak perlu checkOnboarding lagi, sudah dilakukan di atas
-        showScreen("dash");
+        if (!window.restoreLastNavigationState?.()) showScreen("dash");
         window.checkTour?.();
       } else {
         showScreen("login-screen");
@@ -290,7 +295,7 @@ export async function initAuth() {
     lsRemoveScoped(LS_ACTIVE_QUIZ);
     lsRemoveScoped(LS_ACTIVE_KAL);
     if (_currentUser) {
-      showScreen("dash");
+      if (!window.restoreLastNavigationState?.()) showScreen("dash");
     } else {
       showScreen("login-screen");
     }
@@ -313,6 +318,10 @@ export async function initAuth() {
       const obShown = await _checkOnboardingOnce();
 
       if ((onLoginScreen || !anyScreenActive) && !obShown) {
+        if (window.restoreLastNavigationState?.()) {
+          _backgroundLoad();
+          return;
+        }
         showScreen("dash");
         window.checkTour?.();
       }

@@ -5,8 +5,7 @@
 import { supa } from "../core/config.js";
 import { showToast } from "../utilities/helpers.js";
 
-const GRID_COLS = 11;
-const GRID_ROWS_PER_PAGE = 15;
+const PRACTICE_BOXES = 8;
 
 function _escapeHtml(value) {
   return String(value ?? "")
@@ -35,12 +34,13 @@ function _extractHanziRows(words) {
   return rows;
 }
 
-function _chunkRows(rows, size) {
-  const chunks = [];
-  for (let i = 0; i < rows.length; i += size) {
-    chunks.push(rows.slice(i, i + size));
-  }
-  return chunks.length ? chunks : [[]];
+function _serializeRows(rows) {
+  return JSON.stringify(rows)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 window.preparePrintDeck = async function (deckId, title) {
@@ -117,17 +117,6 @@ function _openPrintWindow() {
   return printWindow;
 }
 
-function _renderBox(content = "", note = "") {
-  return `
-    <div class="tz-box${content ? " hanzi-main" : ""}">
-      <span class="diag-a"></span>
-      <span class="diag-b"></span>
-      ${content ? _escapeHtml(content) : ""}
-      ${note ? `<span class="row-note">${_escapeHtml(note)}</span>` : ""}
-    </div>
-  `;
-}
-
 function _generatePrintOutput(printWindow, title, words) {
   const rows = _extractHanziRows(words);
 
@@ -137,8 +126,8 @@ function _generatePrintOutput(printWindow, title, words) {
     return;
   }
 
-  const pages = _chunkRows(rows, GRID_ROWS_PER_PAGE);
-  const safeTitle = _escapeHtml(title);
+  const safeTitle = _escapeHtml(title || "Tulis Hanzi");
+  const serializedRows = _serializeRows(rows);
 
   const html = `
     <!DOCTYPE html>
@@ -150,15 +139,11 @@ function _generatePrintOutput(printWindow, title, words) {
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
 
         @media print {
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 9mm; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none; }
-          .page {
-            margin: 0;
-            box-shadow: none;
-            page-break-after: always;
-          }
-          .page:last-child { page-break-after: auto; }
+          .page { margin: 0; box-shadow: none; }
+          .char-card { break-inside: avoid; page-break-inside: avoid; }
         }
 
         * { box-sizing: border-box; }
@@ -175,14 +160,14 @@ function _generatePrintOutput(printWindow, title, words) {
           width: 210mm;
           min-height: 297mm;
           margin: 0 auto 18px;
-          padding: 13mm 19.6mm 12mm;
+          padding: 12mm 13mm;
           background: #fff;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
         }
 
         .header {
+          margin-bottom: 9px;
           text-align: center;
-          margin-bottom: 10px;
         }
 
         .header h1 {
@@ -201,32 +186,86 @@ function _generatePrintOutput(printWindow, title, words) {
         .student-line {
           display: flex;
           justify-content: space-between;
-          margin: 13px 0 10px;
+          margin: 11px 0 9px;
           color: #333;
           font-size: 9px;
         }
 
-        .sheet {
-          display: grid;
-          grid-template-columns: repeat(${GRID_COLS}, 44px);
-          grid-auto-rows: 44px;
-          justify-content: center;
+        .char-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
-        .row { display: contents; }
+        .char-card {
+          display: grid;
+          grid-template-columns: 24mm 1fr;
+          gap: 8px;
+          padding: 7px 0;
+          border-top: 0.8px solid #ddd;
+        }
 
-        .tz-box {
+        .char-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          color: #777;
+          font-size: 8px;
+          text-align: center;
+        }
+
+        .char-big {
+          color: #111;
+          font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+          font-size: 34px;
+          font-weight: 700;
+          line-height: 1;
+        }
+
+        .char-source {
+          max-width: 23mm;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .stroke-strip,
+        .practice-strip {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          align-items: center;
+        }
+
+        .stroke-strip { margin-bottom: 5px; }
+
+        .tz-box,
+        .stroke-box {
           position: relative;
           display: flex;
-          width: 44px;
-          height: 44px;
+          width: 13.5mm;
+          height: 13.5mm;
           align-items: center;
           justify-content: center;
           border: 0.8px solid #555;
+          background: #fff;
+        }
+
+        .stroke-box { border-color: #888; }
+
+        .stroke-box svg {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          height: 100%;
         }
 
         .tz-box::before,
         .tz-box::after,
+        .stroke-box::before,
+        .stroke-box::after,
         .diag-a,
         .diag-b {
           content: "";
@@ -235,13 +274,15 @@ function _generatePrintOutput(printWindow, title, words) {
           pointer-events: none;
         }
 
-        .tz-box::before {
+        .tz-box::before,
+        .stroke-box::before {
           left: 50%;
           width: 0;
           border-left: 0.3px dashed #ccc;
         }
 
-        .tz-box::after {
+        .tz-box::after,
+        .stroke-box::after {
           top: 50%;
           height: 0;
           border-top: 0.3px dashed #ccc;
@@ -255,23 +296,19 @@ function _generatePrintOutput(printWindow, title, words) {
           background: linear-gradient(-45deg, transparent 49.4%, #d6d6d6 49.4%, #d6d6d6 50.6%, transparent 50.6%);
         }
 
-        .hanzi-main {
-          color: #111;
-          font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-          font-size: 30px;
+        .stroke-num {
+          position: absolute;
+          top: 1px;
+          left: 2px;
+          z-index: 2;
+          color: #2e75b6;
+          font-size: 6px;
           font-weight: 700;
         }
 
-        .row-note {
-          position: absolute;
-          left: 3px;
-          bottom: 2px;
-          max-width: 38px;
-          overflow: hidden;
-          color: #999;
-          font-size: 5.5px;
-          line-height: 1;
-          white-space: nowrap;
+        .stroke-error {
+          color: #aaa;
+          font-size: 7px;
         }
 
         .footer {
@@ -301,37 +338,101 @@ function _generatePrintOutput(printWindow, title, words) {
       </style>
     </head>
     <body>
-      <button class="print-btn-float no-print" onclick="window.print()">Cetak / Simpan PDF</button>
+      <button class="print-btn-float no-print" onclick="window.print()">Download / Simpan PDF</button>
 
-      ${pages.map((pageRows, pageIdx) => `
-        <section class="page">
-          <div class="header">
-            <h1>汉字书写练习 - HSK Writing Practice</h1>
-            <p>Kertas A4 | ${GRID_COLS} kolom x ${GRID_ROWS_PER_PAGE} baris | Halaman ${pageIdx + 1}/${pages.length}</p>
-          </div>
-          <div class="student-line">
-            <span>Nama / 姓名 : _______________________</span>
-            <span>Tanggal / 日期 : _______________</span>
-          </div>
-          <div class="sheet">
-            ${Array.from({ length: GRID_ROWS_PER_PAGE }).map((_, rowIdx) => {
-              const row = pageRows[rowIdx];
-              return `<div class="row">
-                ${Array.from({ length: GRID_COLS }).map((__, colIdx) => {
-                  const isMain = row && colIdx === 0;
-                  const note = isMain && row.source !== row.hanzi ? row.source : "";
-                  return _renderBox(isMain ? row.hanzi : "", note);
-                }).join("")}
-              </div>`;
-            }).join("")}
-          </div>
-          <div class="footer">Mandarin Journey - ${safeTitle}</div>
-        </section>
-      `).join("")}
+      <section class="page">
+        <div class="header">
+          <h1>&#27721;&#23383;&#20070;&#20889;&#32451;&#20064; - Stroke Order Writing Practice</h1>
+          <p>Kertas A4 | Urutan goresan + kotak latihan | ${safeTitle}</p>
+        </div>
+        <div class="student-line">
+          <span>Nama / &#22995;&#21517; : _______________________</span>
+          <span>Tanggal / &#26085;&#26399; : _______________</span>
+        </div>
+        <div id="char-list" class="char-list">Memuat urutan goresan...</div>
+        <div class="footer">Mandarin Journey - ${safeTitle}</div>
+      </section>
+
+      <script>
+        const rows = ${serializedRows};
+        const practiceBoxes = ${PRACTICE_BOXES};
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function gridLines() {
+          return '<span class="diag-a"></span><span class="diag-b"></span>';
+        }
+
+        function renderPracticeBoxes() {
+          return Array.from({ length: practiceBoxes }, () =>
+            '<div class="tz-box">' + gridLines() + '</div>'
+          ).join("");
+        }
+
+        function pathSvg(strokes, activeIdx) {
+          const paths = strokes.map((path, idx) => {
+            const color = idx === activeIdx ? "#2e75b6" : "#222";
+            const opacity = idx <= activeIdx ? (idx === activeIdx ? "1" : "0.28") : "0";
+            return '<path d="' + escapeHtml(path) + '" fill="' + color + '" opacity="' + opacity + '"></path>';
+          }).join("");
+
+          return '<svg viewBox="0 0 1024 1024" aria-hidden="true">' +
+            '<g transform="translate(0, 900) scale(1, -1)">' + paths + '</g>' +
+          '</svg>';
+        }
+
+        async function loadStrokeData(char) {
+          const res = await fetch("https://cdn.jsdelivr.net/npm/hanzi-writer-data@latest/" + encodeURIComponent(char) + ".json");
+          if (!res.ok) throw new Error("Data stroke tidak tersedia");
+          return res.json();
+        }
+
+        async function renderRow(row) {
+          let strokeHtml = "";
+          try {
+            const data = await loadStrokeData(row.hanzi);
+            strokeHtml = data.strokes.map((_, idx) =>
+              '<div class="stroke-box">' +
+                gridLines() +
+                '<span class="stroke-num">' + (idx + 1) + '</span>' +
+                pathSvg(data.strokes, idx) +
+              '</div>'
+            ).join("");
+          } catch (err) {
+            strokeHtml = '<div class="stroke-error">Urutan goresan tidak tersedia untuk ' + escapeHtml(row.hanzi) + '</div>';
+          }
+
+          return '<article class="char-card">' +
+            '<div class="char-meta">' +
+              '<div class="char-big">' + escapeHtml(row.hanzi) + '</div>' +
+              '<div class="char-source">' + escapeHtml(row.source || row.hanzi) + '</div>' +
+            '</div>' +
+            '<div>' +
+              '<div class="stroke-strip">' + strokeHtml + '</div>' +
+              '<div class="practice-strip">' + renderPracticeBoxes() + '</div>' +
+            '</div>' +
+          '</article>';
+        }
+
+        (async function init() {
+          const list = document.getElementById("char-list");
+          list.innerHTML = (await Promise.all(rows.map(renderRow))).join("");
+          document.title = "Latihan Tulis - ${safeTitle}";
+          setTimeout(() => window.print(), 350);
+        })();
+      </script>
     </body>
     </html>
   `;
 
+  printWindow.document.open();
   printWindow.document.write(html);
   printWindow.document.close();
 }

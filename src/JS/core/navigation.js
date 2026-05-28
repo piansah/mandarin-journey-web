@@ -16,6 +16,7 @@ let _appHistIdx = -1;
 let _isRestoringNav = false;
 const _screenScrollPos = {};
 const _layerRenderState = new Map();
+const NAV_STATE_KEY = "hsk_last_nav_state";
 
 // Flag: history sudah diinit atau belum
 let _historyReady = false;
@@ -100,6 +101,56 @@ function _getSnapshot() {
   return { activeScreen, activeLayers };
 }
 
+function _isValidSnapshot(snap) {
+  if (!snap || typeof snap !== "object") return false;
+  if (snap.activeScreen === "login-screen") return false;
+  if (!document.getElementById(snap.activeScreen)) return false;
+  return Array.isArray(snap.activeLayers) &&
+    snap.activeLayers.every((id) => document.getElementById(id));
+}
+
+function _persistSnapshot(snap = _getSnapshot()) {
+  if (snap?.activeScreen === "login-screen") {
+    try {
+      sessionStorage.removeItem(NAV_STATE_KEY);
+    } catch {}
+    return;
+  }
+  if (!_isValidSnapshot(snap)) return;
+  try {
+    sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify(snap));
+  } catch (err) {
+    console.warn("[navigation] failed to persist nav state:", err);
+  }
+}
+
+function _readPersistedSnapshot() {
+  try {
+    const snap = JSON.parse(sessionStorage.getItem(NAV_STATE_KEY) || "null");
+    return _isValidSnapshot(snap) ? snap : null;
+  } catch {
+    return null;
+  }
+}
+
+export function restoreLastNavigationState() {
+  const snap = _readPersistedSnapshot();
+  if (!snap) return false;
+
+  if (!_historyReady) {
+    _appHistory = [snap];
+    _appHistIdx = 0;
+    _historyReady = true;
+    history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+  }
+
+  _restoreSnapshot(snap);
+  _appHistory = [snap];
+  _appHistIdx = 0;
+  history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+  return true;
+}
+
 function _restoreSnapshot(snap) {
   _cleanupCurrentScreen();
   _isRestoringNav = true;
@@ -151,6 +202,7 @@ function _restoreSnapshot(snap) {
   }
 
   _syncNavbar();
+  _persistSnapshot(snap);
   _isRestoringNav = false;
 }
 
@@ -259,6 +311,7 @@ function _triggerScreenInit(id) {
 export function _pushAppHistory() {
   if (_isRestoringNav) return;
   if (!_historyReady) return; // Jangan push sebelum init selesai
+  _persistSnapshot();
   _appHistory = _appHistory.slice(0, _appHistIdx + 1);
   _appHistory.push(_getSnapshot());
   _appHistIdx = _appHistory.length - 1;
@@ -302,6 +355,7 @@ export function closeLayer(id, _suppressHistory = false) {
   const onDash = document.getElementById("dash")?.classList.contains("active");
   setFabVisible(!anyLayerOpen && !!onDash);
   if (!_suppressHistory) _pushAppHistory();
+  else _persistSnapshot();
   _syncNavbar();
 }
 
@@ -339,6 +393,7 @@ export function backToDash() {
     dash.scrollTop = _screenScrollPos["dash"] ?? 0;
     _navStack = [{ type: "dash" }];
     setFabVisible(true);
+    _persistSnapshot();
     _syncNavbar();
   }
 }
@@ -361,6 +416,7 @@ export function backToLayer(id) {
   _navStack = [{ type: "layer", id }];
   _pushAppHistory();
   setFabVisible(false);
+  _persistSnapshot();
   _syncNavbar();
   _triggerLayerRender(id);
 }
@@ -374,6 +430,17 @@ export function backToLayer(id) {
 export function initAppHistory() {
   if (_historyReady) return; // Guard double-init
 
+  const persisted = _readPersistedSnapshot();
+  if (persisted) {
+    _appHistory = [persisted];
+    _appHistIdx = 0;
+    _historyReady = true;
+    history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+    _restoreSnapshot(persisted);
+    initNavbar();
+    return;
+  }
+
   const anyActive = document.querySelector(".screen.active");
   if (!anyActive) {
     const dash = document.getElementById("dash");
@@ -384,6 +451,7 @@ export function initAppHistory() {
   _appHistIdx = 0;
   _historyReady = true;
   history.replaceState({ hskApp: true, idx: 0 }, "", window.location.href);
+  _persistSnapshot();
   initNavbar();
 }
 
@@ -426,4 +494,5 @@ window.closeLayer = closeLayer;
 window.backToDash = backToDash;
 window.backToLayer = backToLayer;
 window.initAppHistory = initAppHistory;
+window.restoreLastNavigationState = restoreLastNavigationState;
 window.appBack = () => history.back();
