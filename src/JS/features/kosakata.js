@@ -230,6 +230,36 @@ export let kosSetsCache = null;
 let _renderKosDeckGridId = 0;
 let _kosActiveHSK = "all";
 let _kosSrsProgressMap = new Map();
+const KOS_DECK_CONTEXT_KEY = "hsk_kos_deck_context";
+
+function _saveKosDeckContext(setId, title = "", desc = "") {
+  try {
+    sessionStorage.setItem(
+      KOS_DECK_CONTEXT_KEY,
+      JSON.stringify({ setId, title, desc }),
+    );
+  } catch (_) {}
+}
+
+function _loadKosDeckContext() {
+  try {
+    const ctx = JSON.parse(sessionStorage.getItem(KOS_DECK_CONTEXT_KEY) || "null");
+    if (!ctx?.setId) return null;
+    return {
+      setId: Number(ctx.setId),
+      title: ctx.title || "",
+      desc: ctx.desc || "",
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+function _clearKosDeckContext() {
+  try {
+    sessionStorage.removeItem(KOS_DECK_CONTEXT_KEY);
+  } catch (_) {}
+}
 
 /* ── HSK Filter for Kos Deck Grid ── */
 export function filterKosHSK(level) {
@@ -844,6 +874,7 @@ export async function refreshKosDashboardProgress() {
 ══════════════════════════════════════════════════════════════ */
 
 export async function renderKosDeckGrid() {
+  _clearKosDeckContext();
   const grid = document.getElementById("kos-deck-grid");
   if (!grid) return;
 
@@ -952,6 +983,7 @@ export async function openKosDeck(setId, title, desc) {
   kosCurrentTitle = title || "";
   kosInitialized = false;
   kosAllData = [];
+  _saveKosDeckContext(setId, title, desc);
 
   const titleEl = document.getElementById("kos-deck-title");
   const subEl = document.getElementById("kos-deck-sub");
@@ -974,8 +1006,25 @@ export async function openKosDeck(setId, title, desc) {
 
 export async function restoreKosDeckLayer() {
   if (!kosCurrentSetId) {
-    await renderKosDeckGrid();
-    return;
+    const ctx = _loadKosDeckContext();
+    if (!ctx) {
+      document.getElementById("layer-kos-deck")?.classList.remove("active");
+      document.getElementById("layer-kos")?.classList.add("active");
+      await renderKosDeckGrid();
+      return;
+    }
+
+    kosCurrentSetId = ctx.setId;
+    kosCurrentDayNum = ctx.setId;
+    kosCurrentTitle = ctx.title;
+
+    const titleEl = document.getElementById("kos-deck-title");
+    const subEl = document.getElementById("kos-deck-sub");
+    if (titleEl) titleEl.textContent = ctx.title;
+    if (subEl) subEl.textContent = ctx.desc;
+
+    const search = document.getElementById("kos-search");
+    if (search) search.value = "";
   }
   _updateMulaiBtn(kosCurrentSetId);
   closeKosTooltip();
