@@ -6,6 +6,7 @@ import { colorPy } from "../utilities/pinyin.js";
 import { startFC } from "./flashcard.js";
 import { openKosWord, _attachLongPressTTS, performSmartSearch, showConfirm, closeKosDelModal } from "./kosakata.js";
 import { speakMandarin } from "../utilities/tts.js";
+import { SVG_BOOK, SVG_HEART_OUTLINE } from "../../assets/icon.js";
 
 let activeTheme = null;
 let activeDeck = null;
@@ -75,6 +76,12 @@ function esc(value) {
     .replace(/"/g, "&quot;");
 }
 
+function safeIntId(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
@@ -109,12 +116,12 @@ export function renderKoleksiSection() {
       </div>
       <div class="pd-menu-card">
         <div class="pd-menu-row" id="pd-btn-open-favorites">
-          <span class="pd-menu-icon">❤️</span>
+          <span class="pd-menu-icon">${SVG_HEART_OUTLINE}</span>
           <span class="pd-menu-label">Kata Favorit</span>
           <span class="pd-menu-arrow">❯</span>
         </div>
         <div class="pd-menu-row" id="pd-btn-open-themes">
-          <span class="pd-menu-icon">📚</span>
+          <span class="pd-menu-icon">${SVG_BOOK}</span>
           <span class="pd-menu-label">Deck Personal</span>
           <span class="pd-menu-arrow">❯</span>
         </div>
@@ -864,6 +871,7 @@ export async function addCard(card, row) {
 
   _isSaving = true;
   try {
+    const sourceId = safeIntId(card.source_id || card.id);
     const { error } = await supa.from("personal_cards").insert({
       user_id: user.id,
       deck_id: activeDeck.id,
@@ -872,7 +880,7 @@ export async function addCard(card, row) {
       arti: card.arti || "",
       word_class: card.word_class || null,
       source: card.source || (card.set_id ? "hsk" : "compound"),
-      source_id: card.id || null,
+      source_id: sourceId,
     });
 
     if (error) {

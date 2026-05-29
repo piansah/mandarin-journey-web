@@ -25,6 +25,7 @@ import {
 /* ── State ── */
 let _profLoaded = false;
 let _profInitInProgress = false; // guard: cegah concurrent init
+let _profInitPromise = null;
 let _profData = null;
 let _profStats = {};
 let _profFollowCounts = { followers: 0, following: 0 };
@@ -33,8 +34,17 @@ let _profFollowCounts = { followers: 0, following: 0 };
    ENTRY POINT
 ══════════════════════════════════════════ */
 export async function initProfileScreen() {
-  if (_profInitInProgress) return;
+  if (_profInitInProgress) return _profInitPromise;
   _profInitInProgress = true;
+  _profInitPromise = _initProfileScreenInner();
+  try {
+    await _profInitPromise;
+  } finally {
+    _profInitPromise = null;
+  }
+}
+
+async function _initProfileScreenInner() {
 
   // Cek sederhana: jika app belum siap, tunggu max 2 detik saja
   if (window.appReadyPromise) {
@@ -56,20 +66,21 @@ export async function initProfileScreen() {
 
   try {
     await Promise.race([
-      Promise.all([
+      Promise.allSettled([
         _loadProfileData(),
         _loadProfileStats(),
         _loadFollowCounts(),
         initAvatarSystem(),
       ]),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Fetch Timeout")), 10000),
-      ),
+      new Promise((resolve) => setTimeout(resolve, 10000)),
     ]);
+    _profData = _profData || {};
+    _profStats = _profStats || {};
     _renderProfileFull();
   } catch (e) {
     console.error("initProfileScreen error:", e);
-    _renderProfileError();
+    if (_profData || getCurrentUser()) _renderProfileFull();
+    else _renderProfileError();
   } finally {
     _profInitInProgress = false;
     // Safety check: if skeleton still exists, clear it

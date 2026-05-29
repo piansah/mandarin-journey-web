@@ -1323,7 +1323,8 @@
     <div class="pd-modal-backdrop" onclick="window.pdHideAddThemeModal()"></div>
     <div class="pd-modal-content">
       <div class="pd-form-title" id="pd-theme-modal-title">+ Tema Baru</div>
-      <input id="pd-theme-name" class="pd-input" placeholder="Nama tema (contoh: Makanan)" autocomplete="off"
+      <input id="pd-theme-name" class="pd-input" type="text" inputmode="text" enterkeyhint="done"
+        placeholder="Nama tema (contoh: Makanan)" autocomplete="off"
         autocorrect="off" autocapitalize="off" spellcheck="false" />
       <div id="pd-emoji-grid" class="pd-emoji-grid"></div>
       <button id="pd-btn-save-theme" class="pd-btn-main">Simpan Tema</button>
@@ -1335,9 +1336,11 @@
     <div class="pd-modal-backdrop" onclick="window.pdHideAddDeckModal()"></div>
     <div class="pd-modal-content">
       <div class="pd-form-title" id="pd-deck-modal-title">+ Deck Baru</div>
-      <input id="pd-deck-title-input" class="pd-input" placeholder="Judul deck (contoh: Kata kerja harian)"
+      <input id="pd-deck-title-input" class="pd-input" type="text" inputmode="text" enterkeyhint="done"
+        placeholder="Judul deck (contoh: Kata kerja harian)"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      <input id="pd-deck-desc-input" class="pd-input" placeholder="Deskripsi (opsional)" style="margin-top: 8px"
+      <input id="pd-deck-desc-input" class="pd-input" type="text" inputmode="text" enterkeyhint="done"
+        placeholder="Deskripsi (opsional)" style="margin-top: 8px"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
       <button id="pd-btn-save-deck" class="pd-btn-main" style="margin-top: 4px">
         Simpan Deck

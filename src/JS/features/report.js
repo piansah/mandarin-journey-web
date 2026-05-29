@@ -30,7 +30,7 @@ export function initBugReportFAB() {
   fab.className = "report-fab";
   fab.innerHTML = SVG_BUG;
   fab.title = "Laporkan Bug";
-  fab.onclick = openBugReportModal;
+  fab.onclick = () => openBugReportModal();
   document.body.appendChild(fab);
 }
 
@@ -85,6 +85,8 @@ function _injectReportModal() {
 }
 
 export function openBugReportModal(preTitle = "", preDesc = "", type = "bug", targetId = null) {
+  if (preTitle && typeof preTitle === "object") preTitle = "";
+  if (preDesc && typeof preDesc === "object") preDesc = "";
   console.log("[Report] Opening modal:", { preTitle, type, targetId });
   const modal = document.getElementById("bug-report-modal");
   if (modal) {
