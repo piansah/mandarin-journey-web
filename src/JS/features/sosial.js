@@ -217,14 +217,11 @@ export async function initSosialScreen() {
     _ensureXPDOM();
     _renderSkeleton();
 
-    // Jalankan fetch dengan timeout 10 detik
-    await Promise.race([
-      (async () => {
-        await _loadMyFollowing();
-        await _loadXPLeaderboard(_activePeriod);
-      })(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Fetch Timeout")), 10000))
-    ]);
+    await _loadMyFollowing().catch((err) => {
+      console.warn("_loadMyFollowing skipped:", err);
+      _followingCache = new Set();
+    });
+    await _loadXPLeaderboard(_activePeriod);
   } catch (e) {
     console.error("initSosialScreen error:", e);
     const listEl = document.getElementById("xp-leaderboard-list");
@@ -555,11 +552,15 @@ async function _loadXPLeaderboard(period) {
       .select("user_id, score, updated_at, type");
     if (startDate) query = query.gte("updated_at", startDate.toISOString());
     const { data: scores, error } = await query;
-    if (error) throw error;
+    if (error) console.warn("_loadXPLeaderboard scores fallback:", error);
 
     const currentUser = getCurrentUser();
     const userScoresMap = new Map();
-    if (scores) {
+    if (!currentUser && error) {
+      _renderGuest();
+      return;
+    }
+    if (!error && scores) {
       scores.forEach((s) => {
         if (!userScoresMap.has(s.user_id)) userScoresMap.set(s.user_id, []);
         userScoresMap.get(s.user_id).push({ type: s.type, score: s.score });
@@ -587,7 +588,7 @@ async function _loadXPLeaderboard(period) {
       return;
     }
 
-    const [{ data: profiles }, streakData] = await Promise.all([
+    const [profilesResult, streakResult] = await Promise.allSettled([
       supa
         .from("user_profile")
         .select("user_id, display_name, selected_avatar, custom_avatar_url")
@@ -598,6 +599,8 @@ async function _loadXPLeaderboard(period) {
         .in("user_id", userIds)
         .order("date", { ascending: false }),
     ]);
+    const profiles = profilesResult.status === "fulfilled" ? profilesResult.value.data : [];
+    const streakData = streakResult.status === "fulfilled" ? streakResult.value : { data: [] };
     const profileMap = new Map();
     (profiles || []).forEach((p) => profileMap.set(p.user_id, p));
     const streakMap = new Map();
@@ -640,6 +643,7 @@ async function _loadXPLeaderboard(period) {
   } catch (err) {
     if (requestId !== _leaderboardRequestId) return;
     console.error("_loadXPLeaderboard:", err);
+    _clearSosialBanners();
     const listEl = document.getElementById("xp-leaderboard-list");
     if (listEl)
       listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">⚠️</div><div>Gagal memuat leaderboard.<br><small>${_escapeHtml(err.message)}</small></div></div>`;
@@ -724,13 +728,17 @@ function _renderXPLeaderboard() {
 }
 
 function _renderXPLeaderboardEmpty() {
+  _clearSosialBanners();
+  const listEl = document.getElementById("xp-leaderboard-list");
+  if (listEl)
+    listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">📊</div><div>Belum ada data peringkat untuk periode ini.<br>Terus belajar untuk masuk leaderboard!</div></div>`;
+}
+
+function _clearSosialBanners() {
   const ligaEl = document.querySelector("#sosial-banners .liga-banner");
   const podiumEl = document.querySelector("#sosial-banners .sosial-podium");
   if (ligaEl) ligaEl.innerHTML = "";
   if (podiumEl) podiumEl.innerHTML = "";
-  const listEl = document.getElementById("xp-leaderboard-list");
-  if (listEl)
-    listEl.innerHTML = `<div class="sosial-empty"><div class="sosial-empty-icon">📊</div><div>Belum ada data peringkat untuk periode ini.<br>Terus belajar untuk masuk leaderboard!</div></div>`;
 }
 
 function _renderSkeleton() {
@@ -1316,6 +1324,7 @@ async function _toggleFollowFromList(userId, isCurrentlyFollowing, btnEl) {
 function _renderGuest() {
   const container = document.getElementById("sosial-scroll");
   if (!container) return;
+  _clearSosialBanners();
   container.innerHTML = `<div class="sosial-guest-wrap"><div class="sosial-guest-icon">🏆</div><div class="sosial-guest-title">Papan Peringkat</div><div class="sosial-guest-sub">Login untuk melihat peringkatmu,<br>bergabung dengan komunitas, dan mengikuti pengguna lain.</div><button class="sosial-guest-btn" onclick="window.openAuthModal()">Login / Daftar</button></div>`;
 }
 

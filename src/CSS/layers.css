@@ -43,6 +43,16 @@
   font-weight: 700;
   color: var(--gold);
 }
+.layer-title-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.layer-title-icon svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
 .layer-sub {
   font-size: 12px;
   color: var(--dim2);

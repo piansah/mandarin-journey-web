@@ -32,12 +32,14 @@ const _NAVBAR_SCREENS = [
 
 export function _syncNavbar() {
   const navbar = document.getElementById("bottom-navbar");
-  if (!navbar) return;
   const activeScreen = document.querySelector(".screen.active")?.id || "dash";
   const anyLayerOpen = document.querySelectorAll(".layer.active").length > 0;
   const shouldShow = _NAVBAR_SCREENS.includes(activeScreen) && !anyLayerOpen;
-  navbar.style.display = shouldShow ? "" : "none";
-  document.querySelectorAll(".bnav-item").forEach((item) => {
+  if (navbar) navbar.style.display = shouldShow ? "" : "none";
+  const desktopBtn = document.getElementById("desktop-menu-btn");
+  if (desktopBtn) desktopBtn.style.display = shouldShow ? "" : "none";
+  if (!shouldShow) closeDesktopSidebar();
+  document.querySelectorAll(".bnav-item, .desktop-nav-item").forEach((item) => {
     item.classList.toggle("active", item.dataset.screen === activeScreen);
   });
 
@@ -53,6 +55,26 @@ export function updateNavbar(_screenId) {
 }
 
 export function bnavGoTo(screenId) {
+  showScreen(screenId);
+}
+
+export function openDesktopSidebar() {
+  document.body.classList.add("desktop-sidebar-open");
+  document.getElementById("desktop-menu-btn")?.setAttribute("aria-expanded", "true");
+}
+
+export function closeDesktopSidebar() {
+  document.body.classList.remove("desktop-sidebar-open");
+  document.getElementById("desktop-menu-btn")?.setAttribute("aria-expanded", "false");
+}
+
+export function toggleDesktopSidebar() {
+  if (document.body.classList.contains("desktop-sidebar-open")) closeDesktopSidebar();
+  else openDesktopSidebar();
+}
+
+export function desktopNavGoTo(screenId) {
+  closeDesktopSidebar();
   showScreen(screenId);
 }
 
@@ -493,6 +515,10 @@ window.addEventListener("popstate", function (e) {
 
 /* ── Expose ke window (dipanggil dari HTML onclick) ── */
 window.bnavGoTo = bnavGoTo;
+window.desktopNavGoTo = desktopNavGoTo;
+window.openDesktopSidebar = openDesktopSidebar;
+window.closeDesktopSidebar = closeDesktopSidebar;
+window.toggleDesktopSidebar = toggleDesktopSidebar;
 window.showScreen = showScreen;
 window.openLayer = openLayer;
 window.closeLayer = closeLayer;

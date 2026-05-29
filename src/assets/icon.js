@@ -20,8 +20,9 @@ export const SVG_NODE_BOOK = `<svg width="32" height="32" viewBox="0 0 32 32" fi
 export const SVG_NODE_RANK = `<svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 7H22V17C22 20.3 19.3 23 16 23C12.7 23 10 20.3 10 17V7Z" fill="#C8C8C8"/><path d="M16 7H22V17C22 20.3 19.3 23 16 23V7Z" fill="#8A8A8A"/><path d="M7 9H10V15C10 15 8 14 7 12V9Z" fill="#F2F2F2"/><path d="M25 9H22V15C22 15 24 14 25 12V9Z" fill="#C8C8C8"/><rect x="13" y="23" width="6" height="3" fill="#8A8A8A"/><rect x="11" y="26" width="10" height="2" rx="1" fill="#6A6A6A"/></svg>`;
 
 // New icons
-export const SVG_HEART_OUTLINE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+export const SVG_HEART_OUTLINE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20.5S4.5 16.1 3.1 10.2C2.4 7.2 4.2 4.5 7.1 4.5C9 4.5 10.6 5.6 12 7.2C13.4 5.6 15 4.5 16.9 4.5C19.8 4.5 21.6 7.2 20.9 10.2C19.5 16.1 12 20.5 12 20.5Z" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const SVG_HEART_FILLED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6b6b" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+export const SVG_DECK_STACK = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4" width="13" height="15" rx="2.2" fill="currentColor" opacity="0.16"/><rect x="7" y="2.8" width="13" height="15" rx="2.2" stroke="currentColor" stroke-width="1.8"/><path d="M10 8H17M10 11.5H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 7.2V18C4 20.2 5.8 22 8 22H16.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
 export const SVG_FLAG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`;
 export const SVG_PLAY = `<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 export const SVG_PAUSE = `<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
@@ -63,6 +64,7 @@ window.SVG_LOGOUT = SVG_LOGOUT;
 window.svgMapIcon = svgMapIcon;
 window.SVG_HEART_OUTLINE = SVG_HEART_OUTLINE;
 window.SVG_HEART_FILLED = SVG_HEART_FILLED;
+window.SVG_DECK_STACK = SVG_DECK_STACK;
 window.SVG_FLAG = SVG_FLAG;
 window.SVG_PLAY = SVG_PLAY;
 window.SVG_PAUSE = SVG_PAUSE;

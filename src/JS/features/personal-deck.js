@@ -6,7 +6,7 @@ import { colorPy } from "../utilities/pinyin.js";
 import { startFC } from "./flashcard.js";
 import { openKosWord, _attachLongPressTTS, performSmartSearch, showConfirm, closeKosDelModal } from "./kosakata.js";
 import { speakMandarin } from "../utilities/tts.js";
-import { SVG_BOOK, SVG_HEART_OUTLINE } from "../../assets/icon.js";
+import { SVG_DECK_STACK, SVG_HEART_OUTLINE } from "../../assets/icon.js";
 
 let activeTheme = null;
 let activeDeck = null;
@@ -121,7 +121,7 @@ export function renderKoleksiSection() {
           <span class="pd-menu-arrow">❯</span>
         </div>
         <div class="pd-menu-row" id="pd-btn-open-themes">
-          <span class="pd-menu-icon">${SVG_BOOK}</span>
+          <span class="pd-menu-icon">${SVG_DECK_STACK}</span>
           <span class="pd-menu-label">Deck Personal</span>
           <span class="pd-menu-arrow">❯</span>
         </div>

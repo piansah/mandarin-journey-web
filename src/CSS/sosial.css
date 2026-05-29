@@ -223,6 +223,9 @@
   justify-content: center;
   gap: 6px;
 }
+.sosial-podium:empty {
+  display: none;
+}
 .podium-item {
   display: flex;
   flex-direction: column;
@@ -353,6 +356,18 @@
 /* ══════════════════════════════════════════════════════════════
    LEADERBOARD HEADER & TIER SELECTOR
 ══════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  #sosial-banners .liga-banner,
+  #sosial-banners .sosial-podium {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  #sosial-banners .sosial-podium {
+    min-height: 220px;
+  }
+}
+
 .sosial-leaderboard-header {
   display: flex;
   align-items: center;
