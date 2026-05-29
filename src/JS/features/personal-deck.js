@@ -871,19 +871,16 @@ export async function addCard(card, row) {
 
   _isSaving = true;
   try {
-    const sourceId = safeIntId(card.source_id || card.id);
     const { error } = await supa.from("personal_cards").insert({
       user_id: user.id,
       deck_id: activeDeck.id,
       hanzi: card.hanzi,
       pinyin: card.pinyin || "",
       arti: card.arti || "",
-      word_class: card.word_class || null,
-      source: card.source || (card.set_id ? "hsk" : "compound"),
-      source_id: sourceId,
     });
 
     if (error) {
+      console.error("addCard error:", error);
       showToast("Gagal menambah kata", "err");
       if (btn) {
         btn.innerHTML = "+ Tambah";
