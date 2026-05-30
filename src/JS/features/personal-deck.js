@@ -904,6 +904,8 @@ export async function addCard(card, row) {
 
 export async function removeCardFromSearch(card, row) {
   if (_isSaving || !activeDeck?.id) return;
+  const user = userOrLogin();
+  if (!user) return;
   const btn = row?.querySelector(".pd-search-add");
   if (btn) btn.disabled = true;
 
@@ -912,6 +914,7 @@ export async function removeCardFromSearch(card, row) {
     const { error } = await supa
       .from("personal_cards")
       .delete()
+      .eq("user_id", user.id)
       .eq("deck_id", activeDeck.id)
       .eq("hanzi", card.hanzi);
 

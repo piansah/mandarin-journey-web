@@ -156,7 +156,12 @@ export function showToast(msg, type = "info") {
     box-shadow:0 8px 32px rgba(0,0,0,0.4); z-index:9999; width:max-content; max-width:320px;
     opacity:0; transition:opacity 0.2s ease, transform 0.2s ease; white-space:normal; line-height:1.4;
   `;
-  toast.innerHTML = `<span style="font-size:16px;flex-shrink:0">${c.icon}</span><span>${msg}</span>`;
+  const icon = document.createElement("span");
+  icon.style.cssText = "font-size:16px;flex-shrink:0";
+  icon.textContent = c.icon;
+  const text = document.createElement("span");
+  text.textContent = String(msg ?? "");
+  toast.append(icon, text);
   document.body.appendChild(toast);
 
   requestAnimationFrame(() => {
@@ -187,7 +192,13 @@ export function showXPToast(xp, label) {
 
   const toast = document.createElement("div");
   toast.id = "xp-toast";
-  toast.innerHTML = `<span class="xp-toast-points">+${xp} XP</span><span class="xp-toast-label">${label}</span>`;
+  const points = document.createElement("span");
+  points.className = "xp-toast-points";
+  points.textContent = `+${xp} XP`;
+  const text = document.createElement("span");
+  text.className = "xp-toast-label";
+  text.textContent = String(label ?? "");
+  toast.append(points, text);
   document.body.appendChild(toast);
 
   requestAnimationFrame(() => {
