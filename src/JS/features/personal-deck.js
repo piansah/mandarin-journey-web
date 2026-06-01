@@ -872,11 +872,12 @@ export async function addCard(card, row) {
   _isSaving = true;
   try {
     const { error } = await supa.from("personal_cards").insert({
-      user_id: user.id,
       deck_id: activeDeck.id,
       hanzi: card.hanzi,
       pinyin: card.pinyin || "",
       arti: card.arti || "",
+      word_class: card.word_class || null,
+      catatan: card.catatan || null,
     });
 
     if (error) {
@@ -914,7 +915,6 @@ export async function removeCardFromSearch(card, row) {
     const { error } = await supa
       .from("personal_cards")
       .delete()
-      .eq("user_id", user.id)
       .eq("deck_id", activeDeck.id)
       .eq("hanzi", card.hanzi);
 
