@@ -68,6 +68,11 @@ async function _getUser() {
   return data?.user ?? null;
 }
 
+function _recordFCReview(card, quality) {
+  if (!card?._id) return;
+  _fcPendingReviews.set(card._id, quality);
+}
+
 /* ══════════════════════════════════════════════════════════════
    RESET STATE (BARU)
 ══════════════════════════════════════════════════════════════ */
@@ -586,6 +591,7 @@ export function fcNavHafal() {
   if (!fcCards.length || fcIdx >= fcCards.length) return;
   const card = fcCards[fcIdx];
   if (!card) return;
+  _recordFCReview(card, 5);
 
   if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
     _fcHafal++;
@@ -615,6 +621,7 @@ export function fcNavLupa() {
   if (!fcCards.length || fcIdx >= fcCards.length) return;
   const card = fcCards[fcIdx];
   if (!card) return;
+  _recordFCReview(card, 0);
 
   if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
     _fcLupaIds.add(card._id);
@@ -1068,9 +1075,7 @@ export function openKosvok() {
     const quality = dir > 0 ? 5 : 0;
     const card = fcCards[fcIdx];
 
-    if (card) {
-      _fcPendingReviews.set(card._id, quality);
-    }
+    _recordFCReview(card, quality);
 
     el.style.setProperty("--fc-tx", dir > 0 ? "130%" : "-130%");
     el.style.setProperty("--fc-rot", dir > 0 ? "18deg" : "-18deg");
