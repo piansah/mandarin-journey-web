@@ -546,7 +546,7 @@ export function pdShowDeckOptions(deck) {
   const btnBuka = document.getElementById("hsk-opt-open");
   if (btnBuka) btnBuka.style.display = "none";
 
-  // Tombol Cetak PDF — di paling atas, styling konsisten
+  // Tombol Download PDF — di paling atas, styling konsisten
   let btnPrint = document.getElementById("pd-deck-opt-print");
   if (!btnPrint) {
     btnPrint = document.createElement("button");
@@ -559,7 +559,7 @@ export function pdShowDeckOptions(deck) {
     container.insertBefore(btnPrint, btnEdit);
   }
   btnPrint.style.cssText = "display:block; width:100%; padding:16px; background:transparent; color:var(--gold); border:1.5px solid rgba(232,201,109,0.35); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; text-align:center; margin-bottom:10px; box-sizing:border-box;";
-  btnPrint.textContent = "🖨️ Cetak PDF (Lembar Latihan)";
+  btnPrint.textContent = "Download PDF (Lembar Latihan)";
   btnPrint.onclick = () => {
     pdHideDeckOptions();
     window.preparePrintDeck?.(optionDeck.id, optionDeck.title);

@@ -2830,7 +2830,7 @@ window.openHskPrintOptions = function (setId, title) {
   const titleEl = container.querySelector(".pd-modal-label");
   if (titleEl) titleEl.textContent = "OPSI KOSAKATA HSK";
 
-  // Tombol Cetak PDF
+  // Tombol Download PDF
   let btnPrint = document.getElementById("pd-deck-opt-print");
   if (!btnPrint) {
     btnPrint = document.createElement("button");
@@ -2840,7 +2840,7 @@ window.openHskPrintOptions = function (setId, title) {
   }
   btnPrint.style.display = "block";
   btnPrint.style.cssText = "display:block; width:100%; padding:16px; background:transparent; color:var(--gold); border:1.5px solid rgba(232,201,109,0.35); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; text-align:center; margin-bottom:12px; box-sizing:border-box;";
-  btnPrint.textContent = "🖨️ Cetak PDF (Lembar Latihan)";
+  btnPrint.textContent = "Download PDF (Lembar Latihan)";
   btnPrint.onclick = () => {
     modal.classList.remove("active");
     if (typeof window.preparePrintHsk === "function") {

@@ -15,6 +15,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",
     "hanzi-writer": "^3.7.3",
+    "jspdf": "^4.2.1",
     "tesseract.js": "^7.0.0"
   }
 }

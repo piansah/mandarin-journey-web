@@ -6,15 +6,17 @@ import { supa } from "../core/config.js";
 import { showToast } from "../utilities/helpers.js";
 
 const PRACTICE_BOXES = 8;
-
-function _escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+const A4_WIDTH_MM = 210;
+const A4_HEIGHT_MM = 297;
+const PDF_SCALE = 3;
+const PAGE_WIDTH = 794 * PDF_SCALE;
+const PAGE_HEIGHT = 1123 * PDF_SCALE;
+const PAGE_PAD = 52 * PDF_SCALE;
+const ROW_GAP = 10 * PDF_SCALE;
+const BOX_SIZE = 51 * PDF_SCALE;
+const BOX_GAP = 10 * PDF_SCALE;
+const META_WIDTH = 92 * PDF_SCALE;
+const STROKE_DATA_BASE = "https://cdn.jsdelivr.net/npm/hanzi-writer-data@latest/";
 
 function _extractHanziRows(words) {
   const seen = new Set();
@@ -34,19 +36,8 @@ function _extractHanziRows(words) {
   return rows;
 }
 
-function _serializeRows(rows) {
-  return JSON.stringify(rows)
-    .replace(/</g, "\\u003c")
-    .replace(/>/g, "\\u003e")
-    .replace(/&/g, "\\u0026")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
-}
-
 window.preparePrintDeck = async function (deckId, title) {
   showToast("Menyiapkan lembar latihan...", "info");
-  const printWindow = _openPrintWindow();
-  if (!printWindow) return;
 
   try {
     const { data, error } = await supa
@@ -56,17 +47,14 @@ window.preparePrintDeck = async function (deckId, title) {
       .order("created_at", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata.");
-    _generatePrintOutput(printWindow, title, data);
+    await _downloadPracticePdf(title, data);
   } catch (err) {
     showToast(err.message, "err");
-    printWindow.close();
   }
 };
 
 window.preparePrintHsk = async function (setId, title) {
   showToast("Menyiapkan lembar latihan HSK...", "info");
-  const printWindow = _openPrintWindow();
-  if (!printWindow) return;
 
   try {
     const { data, error } = await supa
@@ -77,362 +65,252 @@ window.preparePrintHsk = async function (setId, title) {
       .order("id", { ascending: true });
 
     if (error || !data) throw new Error("Gagal memuat data kata HSK.");
-    _generatePrintOutput(printWindow, title, data);
+    await _downloadPracticePdf(title, data);
   } catch (err) {
     showToast(err.message, "err");
-    printWindow.close();
   }
 };
 
-function _openPrintWindow() {
-  const printWindow = window.open("", "_blank");
-
-  if (!printWindow) {
-    showToast("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.", "warn");
-    return null;
-  }
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="id">
-    <head>
-      <meta charset="UTF-8">
-      <title>Menyiapkan lembar latihan...</title>
-      <style>
-        body {
-          margin: 0;
-          display: grid;
-          min-height: 100vh;
-          place-items: center;
-          background: #f4f4f4;
-          color: #333;
-          font-family: Arial, sans-serif;
-        }
-      </style>
-    </head>
-    <body>Menyiapkan lembar latihan...</body>
-    </html>
-  `);
-  printWindow.document.close();
-  return printWindow;
+function _safeFileName(value) {
+  return String(value || "lembar-latihan-hanzi")
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, "-")
+    .slice(0, 80) || "lembar-latihan-hanzi";
 }
 
-function _generatePrintOutput(printWindow, title, words) {
+async function _loadStrokeData(char) {
+  const res = await fetch(`${STROKE_DATA_BASE}${encodeURIComponent(char)}.json`);
+  if (!res.ok) throw new Error("Data stroke tidak tersedia");
+  return res.json();
+}
+
+async function _loadRowsWithStrokes(rows) {
+  return Promise.all(
+    rows.map(async (row) => {
+      try {
+        const data = await _loadStrokeData(row.hanzi);
+        return { ...row, strokes: data.strokes || [] };
+      } catch {
+        return { ...row, strokes: [] };
+      }
+    }),
+  );
+}
+
+function _makeCanvas() {
+  const canvas = document.createElement("canvas");
+  canvas.width = PAGE_WIDTH;
+  canvas.height = PAGE_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+  ctx.textBaseline = "alphabetic";
+  return { canvas, ctx };
+}
+
+function _drawText(ctx, text, x, y, options = {}) {
+  ctx.fillStyle = options.color || "#222222";
+  ctx.font = `${options.weight || 400} ${options.size}px ${options.family || "Arial, sans-serif"}`;
+  ctx.textAlign = options.align || "left";
+  ctx.fillText(String(text ?? ""), x, y);
+}
+
+function _drawTianziGrid(ctx, x, y, size, border = "#666666") {
+  ctx.save();
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, size, size);
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = "#cfcfcf";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x + size / 2, y);
+  ctx.lineTo(x + size / 2, y + size);
+  ctx.moveTo(x, y + size / 2);
+  ctx.lineTo(x + size, y + size / 2);
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + size, y + size);
+  ctx.moveTo(x + size, y);
+  ctx.lineTo(x, y + size);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function _drawStrokePath(ctx, strokes, activeIdx, x, y, size) {
+  _drawTianziGrid(ctx, x, y, size, "#888888");
+  if (!strokes?.length || typeof Path2D === "undefined") return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, size, size);
+  ctx.clip();
+  ctx.translate(x + size * 0.04, y + size * 0.08);
+  const scale = (size * 0.92) / 1024;
+  ctx.scale(scale, scale);
+  ctx.translate(0, 900);
+  ctx.scale(1, -1);
+
+  strokes.forEach((path, idx) => {
+    if (idx > activeIdx) return;
+    ctx.fillStyle = idx === activeIdx ? "#2e75b6" : "rgba(34,34,34,0.28)";
+    ctx.fill(new Path2D(path));
+  });
+  ctx.restore();
+
+  _drawText(ctx, activeIdx + 1, x + 7, y + 18, {
+    color: "#2e75b6",
+    size: 15,
+    weight: 700,
+  });
+}
+
+function _drawPracticeBox(ctx, x, y) {
+  _drawTianziGrid(ctx, x, y, BOX_SIZE, "#555555");
+}
+
+function _drawHeader(ctx, title, pageNo) {
+  _drawText(ctx, "Hanzi Writing Practice", PAGE_WIDTH / 2, 62 * PDF_SCALE, {
+    align: "center",
+    color: "#2e75b6",
+    size: 17 * PDF_SCALE,
+    weight: 700,
+  });
+  _drawText(ctx, `A4 worksheet | Stroke order + practice boxes | ${title}`, PAGE_WIDTH / 2, 82 * PDF_SCALE, {
+    align: "center",
+    color: "#777777",
+    size: 9 * PDF_SCALE,
+  });
+  _drawText(ctx, "Nama: _______________________", PAGE_PAD, 116 * PDF_SCALE, {
+    size: 10 * PDF_SCALE,
+  });
+  _drawText(ctx, "Tanggal: _______________", PAGE_WIDTH - PAGE_PAD, 116 * PDF_SCALE, {
+    align: "right",
+    size: 10 * PDF_SCALE,
+  });
+  _drawText(ctx, `Mandarin Journey - ${title} - ${pageNo}`, PAGE_WIDTH / 2, PAGE_HEIGHT - 28 * PDF_SCALE, {
+    align: "center",
+    color: "#999999",
+    size: 8 * PDF_SCALE,
+  });
+}
+
+function _estimateRowHeight(row) {
+  const strokeCount = Math.max(1, row.strokes?.length || 1);
+  const strokeRows = Math.ceil(strokeCount / 8);
+  const practiceRows = Math.ceil(PRACTICE_BOXES / 8);
+  return (18 * PDF_SCALE) + (strokeRows + practiceRows) * (BOX_SIZE + BOX_GAP);
+}
+
+function _drawRow(ctx, row, y) {
+  const rowHeight = _estimateRowHeight(row);
+  ctx.save();
+  ctx.strokeStyle = "#dddddd";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAGE_PAD, y);
+  ctx.lineTo(PAGE_WIDTH - PAGE_PAD, y);
+  ctx.stroke();
+
+  const metaX = PAGE_PAD;
+  const centerX = metaX + META_WIDTH / 2;
+  _drawText(ctx, row.hanzi, centerX, y + 50 * PDF_SCALE, {
+    align: "center",
+    color: "#111111",
+    size: 36 * PDF_SCALE,
+    weight: 700,
+    family: "\"Microsoft YaHei\", \"Noto Sans SC\", sans-serif",
+  });
+  _drawText(ctx, row.source || row.hanzi, centerX, y + 75 * PDF_SCALE, {
+    align: "center",
+    color: "#777777",
+    size: 8 * PDF_SCALE,
+    family: "\"Microsoft YaHei\", Arial, sans-serif",
+  });
+
+  const startX = PAGE_PAD + META_WIDTH + 20 * PDF_SCALE;
+  const maxX = PAGE_WIDTH - PAGE_PAD;
+  let x = startX;
+  let boxY = y + 18 * PDF_SCALE;
+
+  const strokes = row.strokes || [];
+  if (strokes.length) {
+    strokes.forEach((_, idx) => {
+      if (x + BOX_SIZE > maxX) {
+        x = startX;
+        boxY += BOX_SIZE + BOX_GAP;
+      }
+      _drawStrokePath(ctx, strokes, idx, x, boxY, BOX_SIZE);
+      x += BOX_SIZE + BOX_GAP;
+    });
+  } else {
+    _drawText(ctx, "Stroke data unavailable", startX, boxY + 27 * PDF_SCALE, {
+      color: "#999999",
+      size: 8 * PDF_SCALE,
+    });
+  }
+
+  x = startX;
+  boxY += BOX_SIZE + BOX_GAP;
+  for (let i = 0; i < PRACTICE_BOXES; i++) {
+    if (x + BOX_SIZE > maxX) {
+      x = startX;
+      boxY += BOX_SIZE + BOX_GAP;
+    }
+    _drawPracticeBox(ctx, x, boxY);
+    x += BOX_SIZE + BOX_GAP;
+  }
+
+  ctx.restore();
+  return rowHeight;
+}
+
+async function _downloadPracticePdf(title, words) {
   const rows = _extractHanziRows(words);
 
   if (!rows.length) {
     showToast("Tidak ada Hanzi yang bisa dicetak.", "warn");
-    printWindow.close();
     return;
   }
 
-  const safeTitle = _escapeHtml(title || "Tulis Hanzi");
-  const serializedRows = _serializeRows(rows);
+  const safeTitle = title || "Tulis Hanzi";
+  showToast("Mengunduh data stroke...", "info");
+  const [{ jsPDF }, rowsWithStrokes] = await Promise.all([
+    import("jspdf"),
+    _loadRowsWithStrokes(rows),
+  ]);
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+  });
 
-  const html = `
-    <!DOCTYPE html>
-    <html lang="id">
-    <head>
-      <meta charset="UTF-8">
-      <title>Latihan Tulis - ${safeTitle}</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+  let pageNo = 1;
+  let { canvas, ctx } = _makeCanvas();
+  _drawHeader(ctx, safeTitle, pageNo);
+  let y = 132 * PDF_SCALE;
+  const maxY = PAGE_HEIGHT - 48 * PDF_SCALE;
 
-        @media print {
-          @page { size: A4; margin: 9mm; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none; }
-          .page { margin: 0; box-shadow: none; }
-          .char-card { break-inside: avoid; page-break-inside: avoid; }
-        }
+  function addCanvasPage() {
+    const img = canvas.toDataURL("image/jpeg", 0.92);
+    if (pageNo > 1) pdf.addPage();
+    pdf.addImage(img, "JPEG", 0, 0, A4_WIDTH_MM, A4_HEIGHT_MM);
+  }
 
-        * { box-sizing: border-box; }
+  rowsWithStrokes.forEach((row) => {
+    const rowHeight = _estimateRowHeight(row);
+    if (y + rowHeight > maxY) {
+      addCanvasPage();
+      pageNo++;
+      ({ canvas, ctx } = _makeCanvas());
+      _drawHeader(ctx, safeTitle, pageNo);
+      y = 132 * PDF_SCALE;
+    }
+    y += _drawRow(ctx, row, y) + ROW_GAP;
+  });
 
-        body {
-          margin: 0;
-          padding: 18px;
-          background: #f4f4f4;
-          color: #333;
-          font-family: Arial, "Noto Sans SC", sans-serif;
-        }
-
-        .page {
-          width: 210mm;
-          min-height: 297mm;
-          margin: 0 auto 18px;
-          padding: 12mm 13mm;
-          background: #fff;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
-        }
-
-        .header {
-          margin-bottom: 9px;
-          text-align: center;
-        }
-
-        .header h1 {
-          margin: 0;
-          color: #2e75b6;
-          font-size: 16px;
-          font-weight: 700;
-        }
-
-        .header p {
-          margin: 5px 0 0;
-          color: #888;
-          font-size: 9px;
-        }
-
-        .student-line {
-          display: flex;
-          justify-content: space-between;
-          margin: 11px 0 9px;
-          color: #333;
-          font-size: 9px;
-        }
-
-        .char-list {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .char-card {
-          display: grid;
-          grid-template-columns: 24mm 1fr;
-          gap: 8px;
-          padding: 7px 0;
-          border-top: 0.8px solid #ddd;
-        }
-
-        .char-meta {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          color: #777;
-          font-size: 8px;
-          text-align: center;
-        }
-
-        .char-big {
-          color: #111;
-          font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
-          font-size: 34px;
-          font-weight: 700;
-          line-height: 1;
-        }
-
-        .char-source {
-          max-width: 23mm;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .stroke-strip,
-        .practice-strip {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
-          align-items: center;
-        }
-
-        .stroke-strip { margin-bottom: 5px; }
-
-        .tz-box,
-        .stroke-box {
-          position: relative;
-          display: flex;
-          width: 13.5mm;
-          height: 13.5mm;
-          align-items: center;
-          justify-content: center;
-          border: 0.8px solid #555;
-          background: #fff;
-        }
-
-        .stroke-box { border-color: #888; }
-
-        .stroke-box svg {
-          position: relative;
-          z-index: 1;
-          width: 100%;
-          height: 100%;
-        }
-
-        .tz-box::before,
-        .tz-box::after,
-        .stroke-box::before,
-        .stroke-box::after,
-        .diag-a,
-        .diag-b {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-        }
-
-        .tz-box::before,
-        .stroke-box::before {
-          left: 50%;
-          width: 0;
-          border-left: 0.3px dashed #ccc;
-        }
-
-        .tz-box::after,
-        .stroke-box::after {
-          top: 50%;
-          height: 0;
-          border-top: 0.3px dashed #ccc;
-        }
-
-        .diag-a {
-          background: linear-gradient(45deg, transparent 49.4%, #d6d6d6 49.4%, #d6d6d6 50.6%, transparent 50.6%);
-        }
-
-        .diag-b {
-          background: linear-gradient(-45deg, transparent 49.4%, #d6d6d6 49.4%, #d6d6d6 50.6%, transparent 50.6%);
-        }
-
-        .stroke-num {
-          position: absolute;
-          top: 1px;
-          left: 2px;
-          z-index: 2;
-          color: #2e75b6;
-          font-size: 6px;
-          font-weight: 700;
-        }
-
-        .stroke-error {
-          color: #aaa;
-          font-size: 7px;
-        }
-
-        .footer {
-          margin-top: 9px;
-          color: #999;
-          font-size: 8px;
-          text-align: center;
-        }
-
-        .print-btn-float {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          z-index: 9999;
-          padding: 12px 22px;
-          border: none;
-          border-radius: 999px;
-          background: #2e75b6;
-          color: white;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          cursor: pointer;
-          font-family: Arial, sans-serif;
-          font-weight: 700;
-        }
-
-        .print-btn-float:hover { background: #225b8d; }
-      </style>
-    </head>
-    <body>
-      <button class="print-btn-float no-print" onclick="window.print()">Download / Simpan PDF</button>
-
-      <section class="page">
-        <div class="header">
-          <h1>&#27721;&#23383;&#20070;&#20889;&#32451;&#20064; - Stroke Order Writing Practice</h1>
-          <p>Kertas A4 | Urutan goresan + kotak latihan | ${safeTitle}</p>
-        </div>
-        <div class="student-line">
-          <span>Nama / &#22995;&#21517; : _______________________</span>
-          <span>Tanggal / &#26085;&#26399; : _______________</span>
-        </div>
-        <div id="char-list" class="char-list">Memuat urutan goresan...</div>
-        <div class="footer">Mandarin Journey - ${safeTitle}</div>
-      </section>
-
-      <script>
-        const rows = ${serializedRows};
-        const practiceBoxes = ${PRACTICE_BOXES};
-
-        function escapeHtml(value) {
-          return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-        }
-
-        function gridLines() {
-          return '<span class="diag-a"></span><span class="diag-b"></span>';
-        }
-
-        function renderPracticeBoxes() {
-          return Array.from({ length: practiceBoxes }, () =>
-            '<div class="tz-box">' + gridLines() + '</div>'
-          ).join("");
-        }
-
-        function pathSvg(strokes, activeIdx) {
-          const paths = strokes.map((path, idx) => {
-            const color = idx === activeIdx ? "#2e75b6" : "#222";
-            const opacity = idx <= activeIdx ? (idx === activeIdx ? "1" : "0.28") : "0";
-            return '<path d="' + escapeHtml(path) + '" fill="' + color + '" opacity="' + opacity + '"></path>';
-          }).join("");
-
-          return '<svg viewBox="0 0 1024 1024" aria-hidden="true">' +
-            '<g transform="translate(0, 900) scale(1, -1)">' + paths + '</g>' +
-          '</svg>';
-        }
-
-        async function loadStrokeData(char) {
-          const res = await fetch("https://cdn.jsdelivr.net/npm/hanzi-writer-data@latest/" + encodeURIComponent(char) + ".json");
-          if (!res.ok) throw new Error("Data stroke tidak tersedia");
-          return res.json();
-        }
-
-        async function renderRow(row) {
-          let strokeHtml = "";
-          try {
-            const data = await loadStrokeData(row.hanzi);
-            strokeHtml = data.strokes.map((_, idx) =>
-              '<div class="stroke-box">' +
-                gridLines() +
-                '<span class="stroke-num">' + (idx + 1) + '</span>' +
-                pathSvg(data.strokes, idx) +
-              '</div>'
-            ).join("");
-          } catch (err) {
-            strokeHtml = '<div class="stroke-error">Urutan goresan tidak tersedia untuk ' + escapeHtml(row.hanzi) + '</div>';
-          }
-
-          return '<article class="char-card">' +
-            '<div class="char-meta">' +
-              '<div class="char-big">' + escapeHtml(row.hanzi) + '</div>' +
-              '<div class="char-source">' + escapeHtml(row.source || row.hanzi) + '</div>' +
-            '</div>' +
-            '<div>' +
-              '<div class="stroke-strip">' + strokeHtml + '</div>' +
-              '<div class="practice-strip">' + renderPracticeBoxes() + '</div>' +
-            '</div>' +
-          '</article>';
-        }
-
-        (async function init() {
-          const list = document.getElementById("char-list");
-          list.innerHTML = (await Promise.all(rows.map(renderRow))).join("");
-          document.title = "Latihan Tulis - ${safeTitle}";
-          setTimeout(() => window.print(), 350);
-        })();
-      </script>
-    </body>
-    </html>
-  `;
-
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
+  addCanvasPage();
+  pdf.save(`${_safeFileName(safeTitle)}-lembar-latihan.pdf`);
+  showToast("PDF berhasil diunduh", "ok");
 }
