@@ -135,19 +135,24 @@ async function srsSaveReview(cardId, quality) {
     .maybeSingle();
   const prev = existing ?? { srs_level: 0, interval_days: 1, ease_factor: 2.5 };
   const next = srsCalc(prev, quality);
+  const payload = {
+    user_id: user.id,
+    card_id: cardId,
+    srs_level: next.srs_level,
+    interval_days: next.interval_days,
+    ease_factor: next.ease_factor,
+    last_reviewed: _todayStr(),
+    next_review: next.next_review,
+  };
 
-  await supa.from("user_card_progress").upsert(
-    {
-      user_id: user.id,
-      card_id: cardId,
-      srs_level: next.srs_level,
-      interval_days: next.interval_days,
-      ease_factor: next.ease_factor,
-      last_reviewed: _todayStr(),
-      next_review: next.next_review,
-    },
-    { onConflict: "user_id,card_id" },
-  );
+  const { error } = existing
+    ? await supa
+        .from("user_card_progress")
+        .update(payload)
+        .eq("user_id", user.id)
+        .eq("card_id", cardId)
+    : await supa.from("user_card_progress").insert(payload);
+  if (error) throw error;
 }
 
 function _chunkArray(arr, size) {
