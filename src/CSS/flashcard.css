@@ -51,6 +51,11 @@
   transition: width 0.3s;
 }
 
+#fc-screen.fc-empty-state .score-badge,
+#fc-screen.fc-empty-state .fc-prog {
+  display: none;
+}
+
 /* ── FC Wrapper ── */
 .fc-wrap {
   max-width: 600px;

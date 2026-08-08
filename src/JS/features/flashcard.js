@@ -62,6 +62,13 @@ function _fcShowHeader(visible) {
   if (fcProg) fcProg.style.display = visible ? "" : "none";
 }
 
+function _fcShowCounter(visible) {
+  const badge =
+    document.querySelector("#fc-screen .score-badge") ||
+    document.getElementById("fc-count-num")?.closest(".score-badge");
+  if (badge) badge.style.display = visible ? "" : "none";
+}
+
 async function _getUser() {
   const currentUser = getCurrentUser();
   if (!currentUser) return null;
@@ -189,7 +196,8 @@ async function srsFetchProgress(cardIds) {
 /* ══════════════════════════════════════════════════════════════
    START FC DUE — Review semua kartu due lintas semua deck
 ══════════════════════════════════════════════════════════════ */
-function _showFCEmptyState(message, icon = "🎉") {
+function _showFCEmptyState(message, icon = "Done") {
+  document.getElementById("fc-screen")?.classList.add("fc-empty-state");
   fcCards = [];
   fcIdx = 0;
   _fcUniqueTotal = 0;
@@ -202,17 +210,20 @@ function _showFCEmptyState(message, icon = "🎉") {
   const pyEl2 = document.getElementById("fc-pinyin2");
   const artiEl = document.getElementById("fc-arti");
   const progEl = document.getElementById("fc-prog");
+  const progWrap = progEl?.closest(".fc-prog");
   const numEl = document.getElementById("fc-count-num");
   const denomEl = document.getElementById("fc-count-denom");
   const hint = document.getElementById("fc-swipe-hint");
 
   if (doneWrap) doneWrap.style.display = "none";
   if (cardWrap) cardWrap.style.display = "";
+  _fcShowCounter(false);
   if (hzEl) hzEl.textContent = icon;
   if (pyEl) pyEl.textContent = "";
   if (pyEl2) pyEl2.textContent = "";
   if (artiEl) artiEl.textContent = message;
   if (progEl) progEl.style.width = "0%";
+  if (progWrap) progWrap.style.display = "none";
   if (numEl) numEl.textContent = "0";
   if (denomEl) denomEl.textContent = "0";
   if (hint) hint.style.display = "none";
@@ -221,6 +232,8 @@ function _showFCEmptyState(message, icon = "🎉") {
 export async function startFCDue() {
   resetFCState();
 
+  document.getElementById("fc-screen")?.classList.remove("fc-empty-state");
+  _fcShowCounter(true);
   currentFCKey = "due";
   currentFCSetId = null;
 
@@ -362,6 +375,8 @@ export async function startFCDue() {
 export async function startFC(key, setId, _meta) {
   resetFCState();
 
+  document.getElementById("fc-screen")?.classList.remove("fc-empty-state");
+  _fcShowCounter(true);
   _fcShowHeader(true);
   currentFCKey = key;
   currentFCSetId = setId ?? (parseInt(key.replace(/^fc/, ""), 10) || null);
@@ -485,6 +500,7 @@ export async function startFC(key, setId, _meta) {
 
 export function renderFCCard() {
   if (typeof window._spkReset === "function") window._spkReset();
+  _fcShowCounter(true);
 
   const spkToolbar = document.getElementById("spk-toolbar");
   if (spkToolbar) spkToolbar.style.display = "";
@@ -1325,3 +1341,4 @@ window.openKosvok = openKosvok;
 
 Object.defineProperty(window, "fcCards", { get: () => fcCards });
 Object.defineProperty(window, "fcIdx", { get: () => fcIdx });
+
