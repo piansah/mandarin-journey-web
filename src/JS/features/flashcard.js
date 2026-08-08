@@ -46,6 +46,7 @@ let _fcBaseLength = 0; // panjang awal fcCards (tanpa duplikat)
 let _fcRepeatQueue = []; // queue untuk kartu yang dilupakan
 let _fcCardMeta = new Map(); // simpan metadata kartu asli lintas repeat queue
 let _fcFlushPromise = null;
+let _fcDoneSyncPromise = null;
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
@@ -91,6 +92,7 @@ export function resetFCState() {
   _fcBaseLength = 0;
   _fcRepeatQueue = [];
   _fcCardMeta.clear();
+  _fcDoneSyncPromise = null;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -187,6 +189,35 @@ async function srsFetchProgress(cardIds) {
 /* ══════════════════════════════════════════════════════════════
    START FC DUE — Review semua kartu due lintas semua deck
 ══════════════════════════════════════════════════════════════ */
+function _showFCEmptyState(message, icon = "🎉") {
+  fcCards = [];
+  fcIdx = 0;
+  _fcUniqueTotal = 0;
+  _fcBaseLength = 0;
+
+  const cardWrap = document.getElementById("fc-card-wrap");
+  const doneWrap = document.getElementById("fc-done-wrap");
+  const hzEl = document.getElementById("fc-hanzi");
+  const pyEl = document.getElementById("fc-pinyin");
+  const pyEl2 = document.getElementById("fc-pinyin2");
+  const artiEl = document.getElementById("fc-arti");
+  const progEl = document.getElementById("fc-prog");
+  const numEl = document.getElementById("fc-count-num");
+  const denomEl = document.getElementById("fc-count-denom");
+  const hint = document.getElementById("fc-swipe-hint");
+
+  if (doneWrap) doneWrap.style.display = "none";
+  if (cardWrap) cardWrap.style.display = "";
+  if (hzEl) hzEl.textContent = icon;
+  if (pyEl) pyEl.textContent = "";
+  if (pyEl2) pyEl2.textContent = "";
+  if (artiEl) artiEl.textContent = message;
+  if (progEl) progEl.style.width = "0%";
+  if (numEl) numEl.textContent = "0";
+  if (denomEl) denomEl.textContent = "0";
+  if (hint) hint.style.display = "none";
+}
+
 export async function startFCDue() {
   resetFCState();
 
@@ -236,6 +267,7 @@ export async function startFCDue() {
   if (!user) {
     if (loadEl) loadEl.style.display = "none";
     if (subEl) subEl.textContent = "Login dulu untuk review due";
+    _showFCEmptyState("Login dulu untuk review due", "🔒");
     return;
   }
 
@@ -275,6 +307,7 @@ export async function startFCDue() {
     if (subEl) subEl.textContent = "Tidak ada kartu due hari ini 🎉";
     if (cardWrap) cardWrap.style.display = "";
     if (hzEl) hzEl.textContent = "🎉";
+    _showFCEmptyState("Tidak ada kartu due hari ini", "🎉");
     return;
   }
 
@@ -288,6 +321,7 @@ export async function startFCDue() {
     if (subEl) subEl.textContent = "Tidak ada kartu due hari ini 🎉";
     if (cardWrap) cardWrap.style.display = "";
     if (hzEl) hzEl.textContent = "🎉";
+    _showFCEmptyState("Tidak ada kartu due hari ini", "🎉");
     return;
   }
 
@@ -789,8 +823,8 @@ export async function showFCDone() {
   // 3. RENDER DONE STATS SEGERA (No Lag)
   _renderDoneStats();
 
-  // 4. JALANKAN PROSES BERAT DI BACKGROUND (Jangan di-await)
-  (async () => {
+  // 4. Jalankan sync async, tapi simpan promise agar close/restart bisa menunggu.
+  _fcDoneSyncPromise = (async () => {
     try {
       await _flushPendingReviews();
       if (typeof window._recordDailyStreak === "function")
@@ -830,8 +864,15 @@ function _renderDoneStats() {
 /* ══════════════════════════════════════════════════════════════
    RESTART & CLOSE (DENGAN RESET STATE LENGKAP)
 ══════════════════════════════════════════════════════════════ */
-export function restartFC() {
+export async function restartFC() {
   cancelTTS();
+  const restartKey = currentFCKey;
+  const restartSetId = currentFCSetId;
+  if (_fcDoneSyncPromise) {
+    await _fcDoneSyncPromise;
+  } else if (_fcPendingReviews.size > 0) {
+    await _flushPendingReviews();
+  }
   _fcShowHeader(true);
 
   // Reset state yang berkaitan dengan sesi
@@ -840,17 +881,24 @@ export function restartFC() {
   _fcRepeatQueue = [];
 
   // Mulai ulang berdasarkan konteks
-  if (currentFCKey === "due") {
+  if (restartKey === "due") {
     startFCDue();
-  } else if (currentFCSetId) {
-    startFC(currentFCKey, currentFCSetId);
+  } else if (restartSetId) {
+    startFC(restartKey, restartSetId);
   }
 }
 
-export function closeFC() {
+export async function closeFC() {
   cancelTTS();
   const returnSetId = currentFCSetId;
   const returnLayer = currentFCReturnLayer;
+  const isDueSession = currentFCKey === "due";
+
+  if (_fcDoneSyncPromise) {
+    await _fcDoneSyncPromise;
+  } else if (_fcPendingReviews.size > 0) {
+    await _flushPendingReviews();
+  }
 
   // Lepas semua event listener global
   if (typeof window._fcDetachDocListeners === "function")
@@ -867,7 +915,7 @@ export function closeFC() {
   if (typeof window.loadSRSStats === "function")
     window.loadSRSStats().catch(console.error);
 
-  if (currentFCKey === "due") {
+  if (isDueSession) {
     if (typeof window.updateSrsDashboard === "function")
       window.updateSrsDashboard().catch(console.error);
     if (typeof window.refreshKosDashboardProgress === "function")
