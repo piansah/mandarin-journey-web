@@ -1439,7 +1439,15 @@ export async function updateSrsDashboard() {
     .from("user_card_progress")
     .select("card_id, srs_level, next_review, last_reviewed")
     .eq("user_id", currentUser.id);
-  const reviewed = progress ?? [];
+  const progressByCard = new Map();
+  (progress ?? []).forEach((row) => {
+    if (!row.card_id) return;
+    const prev = progressByCard.get(row.card_id);
+    const prevKey = `${prev?.last_reviewed || ""}|${prev?.next_review || ""}`;
+    const rowKey = `${row.last_reviewed || ""}|${row.next_review || ""}`;
+    if (!prev || rowKey >= prevKey) progressByCard.set(row.card_id, row);
+  });
+  const reviewed = [...progressByCard.values()];
   const total = reviewed.length;
 
   const todayCards = reviewed.filter((r) => r.last_reviewed === today);
@@ -1451,7 +1459,7 @@ export async function updateSrsDashboard() {
   let dueCount = dueRows.length;
   if (dueRows.length > 0) {
     const validDueIds = new Set();
-    const dueIds = [...new Set(dueRows.map((r) => r.card_id))];
+    const dueIds = dueRows.map((r) => r.card_id);
     for (const chunk of _chunkArray(dueIds, 100)) {
       const { data } = await supa
         .from("flashcard_cards")

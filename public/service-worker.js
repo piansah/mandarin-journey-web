@@ -1,5 +1,5 @@
 /* © 2026 Piansah - Mandarin Journey Service Worker */
-const CACHE_NAME = "mandarin-journey-v16";
+const CACHE_NAME = "mandarin-journey-v17";
 
 const STATIC_ASSETS = [
   "/",

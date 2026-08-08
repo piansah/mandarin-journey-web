@@ -136,12 +136,14 @@ async function srsSaveReview(cardId, quality) {
   const user = await _getUser();
   if (!user || !cardId) return;
 
-  const { data: existing } = await supa
+  const { data: existingRows, error: existingError } = await supa
     .from("user_card_progress")
     .select("srs_level, interval_days, ease_factor")
     .eq("user_id", user.id)
-    .eq("card_id", cardId)
-    .maybeSingle();
+    .eq("card_id", cardId);
+  if (existingError) throw existingError;
+
+  const existing = existingRows?.[0] ?? null;
   const prev = existing ?? { srs_level: 0, interval_days: 1, ease_factor: 2.5 };
   const next = srsCalc(prev, quality);
   const payload = {
@@ -154,7 +156,7 @@ async function srsSaveReview(cardId, quality) {
     next_review: next.next_review,
   };
 
-  const { error } = existing
+  const { error } = existingRows?.length
     ? await supa
         .from("user_card_progress")
         .update(payload)
