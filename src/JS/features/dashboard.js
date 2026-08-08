@@ -42,6 +42,14 @@ import { calcXPFromRows } from "../utilities/xp.js";
 const LS_HAN = "hsk_han";
 const XP_WEIGHT = { high: 36, mid: 18, low: 9, flat: 36 };
 
+function _chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
 /* ── Score Objects (export untuk akses file lain) ── */
 export const quizScoresGlobal = {};
 export const quizMetaGlobal = {};
@@ -1429,7 +1437,7 @@ export async function updateSrsDashboard() {
   const today = _todayWIB();
   const { data: progress } = await supa
     .from("user_card_progress")
-    .select("srs_level, next_review, last_reviewed")
+    .select("card_id, srs_level, next_review, last_reviewed")
     .eq("user_id", currentUser.id);
   const reviewed = progress ?? [];
   const total = reviewed.length;
@@ -1439,7 +1447,20 @@ export async function updateSrsDashboard() {
   const lupaToday = todayCards.filter((r) => r.srs_level === 0).length;
   const totalToday = hafalToday + lupaToday;
   const totalHafal = reviewed.filter((r) => r.srs_level >= 1).length;
-  const dueCount = reviewed.filter((r) => r.next_review <= today).length;
+  const dueRows = reviewed.filter((r) => r.next_review <= today && r.card_id);
+  let dueCount = dueRows.length;
+  if (dueRows.length > 0) {
+    const validDueIds = new Set();
+    const dueIds = [...new Set(dueRows.map((r) => r.card_id))];
+    for (const chunk of _chunkArray(dueIds, 100)) {
+      const { data } = await supa
+        .from("flashcard_cards")
+        .select("id")
+        .in("id", chunk);
+      (data || []).forEach((card) => validDueIds.add(card.id));
+    }
+    dueCount = dueRows.filter((r) => validDueIds.has(r.card_id)).length;
+  }
   const pct = totalToday > 0 ? Math.round((hafalToday / totalToday) * 100) : 0;
 
   const totalEl = document.getElementById("srs-total");
