@@ -235,7 +235,7 @@
   flex-wrap: wrap;
 }
 .h-py.show {
-  display: flex;
+  display: block;
 }
 .h-arti {
   font-size: 12px;
