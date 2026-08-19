@@ -318,7 +318,7 @@
   display: block;
 }
 .kal-res h2 {
-  font-family: var(--font-serif);
+  font-family: var(--font-ui);
   font-size: 24px;
   color: var(--gold);
   margin-bottom: 4px;
@@ -326,12 +326,12 @@
 .kal-res-big {
   font-size: 60px;
   font-weight: 700;
-  font-family: var(--font-serif);
+  font-family: var(--font-ui);
   line-height: 1;
   margin: 12px 0;
 }
 .kal-res-grade {
-  font-size: 15px;
+  font-size: 13px;
   color: var(--dim2);
   margin-bottom: 14px;
 }
@@ -350,7 +350,7 @@
 .krc .krn {
   font-size: 22px;
   font-weight: 700;
-  font-family: var(--font-serif);
+  font-family: var(--font-ui);
 }
 .krc .krl {
   font-size: 9px;
