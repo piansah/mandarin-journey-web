@@ -12,9 +12,16 @@ const XP_FLAT = 36;
 const XP_CAP  = 36;
 const XP_TULIS = 36;
 
-function xpFromScore(score: number): number {
+function xpFromQuizScore(score: number): number {
   if (score >= 80) return XP_HIGH;
   if (score >= 60) return XP_MID;
+  return XP_LOW;
+}
+
+// Kalimat: 60 soal → 80% = 48, 60% = 36
+function xpFromKalScore(score: number): number {
+  if (score >= 48) return XP_HIGH;
+  if (score >= 36) return XP_MID;
   return XP_LOW;
 }
 
@@ -28,9 +35,11 @@ function calcXPFromRows(rows: ScoreRow[]): number {
   for (const { type, score } of rows) {
     switch (type) {
       case "quiz":
-      case "kal":
       case "grammar":
-        xp += xpFromScore(score);
+        xp += xpFromQuizScore(score);
+        break;
+      case "kal":
+        xp += xpFromKalScore(score);
         break;
       case "hanzi":
         if (score >= 100) xp += XP_FLAT;

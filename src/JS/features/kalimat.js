@@ -548,7 +548,7 @@ export function submitKalimat(silent = false) {
   const kb = document.getElementById("ks-" + currentKalKey);
   if (kb) {
     kb.textContent = `${kalCorrect}/${total}`;
-    kb.className = "status " + (kalCorrect >= 80 ? "done" : "new");
+    kb.className = "status " + (kalCorrect >= 48 ? "done" : "new");
   }
 }
 
@@ -650,9 +650,9 @@ function _renderKalGrid() {
 
       const lockedOnclick = `window.showToast('${lockMessage(reason, { unlockAfter: s.unlock_after })}', 'warn')`;
 
-      const statusTxt = scoreVal !== undefined ? `${scoreVal}/100` : "Belum";
+      const statusTxt = scoreVal !== undefined ? `${scoreVal}/60` : "Belum";
       const statusCls =
-        scoreVal !== undefined ? (scoreVal >= 80 ? "done" : "new") : "new";
+        scoreVal !== undefined ? (scoreVal >= 48 ? "done" : "new") : "new";
 
       return `<div class="item-card${isLocked ? " locked" : ""}" data-hsk="${hsk}" onclick="${isLocked ? lockedOnclick : `window.startKalimat('${s.key}')`}">
       <div class="item-card-top"><span class="day-badge">HSK ${s.hsk_level}</span>${!isLocked ? `<span class="status ${statusCls}" id="ks-${s.key}">${statusTxt}</span>` : ""}</div>

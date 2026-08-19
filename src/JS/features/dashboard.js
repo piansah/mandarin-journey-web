@@ -815,7 +815,7 @@ export async function saveKalScore(key, score, meta = null) {
   }
   kalScoresGlobal[key] = score;
   if (meta) kalMetaGlobal[key] = meta;
-  showXPToast(score >= 80 ? 36 : score >= 60 ? 18 : 9, "Kalimat selesai");
+  showXPToast(score >= 48 ? 36 : score >= 36 ? 18 : 9, "Kalimat selesai");
   upsertScore("kal", key, score, meta).catch(console.error);
   updateDailyProgress();
   if (
