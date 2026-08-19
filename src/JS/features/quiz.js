@@ -161,7 +161,7 @@ export async function startQuiz(key) {
         ? window._quizSetsCache[idx + 1].key
         : null;
     if (nextKey && !_quizCache[nextKey])
-      loadQuizFromDB(nextKey).catch(() => {});
+      loadQuizFromDB(nextKey).catch(() => { });
   }
 
   const saved = lsGetScoped("hsk_quiz_state", {});

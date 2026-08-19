@@ -338,7 +338,7 @@ export function renderKalimat(filter) {
         range.start === range.end
           ? `${range.start}`
           : `${range.start}–${range.end}`;
-      main.innerHTML += `<div class="kal-sec-hd"><div class="kal-sec-badge">${sec.badge}</div><div class="kal-sec-title">${sec.title}</div><div class="kal-sec-cnt">${rangeTxt}</div></div>`;
+      main.insertAdjacentHTML('beforeend', `<div class="kal-sec-hd"><div class="kal-sec-badge">${sec.badge}</div><div class="kal-sec-title">${sec.title}</div><div class="kal-sec-cnt">${rangeTxt}</div></div>`);
     }
 
     const card = document.createElement("div");

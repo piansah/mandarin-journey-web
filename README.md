@@ -46,4 +46,3 @@ A premium web-based Mandarin learning application ([mandarin-journey.vercel.app]
 
 
 BUG REPORT
-- UPDATE DATA SOAL QUIZ KUMULATIF LENGKAPI KALIMMAT DENGAN ARTI
