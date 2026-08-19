@@ -35,45 +35,37 @@
 
 .dash-hero {
   margin: 18px 32px 0;
-  padding: 24px 22px 22px;
+  padding: 16px 18px;
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   background:
     radial-gradient(
       ellipse 60% 80% at 5% 0%,
-      rgba(96, 165, 250, 0.15),
+      rgba(96, 165, 250, 0.1),
       transparent 60%
     ),
     radial-gradient(
-      ellipse 60% 70% at 95% 80%,
-      rgba(87, 181, 151, 0.12),
+      ellipse 50% 50% at 95% 80%,
+      rgba(87, 181, 151, 0.08),
       transparent 60%
     ),
     rgba(255, 255, 255, 0.01);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 .dash-hero-copy {
-  max-width: 560px;
+  width: 100%;
 }
 .dash-hero-title {
   margin: 0;
-  font-family: var(--font-serif);
-  font-size: 32px;
-  line-height: 1.05;
-  color: var(--gold);
-  font-weight: 700;
+  font-family: var(--font-display);
 }
 .dash-hero-sub {
-  margin: 8px 0 0;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--dim2);
+  margin: 0;
 }
 
 /* ── Menu Section ── */
