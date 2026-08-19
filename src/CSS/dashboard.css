@@ -33,26 +33,29 @@
   z-index: 0;
 }
 
-/* ── Dashboard Hero ── */
 .dash-hero {
   margin: 18px 32px 0;
-  padding: 20px 18px 18px;
+  padding: 24px 22px 22px;
   position: relative;
   z-index: 1;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   background:
     radial-gradient(
-      ellipse 70% 90% at 8% 0%,
-      rgba(232, 201, 109, 0.16),
-      transparent 62%
-    ),
-    radial-gradient(
-      ellipse 62% 82% at 100% 30%,
-      rgba(87, 181, 151, 0.13),
+      ellipse 60% 80% at 5% 0%,
+      rgba(96, 165, 250, 0.15),
       transparent 60%
     ),
-    rgba(255, 255, 255, 0.02);
+    radial-gradient(
+      ellipse 60% 70% at 95% 80%,
+      rgba(87, 181, 151, 0.12),
+      transparent 60%
+    ),
+    rgba(255, 255, 255, 0.01);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .dash-hero-copy {
   max-width: 560px;
