@@ -42,3 +42,8 @@ A premium web-based Mandarin learning application ([mandarin-journey.vercel.app]
 
 ---
 © 2026 Piansah — Mandarin Journey. All rights reserved.
+
+
+
+BUG REPORT
+- UPDATE DATA SOAL QUIZ KUMULATIF LENGKAPI KALIMMAT DENGAN ARTI

@@ -198,13 +198,15 @@ export async function startKalimat(key) {
     "kalimat-hz",
   ]);
   const savedState = saved[key];
+  // Validasi: kalQ harus ada, punya soal (> 0), dan semua filter valid
   const isValidSave =
     savedState &&
     savedState.kalQ &&
-    savedState.kalQ.length === 100 &&
+    savedState.kalQ.length > 0 &&
     savedState.kalQ.every((q) => VALID_FILTERS.has(q.filter));
 
-  if (isValidSave) {
+  if (isValidSave && !savedState.submitted) {
+    // Restore quiz yang belum selesai
     kalQ = savedState.kalQ;
     kalAnswered = savedState.kalAnswered || {};
     kalCorrect = Object.values(kalAnswered).filter((v) => v === true).length;
@@ -212,8 +214,17 @@ export async function startKalimat(key) {
     renderKalimatTabs();
     renderKalimat("all");
     updateKalLive();
-    if (savedState.submitted) submitKalimat(true);
-  } else if (getCurrentUser() && window.kalMeta?.[key]?.kalQ?.length === 100) {
+  } else if (isValidSave && savedState.submitted) {
+    // Restore quiz yang sudah selesai (tampilkan hasil)
+    kalQ = savedState.kalQ;
+    kalAnswered = savedState.kalAnswered || {};
+    kalCorrect = Object.values(kalAnswered).filter((v) => v === true).length;
+    kalAnsweredN = Object.keys(kalAnswered).length;
+    renderKalimatTabs();
+    renderKalimat("all");
+    updateKalLive();
+    submitKalimat(true);
+  } else if (getCurrentUser() && window.kalMeta?.[key]?.kalQ?.length > 0) {
     const remote = window.kalMeta[key];
     kalQ = remote.kalQ;
     kalAnswered = remote.kalAnswered || {};
@@ -227,7 +238,8 @@ export async function startKalimat(key) {
     updateKalLive();
     submitKalimat(true);
   } else {
-    if (savedState) {
+    // Data corrupt atau tidak ada — hapus dan build ulang
+    if (savedState && !isValidSave) {
       delete saved[key];
       lsSetScoped("hsk_kal_state", saved);
     }

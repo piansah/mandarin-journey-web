@@ -439,13 +439,6 @@ export function playQuizTTS(gi) {
   speakMandarin(speechText);
 }
 
-const saved = lsGetScoped("hsk_quiz_state", {});
-saved[currentQuizKey] = { allQ, answered, submitted: false };
-lsSetScoped("hsk_quiz_state", saved);
-
-if (!_isRestoringFromRefresh && currentQuizKey)
-  lsSetScoped("hsk_active_quiz", currentQuizKey);
-
 /* ── Update Live Score ── */
 export function updateLive() {
   const liveEl = document.getElementById("live-score");
