@@ -57,21 +57,12 @@
 .dash-hero-copy {
   max-width: 560px;
 }
-.dash-hero-kicker {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--gold);
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
 .dash-hero-title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 32px;
   line-height: 1.05;
-  color: var(--txt);
+  color: var(--gold);
   font-weight: 700;
 }
 .dash-hero-sub {
@@ -80,21 +71,6 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--dim2);
-}
-.dash-hero-progress {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-.dash-hero-progress span {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.055);
-  color: var(--dim2);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
 }
 
 /* ── Menu Section ── */
@@ -497,9 +473,6 @@ body.light .dash-hero {
     ),
     rgba(255, 255, 255, 0.5);
 }
-body.light .dash-hero-progress span {
-  background: rgba(20, 20, 36, 0.055);
-}
 body.light .stat-card {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
@@ -531,13 +504,6 @@ body.light .act-item {
   }
   .dash-hero-title {
     font-size: 28px;
-  }
-  .dash-hero-progress {
-    gap: 6px;
-  }
-  .dash-hero-progress span {
-    font-size: 10px;
-    padding: 6px 9px;
   }
   .menu-sec {
     margin: 16px 16px 0;
