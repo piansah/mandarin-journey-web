@@ -274,9 +274,6 @@
 }
 .opt2:disabled {
   cursor: default;
-}
-.qcard.ok .opt2:disabled,
-.qcard.bad .opt2:disabled {
   pointer-events: none;
 }
 
