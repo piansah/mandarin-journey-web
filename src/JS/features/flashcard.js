@@ -1213,21 +1213,31 @@ export function openKosvok() {
     const el = getCard();
     if (!el) return;
     
-    const isVertical = Math.abs(dy) > Math.abs(dx) && dy > 0;
+    el.style.transform = `translate(${dx}px, ${dy > 0 ? dy : 0}px) rotate(${dx * 0.07}deg)`;
     
-    if (isVertical) {
-      el.style.transform = `translateY(${dy}px)`;
+    const r = getOvR();
+    const l = getOvL();
+    const b = document.getElementById("fc-ov-bottom");
+    
+    if (dy > Math.abs(dx) && dy > 20) {
       const ratio = Math.min(dy / 90, 1);
-      const b = document.getElementById("fc-ov-bottom");
       if (b) b.style.opacity = ratio;
-      const r = getOvR(); if (r) r.style.opacity = "0";
-      const l = getOvL(); if (l) l.style.opacity = "0";
-    } else {
-      el.style.transform = `translateX(${dx}px) rotate(${dx * 0.07}deg)`;
+      if (r) r.style.opacity = "0";
+      if (l) l.style.opacity = "0";
+    } else if (dx > Math.abs(dy) && dx > 20) {
+      const ratio = Math.min(dx / 90, 1);
+      if (r) r.style.opacity = ratio;
+      if (l) l.style.opacity = "0";
+      if (b) b.style.opacity = "0";
+    } else if (-dx > Math.abs(dy) && -dx > 20) {
       const ratio = Math.min(Math.abs(dx) / 90, 1);
-      const r = getOvR(); if (r) r.style.opacity = dx > 0 ? ratio : "0";
-      const l = getOvL(); if (l) l.style.opacity = dx < 0 ? ratio : "0";
-      const b = document.getElementById("fc-ov-bottom"); if (b) b.style.opacity = "0";
+      if (l) l.style.opacity = ratio;
+      if (r) r.style.opacity = "0";
+      if (b) b.style.opacity = "0";
+    } else {
+      if (r) r.style.opacity = "0";
+      if (l) l.style.opacity = "0";
+      if (b) b.style.opacity = "0";
     }
   }
 
@@ -1245,7 +1255,7 @@ export function openKosvok() {
     if (!dragging || !isFC()) return;
     const dx = clientX - sx,
       dy = clientY - sy;
-    if (Math.abs(dx) > Math.abs(dy) || dy > 0) applyDrag(dx, dy);
+    applyDrag(dx, dy);
   }
 
   function handleEnd(clientX, clientY) {
