@@ -36,10 +36,27 @@ export function showDoneScreen(containerId, config) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  container.innerHTML = `<div class="ds-wrap">${burstHtml}<div class="ds-icon-wrap"><div class="ds-icon-bg" style="background:${gradeColor}20; border:2px solid ${gradeColor}40"><span class="ds-icon-emoji">${gradeIcon}</span></div></div><div class="ds-title">${gradeMsg}</div><div class="ds-subtitle">${correct} dari ${total} soal benar</div>${xpHtml}<div class="ds-stats"><div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--gold)" id="dsCorrect-${containerId}">0</div><div class="ds-stat-label">✓ Benar</div></div><div class="ds-stat-card ds-stat-card--center"><div class="ds-stat-num" id="dsAcc-${containerId}">0%</div><div class="ds-stat-label">Akurasi</div></div><div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--red)" id="dsWrong-${containerId}">0</div><div class="ds-stat-label">✗ Salah</div></div></div>${dotsHtml}<div class="ds-actions">${mainBtn}${secBtn}</div></div>`;
+  const ragu = config.ragu;
+  const hasRagu = ragu !== undefined;
+  
+  const statsHtml = hasRagu 
+    ? `<div class="ds-stats" style="grid-template-columns: 1fr 1fr 1.2fr 1fr; gap:6px;">
+         <div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--gold)" id="dsCorrect-${containerId}">0</div><div class="ds-stat-label">✓ Benar</div></div>
+         <div class="ds-stat-card"><div class="ds-stat-num" style="color:#f59e0b" id="dsRagu-${containerId}">0</div><div class="ds-stat-label">? Ragu</div></div>
+         <div class="ds-stat-card ds-stat-card--center"><div class="ds-stat-num" id="dsAcc-${containerId}">0%</div><div class="ds-stat-label">Akurasi</div></div>
+         <div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--red)" id="dsWrong-${containerId}">0</div><div class="ds-stat-label">✗ Salah</div></div>
+       </div>`
+    : `<div class="ds-stats">
+         <div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--gold)" id="dsCorrect-${containerId}">0</div><div class="ds-stat-label">✓ Benar</div></div>
+         <div class="ds-stat-card ds-stat-card--center"><div class="ds-stat-num" id="dsAcc-${containerId}">0%</div><div class="ds-stat-label">Akurasi</div></div>
+         <div class="ds-stat-card"><div class="ds-stat-num" style="color:var(--red)" id="dsWrong-${containerId}">0</div><div class="ds-stat-label">✗ Salah</div></div>
+       </div>`;
+
+  container.innerHTML = `<div class="ds-wrap">${burstHtml}<div class="ds-icon-wrap"><div class="ds-icon-bg" style="background:${gradeColor}20; border:2px solid ${gradeColor}40"><span class="ds-icon-emoji">${gradeIcon}</span></div></div><div class="ds-title">${gradeMsg}</div><div class="ds-subtitle">${correct} dari ${total} soal benar</div>${xpHtml}${statsHtml}${dotsHtml}<div class="ds-actions">${mainBtn}${secBtn}</div></div>`;
 
   if (animateCounters) {
     _dsAnimateCounter(`dsCorrect-${containerId}`, 0, correct, 800);
+    if (hasRagu) _dsAnimateCounter(`dsRagu-${containerId}`, 0, ragu, 800);
     _dsAnimateCounter(`dsWrong-${containerId}`, 0, wrong, 800);
     _dsAnimateAccuracy(`dsAcc-${containerId}`, acc, `dsAccBar-${containerId}`, 900);
   } else {

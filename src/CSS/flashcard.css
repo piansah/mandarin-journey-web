@@ -199,6 +199,11 @@
   color: #f87171;
   border: 2px solid rgba(248, 113, 113, 0.35);
 }
+.fc-swipe-overlay.ov-bottom {
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+  border: 2px solid rgba(245, 158, 11, 0.35);
+}
 
 /* ── Swipe Hint ── */
 .fc-swipe-hint {
@@ -213,7 +218,7 @@
 /* ── Swipe Animations ── */
 @keyframes fcSwipeOut {
   to {
-    transform: translateX(var(--fc-tx)) rotate(var(--fc-rot));
+    transform: translateX(var(--fc-tx, 0)) translateY(var(--fc-ty, 0)) rotate(var(--fc-rot, 0));
     opacity: 0;
   }
 }

@@ -36,6 +36,7 @@ let fcIdx = 0;
 let fcFlipState = 0;
 let _fcUniqueTotal = 0;
 let _fcHafal = 0;
+let _fcRagu = 0;
 let _fcLupa = 0;
 let _fcLupaIds = new Set();
 let _fcPendingReviews = new Map();
@@ -90,6 +91,7 @@ export function resetFCState() {
   fcFlipState = 0;
   _fcUniqueTotal = 0;
   _fcHafal = 0;
+  _fcRagu = 0;
   _fcLupa = 0;
   _fcLupaIds.clear();
   _fcPendingReviews.clear();
@@ -574,7 +576,7 @@ export function renderFCCard() {
   const progEl = document.getElementById("fc-prog");
   if (progEl)
     progEl.style.width =
-      uniqueTotal > 0 ? (_fcHafal / uniqueTotal) * 100 + "%" : "0%";
+      uniqueTotal > 0 ? ((_fcHafal + _fcRagu) / uniqueTotal) * 100 + "%" : "0%";
 
   const numEl = document.getElementById("fc-count-num");
   const denomEl = document.getElementById("fc-count-denom");
@@ -684,6 +686,36 @@ export function fcNavLupa() {
     _fcLupaIds.add(card._id);
     _fcLupa++;
     _fcRepeatQueue.push({ ...card, _isRepeat: true });
+  }
+
+  fcIdx++;
+  if (fcIdx >= fcCards.length) {
+    if (_fcRepeatQueue.length > 0) {
+      fcCards = [..._fcRepeatQueue];
+      _fcRepeatQueue = [];
+      fcIdx = 0;
+      renderFCCard();
+      return;
+    } else {
+      showFCDone();
+      return;
+    }
+  }
+  renderFCCard();
+}
+
+export function fcNavRagu() {
+  if (!fcCards.length || fcIdx >= fcCards.length) return;
+  const card = fcCards[fcIdx];
+  if (!card) return;
+  _recordFCReview(card, 3); // Quality 3: Ragu
+
+  if (!card._isRepeat && !_fcLupaIds.has(card._id)) {
+    _fcRagu++;
+  } else if (card._isRepeat) {
+    _fcRagu++;
+    _fcLupa--;
+    _fcLupaIds.delete(card._id);
   }
 
   fcIdx++;
@@ -863,12 +895,14 @@ export async function showFCDone() {
 
 function _renderDoneStats() {
   const hafal = _fcHafal;
+  const ragu = _fcRagu;
   const lupa = _fcLupa;
-  const total = _fcUniqueTotal || hafal + lupa;
+  const total = _fcUniqueTotal || hafal + ragu + lupa;
   const xpNow = _fcPrevSessionXP;
 
   showDoneScreen("fc-done-wrap", {
     correct: hafal,
+    ragu: ragu,
     wrong: lupa,
     total: total,
     xp: xpNow,
@@ -1131,6 +1165,8 @@ export function openKosvok() {
     if (r) r.style.opacity = "0";
     const l = getOvL();
     if (l) l.style.opacity = "0";
+    const b = document.getElementById("fc-ov-bottom");
+    if (b) b.style.opacity = "0";
   }
 
   function dismissCard(dir) {
@@ -1143,13 +1179,20 @@ export function openKosvok() {
       return;
     }
 
-    const quality = dir > 0 ? 5 : 0;
+    const quality = dir === 1 ? 5 : (dir === -1 ? 0 : 3);
     const card = fcCards[fcIdx];
 
     _recordFCReview(card, quality);
 
-    el.style.setProperty("--fc-tx", dir > 0 ? "130%" : "-130%");
-    el.style.setProperty("--fc-rot", dir > 0 ? "18deg" : "-18deg");
+    if (dir === 2) {
+      el.style.setProperty("--fc-tx", "0%");
+      el.style.setProperty("--fc-ty", "130%");
+      el.style.setProperty("--fc-rot", "0deg");
+    } else {
+      el.style.setProperty("--fc-tx", dir > 0 ? "130%" : "-130%");
+      el.style.setProperty("--fc-ty", "0%");
+      el.style.setProperty("--fc-rot", dir > 0 ? "18deg" : "-18deg");
+    }
     el.style.animation = "fcSwipeOut .32s cubic-bezier(.4,0,.6,1) forwards";
 
     el.addEventListener(
@@ -1158,22 +1201,34 @@ export function openKosvok() {
         el.style.animation = "";
         resetCardPos();
         _animating = false;
-        if (dir > 0) fcNavHafal();
-        else fcNavLupa();
+        if (dir === 1) fcNavHafal();
+        else if (dir === -1) fcNavLupa();
+        else fcNavRagu();
       },
       { once: true },
     );
   }
 
-  function applyDrag(dx) {
+  function applyDrag(dx, dy) {
     const el = getCard();
     if (!el) return;
-    el.style.transform = `translateX(${dx}px) rotate(${dx * 0.07}deg)`;
-    const ratio = Math.min(Math.abs(dx) / 90, 1);
-    const r = getOvR();
-    if (r) r.style.opacity = dx > 0 ? ratio : "0";
-    const l = getOvL();
-    if (l) l.style.opacity = dx < 0 ? ratio : "0";
+    
+    const isVertical = Math.abs(dy) > Math.abs(dx) && dy > 0;
+    
+    if (isVertical) {
+      el.style.transform = `translateY(${dy}px)`;
+      const ratio = Math.min(dy / 90, 1);
+      const b = document.getElementById("fc-ov-bottom");
+      if (b) b.style.opacity = ratio;
+      const r = getOvR(); if (r) r.style.opacity = "0";
+      const l = getOvL(); if (l) l.style.opacity = "0";
+    } else {
+      el.style.transform = `translateX(${dx}px) rotate(${dx * 0.07}deg)`;
+      const ratio = Math.min(Math.abs(dx) / 90, 1);
+      const r = getOvR(); if (r) r.style.opacity = dx > 0 ? ratio : "0";
+      const l = getOvL(); if (l) l.style.opacity = dx < 0 ? ratio : "0";
+      const b = document.getElementById("fc-ov-bottom"); if (b) b.style.opacity = "0";
+    }
   }
 
   function handleStart(clientX, clientY) {
@@ -1190,7 +1245,7 @@ export function openKosvok() {
     if (!dragging || !isFC()) return;
     const dx = clientX - sx,
       dy = clientY - sy;
-    if (Math.abs(dx) > Math.abs(dy)) applyDrag(dx);
+    if (Math.abs(dx) > Math.abs(dy) || dy > 0) applyDrag(dx, dy);
   }
 
   function handleEnd(clientX, clientY) {
@@ -1207,7 +1262,9 @@ export function openKosvok() {
       return;
     }
 
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= MIN_SWIPE) {
+    if (dy > Math.abs(dx) && dy >= MIN_SWIPE) {
+      dismissCard(2);
+    } else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= MIN_SWIPE) {
       dismissCard(dx > 0 ? 1 : -1);
     } else {
       const el = getCard();
