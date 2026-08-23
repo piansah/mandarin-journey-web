@@ -2718,23 +2718,37 @@ export async function saveContoh() {
     const wordHanzi = _currentKosWord.hanzi;
     let error;
 
+    let resultData = null;
+
     if (_editingContohId) {
-      ({ error } = await supa
+      const { data, error: err } = await supa
         .from("word_examples")
         .update({ hanzi, pinyin, arti })
         .eq("id", _editingContohId)
-        .eq("added_by", currentUser.id));
+        .eq("added_by", currentUser.id)
+        .select();
+      error = err;
+      resultData = data;
     } else {
-      ({ error } = await supa.from("word_examples").insert({
+      const { data, error: err } = await supa.from("word_examples").insert({
         word_hanzi: wordHanzi,
         hanzi,
         pinyin,
         arti,
         added_by: currentUser.id,
-      }));
+      }).select();
+      error = err;
+      resultData = data;
     }
 
     if (error) throw error;
+    
+    // Jika RLS memblokir secara diam-diam, data akan kosong
+    if (!resultData || resultData.length === 0) {
+      throw new Error("Penyimpanan ditolak oleh Database (RLS Policy). Pastikan tabel word_examples memiliki policy INSERT untuk user yang login.");
+    }
+
+    _exampleCache.delete(`${_EXAMPLE_CACHE_VERSION}:${wordHanzi}`);
 
     closeContohForm();
     await _loadKosWordExamples(wordHanzi);
@@ -2764,6 +2778,9 @@ export async function deleteContoh(id) {
       .eq("id", id)
       .eq("added_by", currentUser.id);
     if (error) throw error;
+    if (_currentKosWord?.hanzi) {
+      _exampleCache.delete(`${_EXAMPLE_CACHE_VERSION}:${_currentKosWord.hanzi}`);
+    }
     await _loadKosWordExamples(_currentKosWord?.hanzi);
   });
 }
