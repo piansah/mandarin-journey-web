@@ -2641,7 +2641,7 @@ export function openContohEdit(id, hanzi, pinyin, arti) {
 function _renderContohForm(data) {
   const contentEl = document.getElementById("contoh-form-content");
   if (!contentEl) return;
-  const inputAttrs = `type="text" inputmode="text" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly data-lpignore="true" data-1p-ignore="true" data-bwignore="true" onfocus="this.removeAttribute('readonly')" ontouchstart="this.removeAttribute('readonly')"`;
+  const inputAttrs = `type="search" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"`;
 
   contentEl.innerHTML = `
     <div class="modal-title">${data ? "Edit Contoh" : "Tambah Contoh Kalimat"}</div>
