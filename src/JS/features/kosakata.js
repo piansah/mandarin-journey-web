@@ -443,6 +443,13 @@ export function warmUpGlobalSearchCache() {
 
 let _globalSearchFilter = "all";
 
+function _isGlobalSearchSentence(raw) {
+  const val = (raw || "").trim();
+  if (!val) return false;
+  const hanziMatches = val.match(/[\u4e00-\u9fff]/g) || [];
+  return hanziMatches.length > 1 || /[\u3000-\u303F\uFF00-\uFFEF]/.test(val);
+}
+
 export async function onKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
   clearTimeout(_globalSearchTimer);
@@ -468,7 +475,7 @@ function _initSearchFilters() {
       if (e.key === "Enter") {
         const val = searchInput.value.trim();
         if (!val) return;
-        const isSentence = val.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(val);
+        const isSentence = _isGlobalSearchSentence(val);
         if (isSentence && typeof window.openSegmentedView === "function") {
           window.openSegmentedView(val);
         }
@@ -501,8 +508,12 @@ export async function performSmartSearch(raw, filter = "all") {
       if (_matchPinyinTokens(py, queryTokens)) return true;
     } else {
       const qStrip = _stripTones(q);
+      const qCompact = qStrip.replace(/\s+/g, "");
+      const pyStrip = _stripTones(py);
+      if (_matchPinyinTokens(py, queryTokens)) return true;
+      if (pyStrip.replace(/\s+/g, "").includes(qCompact)) return true;
       const queryParts = qStrip.split(/\s+/).filter(Boolean);
-      const syllables = _stripTones(py).split(/\s+/).filter(Boolean);
+      const syllables = pyStrip.split(/\s+/).filter(Boolean);
       if (queryParts.length > 1) {
         const found = syllables.some((_, i) =>
           queryParts.every((qp, j) => syllables[i + j]?.startsWith(qp)),
@@ -589,7 +600,7 @@ export async function _runKosGlobalSearch() {
   resultsEl.innerHTML =
     '<div style="text-align:center;padding:32px;color:var(--dim);font-size:13px;"><span class="spinner"></span>Memuat...</div>';
 
-  const isSentence = raw.length > 2 || /[\s\u3000-\u303F\uFF00-\uFFEF]/.test(raw);
+  const isSentence = _isGlobalSearchSentence(raw);
   let results = [];
   let sentenceWords = [];
 
@@ -1259,8 +1270,12 @@ export function filterKos() {
     } else {
       const pyLower = py.toLowerCase();
       const qStrip = _stripTones(q);
+      const qCompact = qStrip.replace(/\s+/g, "");
+      const pyStrip = _stripTones(pyLower);
+      if (_matchPinyinTokens(pyLower, queryTokens)) return true;
+      if (pyStrip.replace(/\s+/g, "").includes(qCompact)) return true;
       const queryParts = qStrip.split(/\s+/).filter(Boolean);
-      const syllables = _stripTones(pyLower).split(/\s+/).filter(Boolean);
+      const syllables = pyStrip.split(/\s+/).filter(Boolean);
       if (queryParts.length > 1) {
         const found = syllables.some((_, i) =>
           queryParts.every((qp, j) => syllables[i + j]?.startsWith(qp)),

@@ -627,11 +627,12 @@
   border-color: rgba(232, 201, 109, 0.3);
 }
 .kwd-ex-source {
+  display: none;
   font-size: 9px;
   color: var(--dim);
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 .kwd-ex-hz {
   font-family: var(--font-hanzi);

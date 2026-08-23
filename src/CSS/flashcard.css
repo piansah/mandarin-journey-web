@@ -89,6 +89,9 @@
   touch-action: none;
   position: relative;
 }
+.fc-card-wrap.is-holding .fc-card {
+  transform: scale(0.985);
+}
 
 /* ── Card ── */
 .fc-card {

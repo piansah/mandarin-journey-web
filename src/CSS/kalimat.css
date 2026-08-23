@@ -154,11 +154,12 @@
   flex: 1;
 }
 .qlabel {
+  display: none;
   font-size: 9px;
   color: var(--dim);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin-bottom: 5px;
+  margin-bottom: 0;
 }
 .qtext {
   font-family: var(--font-hanzi);

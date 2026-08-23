@@ -1141,10 +1141,14 @@ export function openKosvok() {
   let sx = 0,
     sy = 0,
     sTime = 0,
-    dragging = false;
+    dragging = false,
+    longPressTimer = null,
+    longPressFired = false;
   const MIN_SWIPE = 60;
   const MAX_TAP_MOV = 10;
   const MAX_TAP_MS = 300;
+  const LONG_PRESS_MS = 520;
+  const LONG_PRESS_MAX_MOV = 12;
   let _lastTouchEnd = 0;
   let _animating = false;
 
@@ -1154,6 +1158,39 @@ export function openKosvok() {
   const getOvR = () => document.getElementById("fc-ov-right");
   const getOvL = () => document.getElementById("fc-ov-left");
   const getWrap = () => document.getElementById("fc-card-wrap");
+
+  function clearLongPress() {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    getWrap()?.classList.remove("is-holding");
+  }
+
+  function openCurrentCardDetail() {
+    const card = fcCards[fcIdx];
+    if (!card?.hz || typeof window.searchAndOpenWord !== "function") {
+      showToast("Detail kata belum tersedia.", "dim");
+      return;
+    }
+    window.searchAndOpenWord(card.hz);
+  }
+
+  function armLongPress() {
+    clearLongPress();
+    longPressFired = false;
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      if (!dragging || !isFC() || _animating) return;
+      longPressFired = true;
+      dragging = false;
+      getCard()?.classList.remove("is-dragging");
+      getWrap()?.classList.add("is-holding");
+      resetCardPos();
+      openCurrentCardDetail();
+      setTimeout(() => getWrap()?.classList.remove("is-holding"), 180);
+    }, LONG_PRESS_MS);
+  }
 
   function resetCardPos() {
     const el = getCard();
@@ -1247,6 +1284,7 @@ export function openKosvok() {
     sy = clientY;
     sTime = Date.now();
     dragging = true;
+    armLongPress();
     const el = getCard();
     if (el) el.classList.add("is-dragging");
   }
@@ -1255,10 +1293,17 @@ export function openKosvok() {
     if (!dragging || !isFC()) return;
     const dx = clientX - sx,
       dy = clientY - sy;
+    if (Math.hypot(dx, dy) > LONG_PRESS_MAX_MOV) clearLongPress();
     applyDrag(dx, dy);
   }
 
   function handleEnd(clientX, clientY) {
+    clearLongPress();
+    if (longPressFired) {
+      longPressFired = false;
+      resetCardPos();
+      return;
+    }
     if (!dragging || !isFC()) return;
     dragging = false;
     const dx = clientX - sx,
@@ -1306,6 +1351,8 @@ export function openKosvok() {
       handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     };
     const _fcTouchCancel = () => {
+      clearLongPress();
+      longPressFired = false;
       dragging = false;
       resetCardPos();
     };
