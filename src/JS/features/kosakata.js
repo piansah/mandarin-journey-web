@@ -2531,8 +2531,14 @@ function _renderKosWordExamples(listEl, hanziItems, userExamples) {
 
     const actions = isOwner
       ? `<div class="kwd-ex-actions">
-          <button class="kwd-ex-btn" onclick="event.stopPropagation();window.openRenderedContohEdit(${editIdx})">Edit</button>
-          <button class="kwd-ex-btn del" onclick="event.stopPropagation();window.deleteContoh(${u.id})">x</button>
+          <button class="kwd-ex-btn" 
+            onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()" 
+            ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()" 
+            onclick="event.stopPropagation();window.openRenderedContohEdit(${editIdx})">Edit</button>
+          <button class="kwd-ex-btn del" 
+            onmousedown="event.stopPropagation()" onmouseup="event.stopPropagation()" 
+            ontouchstart="event.stopPropagation()" ontouchend="event.stopPropagation()" 
+            onclick="event.stopPropagation();window.deleteContoh(${u.id})">x</button>
         </div>`
       : "";
 
