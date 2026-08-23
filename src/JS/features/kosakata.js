@@ -452,6 +452,9 @@ function _isGlobalSearchSentence(raw) {
 
 export async function onKosGlobalSearch() {
   const input = document.getElementById("kos-global-search");
+  const hasValue = !!input?.value.trim();
+  document.getElementById("kos-global-clear")?.style.setProperty("display", hasValue ? "flex" : "none");
+  document.querySelector(".search-history-trigger")?.classList.toggle("is-hidden", hasValue);
   clearTimeout(_globalSearchTimer);
   _globalSearchTimer = setTimeout(() => _runKosGlobalSearch(), 200);
 }
@@ -717,6 +720,8 @@ export function clearKosGlobalSearch() {
   if (input) input.value = "";
   const clearBtn = document.getElementById("kos-global-clear");
   if (clearBtn) clearBtn.style.display = "none";
+  document.querySelector(".search-history-trigger")?.classList.remove("is-hidden");
+  document.querySelector(".search-history-container")?.remove();
   const resultsEl = document.getElementById("kos-global-results");
   const deckSection = document.getElementById("kos-deck-section");
   if (resultsEl) resultsEl.style.display = "none";
@@ -2636,6 +2641,7 @@ export function openContohEdit(id, hanzi, pinyin, arti) {
 function _renderContohForm(data) {
   const contentEl = document.getElementById("contoh-form-content");
   if (!contentEl) return;
+  const inputAttrs = `type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"`;
 
   contentEl.innerHTML = `
     <div class="modal-title">${data ? "Edit Contoh" : "Tambah Contoh Kalimat"}</div>
@@ -2643,15 +2649,15 @@ function _renderContohForm(data) {
     <div class="auth-msg" id="contoh-msg"></div>
     <div class="form-group">
       <label class="form-label">Kalimat Hanzi *</label>
-      <input class="form-input" id="contoh-hanzi" placeholder="例: 请进，请坐！" value="${data?.hanzi || ""}" style="font-family:'Noto Sans SC',sans-serif;font-size:17px;">
+      <input class="form-input" id="contoh-hanzi" name="contoh-hanzi-text" ${inputAttrs} enterkeyhint="next" placeholder="例: 请进，请坐！" value="${data?.hanzi || ""}" style="font-family:'Noto Sans SC',sans-serif;font-size:17px;">
     </div>
     <div class="form-group">
       <label class="form-label">Pinyin</label>
-      <input class="form-input" id="contoh-pinyin" placeholder="例: Qǐng jìn, qǐng zuò!" value="${data?.pinyin || ""}">
+      <input class="form-input" id="contoh-pinyin" name="contoh-pinyin-text" ${inputAttrs} enterkeyhint="next" placeholder="例: Qǐng jìn, qǐng zuò!" value="${data?.pinyin || ""}">
     </div>
     <div class="form-group">
       <label class="form-label">Arti (Indonesia)</label>
-      <input class="form-input" id="contoh-arti" placeholder="例: Silakan masuk, silakan duduk!" value="${data?.arti || ""}">
+      <input class="form-input" id="contoh-arti" name="contoh-arti-text" ${inputAttrs} enterkeyhint="done" placeholder="例: Silakan masuk, silakan duduk!" value="${data?.arti || ""}">
     </div>
     <button class="btn-primary" id="contoh-save-btn" onclick="window.saveContoh()">${data ? "Simpan Perubahan" : "+ Tambah Contoh"}</button>`;
 

@@ -96,9 +96,14 @@
     background: none;
     border: none;
     color: var(--dim2);
-    padding: 4px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     cursor: pointer;
     border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .h-action-btn:hover {
