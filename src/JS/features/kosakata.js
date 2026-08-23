@@ -2647,19 +2647,21 @@ function _renderContohForm(data) {
     <div class="modal-title">${data ? "Edit Contoh" : "Tambah Contoh Kalimat"}</div>
     <div class="modal-sub">Untuk kata: <strong style="color:var(--gold);font-family:'Noto Sans SC',sans-serif;">${_currentKosWord?.hanzi || ""}</strong></div>
     <div class="auth-msg" id="contoh-msg"></div>
+    <form autocomplete="off" onsubmit="return false" style="display:contents;">
     <div class="form-group">
       <label class="form-label">Kalimat Hanzi *</label>
-      <input class="form-input" id="contoh-hanzi" name="contoh-hanzi-text" ${inputAttrs} enterkeyhint="next" placeholder="例: 请进，请坐！" value="${data?.hanzi || ""}" style="font-family:'Noto Sans SC',sans-serif;font-size:17px;">
+      <input class="form-input" id="contoh-hanzi" name="contoh-hanzi-x" ${inputAttrs} enterkeyhint="next" placeholder="例: 请进，请坐！" value="${data?.hanzi || ""}" style="font-family:'Noto Sans SC',sans-serif;font-size:17px;">
     </div>
     <div class="form-group">
       <label class="form-label">Pinyin</label>
-      <input class="form-input" id="contoh-pinyin" name="contoh-pinyin-text" ${inputAttrs} enterkeyhint="next" placeholder="例: Qǐng jìn, qǐng zuò!" value="${data?.pinyin || ""}">
+      <input class="form-input" id="contoh-pinyin" name="contoh-pinyin-x" ${inputAttrs} enterkeyhint="next" placeholder="例: Qǐng jìn, qǐng zuò!" value="${data?.pinyin || ""}">
     </div>
     <div class="form-group">
       <label class="form-label">Arti (Indonesia)</label>
-      <input class="form-input" id="contoh-arti" name="contoh-arti-text" ${inputAttrs} enterkeyhint="done" placeholder="例: Silakan masuk, silakan duduk!" value="${data?.arti || ""}">
+      <input class="form-input" id="contoh-arti" name="contoh-arti-x" ${inputAttrs} enterkeyhint="done" placeholder="例: Silakan masuk, silakan duduk!" value="${data?.arti || ""}">
     </div>
-    <button class="btn-primary" id="contoh-save-btn" onclick="window.saveContoh()">${data ? "Simpan Perubahan" : "+ Tambah Contoh"}</button>`;
+    <button class="btn-primary" id="contoh-save-btn" onclick="window.saveContoh()">${data ? "Simpan Perubahan" : "+ Tambah Contoh"}</button>
+    </form>`;
 
   const modalEl = document.getElementById("contoh-form-modal");
   if (modalEl) modalEl.classList.add("active");
